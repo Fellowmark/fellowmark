@@ -1,0 +1,16 @@
+.root {
+  flex-grow: 1;
+}
+
+.menuButton {
+  margin-right: 5px;
+}
+
+.title {
+  flex-grow: 1;
+}
+
+.drawer {
+  width: 250px;
+}
+
