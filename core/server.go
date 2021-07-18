@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
 	"os"
 	"time"
@@ -19,11 +20,11 @@ const (
 
 func main() {
 	loggers.InitLoggers(os.Getenv("RUN_ENV"))
-	db.InitDB(DBType, os.Getenv("DATABASE_URL"))
-	InitServer()
+	db := db.InitDB(DBType, os.Getenv("DATABASE_URL"))
+	InitServer(db)
 }
 
-func InitServer() {
+func InitServer(db *sql.DB) {
 	loggers.InfoLogger.Println("Starting server")
 	route := mux.NewRouter()
 	route.HandleFunc("/signup", routes.Login).Methods(http.MethodPost)
