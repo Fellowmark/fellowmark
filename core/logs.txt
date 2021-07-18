@@ -11,3 +11,12 @@ INFO: 2021/07/11 21:17:39 server.go:62: starting server
 INFO: 2021/07/11 21:19:09 server.go:36: Logging has begun
 INFO: 2021/07/11 21:19:09 server.go:78: connected to database
 INFO: 2021/07/11 21:19:09 server.go:62: starting server
+INFO: 2021/07/19 20:15:12 loggers.go:23: Logging has begun
+INFO: 2021/07/19 20:15:12 db.go:48: Connected to database
+INFO: 2021/07/19 20:15:14 server.go:35: Starting server
+INFO: 2021/07/19 20:16:30 loggers.go:23: Logging has begun
+INFO: 2021/07/19 20:16:30 db.go:48: Connected to database
+INFO: 2021/07/19 20:16:31 server.go:35: Starting server
+INFO: 2021/07/19 20:17:38 loggers.go:23: Logging has begun
+INFO: 2021/07/19 20:17:38 db.go:48: Connected to database
+INFO: 2021/07/19 20:17:39 server.go:35: Starting server

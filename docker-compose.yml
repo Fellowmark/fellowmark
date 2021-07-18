@@ -20,6 +20,9 @@ services:
         environment:
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
             - RUN_ENV=local
+            - ADMIN_NAME=admin
+            - ADMIN_EMAIL=admin@local.com
+            - ADMIN_PASSWORD=admin
         build:
             context: ./core/.
             target: builder
@@ -38,6 +41,9 @@ services:
         environment:
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
             - RUN_ENV=production
+            - ADMIN_NAME=admin
+            - ADMIN_EMAIL=admin@local.com
+            - ADMIN_PASSWORD=admin
         build:
             context: ./core/.
         container_name: api
