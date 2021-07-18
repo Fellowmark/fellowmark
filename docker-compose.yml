@@ -19,6 +19,7 @@ services:
         image: nus-utils/peer-review-api:dev
         environment:
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+            - JWT_SECRET=${JWT_SECRET}
             - RUN_ENV=local
             - ADMIN_NAME=admin
             - ADMIN_EMAIL=admin@local.com
@@ -40,6 +41,7 @@ services:
         image: nus-utils/peer-review-api:latest
         environment:
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+            - JWT_SECRET=${JWT_SECRET}
             - RUN_ENV=production
             - ADMIN_NAME=admin
             - ADMIN_EMAIL=admin@local.com
