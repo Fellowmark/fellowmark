@@ -109,11 +109,31 @@ func InsertDummyData(db *gorm.DB) {
 		Code:     "CS2113T",
 		Semester: "2122-1",
 		Name:     "Software Engineering & OOP",
-		Staff:    staff,
 	}
 	result = db.Create(&module)
 	if result.Error != nil {
 		loggers.ErrorLogger.Fatal("module entry failed")
+	}
+
+	enrollments := []models.Enrollment{}
+	for _, student := range students {
+		enrollments = append(enrollments, models.Enrollment{
+			Module:  module,
+			Student: student,
+		})
+	}
+	result = db.Create(&enrollments)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("enrollments entry failed")
+	}
+
+	supervision := models.Supervision{
+		Module: module,
+		Staff:  staff,
+	}
+	result = db.Create(&supervision)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("supervision entry failed")
 	}
 
 	assignment := models.Assignment{

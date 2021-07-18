@@ -21,6 +21,20 @@ type Module struct {
 	Code     string `gorm:"type:varchar(8);column:code;not null"`
 	Semester string `gorm:"type:varchar(6);column:semester;not null"`
 	Name     string `gorm:"column:name;not null"`
+}
+
+type Enrollment struct {
+	gorm.Model
+	Module    Module  `gorm:"foreignKey:ModuleID"`
+	ModuleID  uint    `gorm:"column:module_id;not null"`
+	Student   Student `gorm:"foreignKey:StudentID"`
+	StudentID uint    `gorm:"column:student_id;not null"`
+}
+
+type Supervision struct {
+	gorm.Model
+	Module   Module `gorm:"foreignKey:ModuleID"`
+	ModuleID uint   `gorm:"column:module_id;not null"`
 	Staff    Staff  `gorm:"foreignKey:StaffID"`
 	StaffID  uint   `gorm:"column:staff_id;not null"`
 }
@@ -72,9 +86,9 @@ type Submission struct {
 
 type Grade struct {
 	gorm.Model
-	Pairing    Pairing  `gorm:"foreignKey:PairingID"`
-	PairingID  uint     `gorm:"column:pairing_id;not null"`
-	Question   Question `gorm:"foreignKey:QuestionID"`
-	QuestionID uint     `gorm:"column:question_id;not null"`
-	Grade      int      `gorm:"column:grade;not null"`
+	Pairing   Pairing `gorm:"foreignKey:PairingID"`
+	PairingID uint    `gorm:"column:pairing_id;not null"`
+	Rubric    Rubric  `gorm:"foreignKey:RubricID"`
+	RubricID  uint    `gorm:"column:rubric_id;not null"`
+	Grade     int     `gorm:"column:grade;not null"`
 }
