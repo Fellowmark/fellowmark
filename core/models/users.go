@@ -9,6 +9,3 @@ type User struct {
 	Email     string `gorm:"unique"`
 	Password  string
 }
-
-func CreateUser(firstName string, lastName string, email string, password string) {
-}
