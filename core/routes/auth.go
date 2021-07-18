@@ -40,8 +40,6 @@ func Login(db *gorm.DB) http.HandlerFunc {
 			HandleResponse(w, err.Error(), http.StatusBadRequest)
 		}
 		result := db.Take(&user, "email = ?", reqUser.Email)
-		HandleResponseWithObject(w, &result, http.StatusOK)
-		return
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
 		} else {
