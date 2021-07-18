@@ -13,12 +13,31 @@ services:
         volumes:
             - dbdata:/var/lib/postgresql/data/
             - ./dbscripts:/docker-entrypoint-initdb.d
-        profiles: ['api']
+        profiles: ['api-dev', 'api']
+
+    api-dev:
+        image: nus-utils/peer-review-api:dev
+        environment:
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+            - RUN_ENV=local
+        build:
+            context: ./core/.
+            target: builder
+        volumes:
+          - ./core:/app
+        command: go run .
+        container_name: api-dev
+        depends_on:
+            - db
+        ports:
+            - '5000:5000'
+        profiles: ['api-dev']
 
     api:
         image: nus-utils/peer-review-api:latest
         environment:
-            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+            - RUN_ENV=production
         build:
             context: ./core/.
         container_name: api
