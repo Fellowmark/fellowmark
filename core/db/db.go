@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
+
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
 )
@@ -37,5 +38,152 @@ func GetDatabase(database string, databaseUrl string) *gorm.DB {
 }
 
 func InitialMigration(connection *gorm.DB) {
-	connection.AutoMigrate(models.User{})
+	defer CloseDB(connection)
+	connection.AutoMigrate(models.Student{})
+	connection.AutoMigrate(models.Staff{})
+	connection.AutoMigrate(models.Module{})
+	connection.AutoMigrate(models.Assignment{})
+	connection.AutoMigrate(models.Question{})
+	connection.AutoMigrate(models.Rubric{})
+	connection.AutoMigrate(models.Pairing{})
+	connection.AutoMigrate(models.Submission{})
+	connection.AutoMigrate(models.Grade{})
+}
+
+func CloseDB(connection *gorm.DB) {
+	db := connection.DB()
+	db.Close()
+}
+
+func InsertDummyData(db *gorm.DB) {
+	defer CloseDB(db)
+	var result *gorm.DB
+	students := []models.Student{
+		{
+			Email:    "e0000000@u.nus.edu",
+			Name:     "Student A",
+			Password: "password",
+		},
+		{
+			Email:    "e0000001@u.nus.edu",
+			Name:     "Student B",
+			Password: "password",
+		},
+		{
+			Email:    "e00000002@u.nus.edu",
+			Name:     "Student C",
+			Password: "password",
+		},
+		{
+			Email:    "e0000003@u.nus.edu",
+			Name:     "Student D",
+			Password: "password",
+		},
+		{
+			Email:    "e0000004@u.nus.edu",
+			Name:     "Student E",
+			Password: "password",
+		},
+		{
+			Email:    "e0000005@u.nus.edu",
+			Name:     "Student F",
+			Password: "password",
+		},
+	}
+	result = db.Create(&students)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("student entry failed")
+	}
+
+	staff := models.Staff{
+		Email:    "e1000000@u.nus.edu",
+		Name:     "Staff A",
+		Password: "password",
+	}
+	result = db.Create(&staff)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("staff entry failed")
+	}
+
+	module := models.Module{
+		Code:     "CS2113T",
+		Semester: "2122-1",
+		Name:     "Software Engineering & OOP",
+		Staff:    staff,
+	}
+	result = db.Create(&module)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("module entry failed")
+	}
+
+	assignment := models.Assignment{
+		Name:   "Lecture 1 Quiz",
+		Module: module,
+	}
+	result = db.Create(&assignment)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("assignment entry failed")
+	}
+
+	question := models.Question{
+		QuestionNumber: 1,
+		QuestionText:   "What is 2+2?",
+		Assignment:     assignment,
+	}
+	result = db.Create(&question)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("question entry failed")
+	}
+
+	rubrics := []models.Rubric{
+		{
+			Question:    question,
+			Criteria:    "Type",
+			Description: "1/1: Answer is an integer. 0/1 otherwise",
+			MinMark:     0,
+			MaxMark:     1,
+		},
+		{
+			Question:    question,
+			Criteria:    "Correctness",
+			Description: "1/1: Answer is 4. 0/1 otherwise",
+			MinMark:     0,
+			MaxMark:     1,
+		},
+	}
+	result = db.Create(&rubrics)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("rubric entry failed")
+	}
+
+	pairings := []models.Pairing{}
+	// trivial cartesian product of students with each other
+	// TODO replace with proper pair assignment
+	for idx1, student := range students {
+		for idx2, marker := range students {
+			if idx1 != idx2 {
+				pairings = append(pairings, models.Pairing{
+					Assignment: assignment,
+					Student:    student,
+					Marker:     marker,
+				})
+			}
+		}
+	}
+	result = db.Create(&pairings)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("pairing entry failed")
+	}
+
+	submission := []models.Submission{
+		{
+			SubmittedBy: students[0],
+			Question:    question,
+			Content:     "4",
+		},
+	}
+	result = db.Create(&submission)
+	if result.Error != nil {
+		loggers.ErrorLogger.Fatal("submission entry failed")
+	}
 }
