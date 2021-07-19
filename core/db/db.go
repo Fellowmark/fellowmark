@@ -1,32 +1,34 @@
 package db
 
 import (
-	"database/sql"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
 )
 
-func InitDB(database string, databaseUrl string) *sql.DB {
+func InitDB(database string, databaseUrl string) *gorm.DB {
 	connection := GetDatabase(database, databaseUrl)
-	db := connection.DB()
+	db, _ := connection.DB()
 	db.SetMaxIdleConns(10)
 	db.SetMaxOpenConns(100)
 	db.SetConnMaxLifetime(time.Hour)
 	InitialMigration(connection)
-	return db
+	return connection
 }
 
 func GetDatabase(database string, databaseUrl string) *gorm.DB {
-	connection, err := gorm.Open(database, databaseUrl)
+	connection, err := gorm.Open(postgres.Open(databaseUrl), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: false,
+	})
 	if err != nil {
 		loggers.ErrorLogger.Fatalln(err)
 	}
 
-	db := connection.DB()
+	db, _ := connection.DB()
 
 	err = db.Ping()
 	if err != nil {
@@ -48,10 +50,12 @@ func InitialMigration(connection *gorm.DB) {
 	connection.AutoMigrate(models.Pairing{})
 	connection.AutoMigrate(models.Submission{})
 	connection.AutoMigrate(models.Grade{})
+	connection.AutoMigrate(models.Supervision{})
+	connection.AutoMigrate(models.Enrollment{})
 }
 
 func CloseDB(connection *gorm.DB) {
-	db := connection.DB()
+	db, _ := connection.DB()
 	db.Close()
 }
 

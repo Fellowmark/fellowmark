@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"net/http"
 	"os"
 	"time"
@@ -9,9 +8,9 @@ import (
 	"github.com/nus-utils/nus-peer-review/db"
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/routes"
+	"gorm.io/gorm"
 
 	"github.com/gorilla/mux"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 const (
@@ -24,7 +23,7 @@ func main() {
 	InitServer(db)
 }
 
-func InitServer(db *sql.DB) {
+func InitServer(db *gorm.DB) {
 	loggers.InfoLogger.Println("Starting server")
 	route := mux.NewRouter()
 	route.HandleFunc("/signup", routes.Login).Methods(http.MethodPost)

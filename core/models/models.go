@@ -1,6 +1,6 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import "gorm.io/gorm"
 
 type Student struct {
 	gorm.Model
@@ -25,7 +25,7 @@ type Module struct {
 
 type Enrollment struct {
 	gorm.Model
-	Module    Module  `gorm:"foreignKey:ModuleID"`
+	Module    Module  `gorm:"foreignKey:ModuleID;references:ID"`
 	ModuleID  uint    `gorm:"column:module_id;not null"`
 	Student   Student `gorm:"foreignKey:StudentID"`
 	StudentID uint    `gorm:"column:student_id;not null"`
