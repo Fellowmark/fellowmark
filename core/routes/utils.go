@@ -43,14 +43,16 @@ func HandleResponseWithObject(w http.ResponseWriter, object interface{}, httpSta
 	encoder.Encode(object)
 }
 
-func GenerateJWT(object interface{}) (string, error) {
+func GenerateJWT(role string, object interface{}) (string, error) {
 	var mySigningKey = []byte(os.Getenv("JWT_SECRET"))
 	type ClaimsData struct {
-		data interface{} `json:"data"`
+		Role string
+		Data interface{} `json:"data"`
 		jwt.StandardClaims
 	}
 
 	claims := ClaimsData{
+		role,
 		object,
 		jwt.StandardClaims{
 			ExpiresAt: 15000,
@@ -62,8 +64,19 @@ func GenerateJWT(object interface{}) (string, error) {
 	tokenString, err := token.SignedString(mySigningKey)
 
 	if err != nil {
-		loggers.ErrorLogger.Println("Something Went Wrong: %s", err.Error())
+		loggers.ErrorLogger.Println("Something Went Wrong: %s" + err.Error())
 		return "", err
 	}
 	return tokenString, nil
+}
+
+func ParseJWT(tokenString string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	} else {
+		return nil, err
+	}
 }

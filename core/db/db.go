@@ -22,7 +22,7 @@ func InitDB(databaseUrl string) *gorm.DB {
 	SetupAdmin(connection, &models.Admin{
 		Name:     os.Getenv("ADMIN_NAME"),
 		Email:    os.Getenv("ADMIN_EMAIL"),
-		Password: os.Getenv("ADMIN_PASSOWRD"),
+		Password: os.Getenv("ADMIN_PASSWORD"),
 	})
 	return connection
 }
@@ -72,7 +72,7 @@ func CloseDB(connection *gorm.DB) {
 func SetupAdmin(pool *gorm.DB, admin *models.Admin) {
 	hash, _ := argon2id.CreateHash(admin.Password, argon2id.DefaultParams)
 	admin.Password = hash
-	pool.Create(&admin)
+	pool.FirstOrCreate(&admin)
 }
 
 func InsertDummyData(db *gorm.DB) {

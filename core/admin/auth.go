@@ -1,4 +1,4 @@
-package routes
+package admin
 
 import (
 	"errors"
@@ -8,48 +8,53 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
+	"github.com/nus-utils/nus-peer-review/routes"
 	"gorm.io/gorm"
 )
 
-func StudentAuthRouter(route *mux.Router, db *gorm.DB) {
+func AdminAuthRouter(route *mux.Router, db *gorm.DB) {
 	route.HandleFunc("/signup", SignUp(db)).Methods(http.MethodPost)
 	route.HandleFunc("/login", Login(db)).Methods(http.MethodGet)
 }
 
 func SignUp(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var user *models.Student
-		if err := DecodeBody(r.Body, &user); err != nil {
-			HandleResponse(w, err.Error(), http.StatusBadRequest)
+		var user *models.Admin
+		if err := routes.DecodeBody(r.Body, &user); err != nil {
+			routes.HandleResponse(w, err.Error(), http.StatusBadRequest)
 		}
 		hash, err := argon2id.CreateHash(user.Password, argon2id.DefaultParams)
 		if err != nil {
 			loggers.ErrorLogger.Println(err)
 		}
 		user.Password = hash
-		db.Create(&user)
-		HandleResponse(w, "Sucess", http.StatusOK)
+		result := db.Create(&user)
+		if result.Error != nil {
+			routes.HandleResponse(w, "Already exist", http.StatusBadRequest)
+		} else {
+			routes.HandleResponse(w, "Success", http.StatusOK)
+		}
 	}
 }
 
 func Login(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var reqUser models.Student
-		var user models.Student
-		if err := DecodeBody(r.Body, &reqUser); err != nil {
-			HandleResponse(w, err.Error(), http.StatusBadRequest)
+		var reqUser models.Admin
+		var user models.Admin
+		if err := routes.DecodeBody(r.Body, &reqUser); err != nil {
+			routes.HandleResponse(w, err.Error(), http.StatusBadRequest)
 		}
 		result := db.Take(&user, "email = ?", reqUser.Email)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
+			routes.HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
 		} else {
 			isEqual, _ := argon2id.ComparePasswordAndHash(reqUser.Password, user.Password)
 			if isEqual {
-				token, err := GenerateJWT(reqUser)
+				token, err := routes.GenerateJWT("Admin", reqUser)
 				if err != nil {
-					HandleResponse(w, "Internal Error", http.StatusInternalServerError)
+					routes.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
 				}
-				HandleResponse(w, token, http.StatusOK)
+				routes.HandleResponse(w, token, http.StatusOK)
 			}
 		}
 	}

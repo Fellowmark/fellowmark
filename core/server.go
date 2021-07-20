@@ -8,9 +8,11 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/nus-utils/nus-peer-review/admin"
 	"github.com/nus-utils/nus-peer-review/db"
 	"github.com/nus-utils/nus-peer-review/loggers"
-	"github.com/nus-utils/nus-peer-review/routes"
+	"github.com/nus-utils/nus-peer-review/staff"
+	"github.com/nus-utils/nus-peer-review/student"
 	"gorm.io/gorm"
 
 	"github.com/gorilla/mux"
@@ -34,7 +36,9 @@ func InitServer(pool *gorm.DB) {
 
 	loggers.InfoLogger.Println("Starting server")
 	route := mux.NewRouter()
-	routes.StudentAuthRouter(route.PathPrefix("/auth").Subrouter(), pool)
+	student.StudentAuthRouter(route.PathPrefix("/student/auth").Subrouter(), pool)
+	staff.StaffAuthRouter(route.PathPrefix("/staff/auth").Subrouter(), pool)
+	admin.AdminAuthRouter(route.PathPrefix("/admin/auth").Subrouter(), pool)
 
 	srv := &http.Server{
 		Addr:         ":5000",
