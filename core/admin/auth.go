@@ -5,15 +5,10 @@ import (
 	"net/http"
 
 	"github.com/alexedwards/argon2id"
-	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/routes"
 	"gorm.io/gorm"
 )
-
-func AdminAuthRouter(route *mux.Router, db *gorm.DB) {
-	route.HandleFunc("/login", Login(db)).Methods(http.MethodGet)
-}
 
 func Login(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

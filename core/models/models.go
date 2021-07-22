@@ -4,23 +4,23 @@ import "gorm.io/gorm"
 
 type Admin struct {
 	gorm.Model
-	Email    string `gorm:"type:varchar(100);column:email;unique"`
+	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
 	Name     string `gorm:"type:varchar(255);column:name;not null"`
-	Password string `gorm:"column:password;not null"`
+	Password string `gorm:"column:password;not null" validate:"min=8"`
 }
 
 type Student struct {
 	gorm.Model
-	Email    string `gorm:"type:varchar(100);column:email;unique"`
+	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
 	Name     string `gorm:"type:varchar(255);column:name;not null"`
-	Password string `gorm:"column:password;not null"`
+	Password string `gorm:"column:password;not null" validate:"min=8"`
 }
 
 type Staff struct {
 	gorm.Model
-	Email    string `gorm:"type:varchar(100);column:email;unique"`
+	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
 	Name     string `gorm:"type:varchar(255);column:name;not null"`
-	Password string `gorm:"column:password;not null"`
+	Password string `gorm:"column:password;not null" validate:"min=8"`
 }
 
 type Module struct {
