@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/nus-utils/nus-peer-review/db"
+	DB "github.com/nus-utils/nus-peer-review/db"
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/routes"
 	"gorm.io/gorm"
@@ -19,7 +19,10 @@ const (
 
 func main() {
 	loggers.InitLoggers(os.Getenv("RUN_ENV"))
-	db := db.InitDB(DBType, os.Getenv("DATABASE_URL"))
+	db := DB.InitDB(DBType, os.Getenv("DATABASE_URL"))
+	DB.ResetDatabase(db)
+	DB.InsertDummyData(db)
+	DB.CloseDB(db)
 	InitServer(db)
 }
 

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
+	"github.com/nus-utils/nus-peer-review/utils"
 )
 
 func InitDB(database string, databaseUrl string) *gorm.DB {
@@ -40,7 +42,7 @@ func GetDatabase(database string, databaseUrl string) *gorm.DB {
 }
 
 func InitialMigration(connection *gorm.DB) {
-	defer CloseDB(connection)
+	//defer CloseDB(connection)
 	connection.AutoMigrate(models.Student{})
 	connection.AutoMigrate(models.Staff{})
 	connection.AutoMigrate(models.Module{})
@@ -60,7 +62,7 @@ func CloseDB(connection *gorm.DB) {
 }
 
 func InsertDummyData(db *gorm.DB) {
-	defer CloseDB(db)
+	//defer CloseDB(db)
 	var result *gorm.DB
 	students := []models.Student{
 		{
@@ -74,7 +76,7 @@ func InsertDummyData(db *gorm.DB) {
 			Password: "password",
 		},
 		{
-			Email:    "e00000002@u.nus.edu",
+			Email:    "e0000002@u.nus.edu",
 			Name:     "Student C",
 			Password: "password",
 		},
@@ -141,8 +143,9 @@ func InsertDummyData(db *gorm.DB) {
 	}
 
 	assignment := models.Assignment{
-		Name:   "Lecture 1 Quiz",
-		Module: module,
+		Name:      "Lecture 1 Quiz",
+		Module:    module,
+		GroupSize: 3,
 	}
 	result = db.Create(&assignment)
 	if result.Error != nil {
@@ -180,24 +183,8 @@ func InsertDummyData(db *gorm.DB) {
 		loggers.ErrorLogger.Fatal("rubric entry failed")
 	}
 
-	pairings := []models.Pairing{}
-	// trivial cartesian product of students with each other
-	// TODO replace with proper pair assignment
-	for idx1, student := range students {
-		for idx2, marker := range students {
-			if idx1 != idx2 {
-				pairings = append(pairings, models.Pairing{
-					Assignment: assignment,
-					Student:    student,
-					Marker:     marker,
-				})
-			}
-		}
-	}
-	result = db.Create(&pairings)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("pairing entry failed")
-	}
+	utils.ResetPairings(db, assignment)
+	utils.SetNewPairings(db, assignment)
 
 	submission := []models.Submission{
 		{
@@ -210,4 +197,39 @@ func InsertDummyData(db *gorm.DB) {
 	if result.Error != nil {
 		loggers.ErrorLogger.Fatal("submission entry failed")
 	}
+}
+
+func LogPairings(db *gorm.DB) {
+	result := []models.Pairing{}
+	db.Raw("SELECT * FROM pairings").Scan(&result)
+	for _, pairing := range result {
+		loggers.InfoLogger.Println(
+			fmt.Sprintf("submitter: %v, marker: %v, active: %v", pairing.StudentID, pairing.MarkerID, pairing.Active),
+		)
+	}
+}
+
+func LogStudents(db *gorm.DB) {
+	result := []models.Student{}
+	db.Raw("SELECT * FROM students").Scan(&result)
+	for _, student := range result {
+		loggers.InfoLogger.Println(
+			fmt.Sprintf("email: %v, name: %v", student.Email, student.Name),
+		)
+	}
+}
+
+func ResetDatabase(db *gorm.DB) {
+	db.Exec("DROP TABLE IF EXISTS grades")
+	db.Exec("DROP TABLE IF EXISTS submissions")
+	db.Exec("DROP TABLE IF EXISTS pairings")
+	db.Exec("DROP TABLE IF EXISTS rubrics")
+	db.Exec("DROP TABLE IF EXISTS questions")
+	db.Exec("DROP TABLE IF EXISTS assignments")
+	db.Exec("DROP TABLE IF EXISTS supervisions")
+	db.Exec("DROP TABLE IF EXISTS enrollments")
+	db.Exec("DROP TABLE IF EXISTS modules")
+	db.Exec("DROP TABLE IF EXISTS students")
+	db.Exec("DROP TABLE IF EXISTS staffs")
+	InitialMigration(db)
 }
