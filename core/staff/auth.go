@@ -1,6 +1,7 @@
 package staff
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -10,25 +11,54 @@ import (
 	"gorm.io/gorm"
 )
 
-func Login(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var reqUser models.Staff
+// Middleware used by both Login and Signup to decode body
+func (ur StaffRoute) DecodeUserJson(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var user models.Staff
-		if err := utils.DecodeBody(r.Body, &reqUser); err != nil {
+		if err := utils.DecodeBody(r.Body, &user); err != nil {
 			utils.HandleResponse(w, err.Error(), http.StatusBadRequest)
+		} else {
+			ctxWithUser := context.WithValue(r.Context(), "user", user)
+			next.ServeHTTP(w, r.WithContext(ctxWithUser))
 		}
-		result := db.Take(&user, "email = ?", reqUser.Email)
+	})
+}
+
+// Login middleware
+func (ur StaffRoute) EmailCheck(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var user models.Staff
+		input := r.Context().Value("user").(models.Staff)
+		result := ur.DB.Take(&user, "email = ?", input.Email)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			utils.HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
 		} else {
-			isEqual, _ := argon2id.ComparePasswordAndHash(reqUser.Password, user.Password)
-			if isEqual {
-				token, err := utils.GenerateJWT("Staff", reqUser)
-				if err != nil {
-					utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
-				}
-				utils.HandleResponse(w, token, http.StatusOK)
-			}
+			ctxWithUser := context.WithValue(r.Context(), "user", user)
+			ctxWithInputAndUser := context.WithValue(ctxWithUser, "input", input)
+			next.ServeHTTP(w, r.WithContext(ctxWithInputAndUser))
 		}
+	})
+}
+
+func (ur StaffRoute) PasswordCheck(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		input := r.Context().Value("input").(models.Staff)
+		user := r.Context().Value("user").(models.Staff)
+		isEqual, _ := argon2id.ComparePasswordAndHash(input.Password, user.Password)
+		if !isEqual {
+			utils.HandleResponse(w, "Incorrect Password", http.StatusUnauthorized)
+		} else {
+			next.ServeHTTP(w, r)
+		}
+	})
+}
+
+func (ur StaffRoute) Login(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(models.Staff)
+	token, err := utils.GenerateJWT("Staff", user)
+	if err != nil {
+		utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
+	} else {
+		utils.HandleResponse(w, token, http.StatusOK)
 	}
 }
