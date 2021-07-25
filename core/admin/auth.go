@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/nus-utils/nus-peer-review/models"
@@ -61,4 +62,24 @@ func (ur AdminRoute) Login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		utils.HandleResponse(w, token, http.StatusOK)
 	}
+}
+
+// Middleware used for privileged operations
+func (ur AdminRoute) ValidateJWT(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if !strings.Contains(authHeader, "Bearer") {
+			utils.HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		tokenString := strings.Split(authHeader, "Bearer ")[1]
+		claims, err := utils.ParseJWT(tokenString)
+		if err != nil || claims.Role != "Admin" {
+			utils.HandleResponse(w, err.Error(), http.StatusUnauthorized)
+		} else {
+			ctxWithUser := context.WithValue(r.Context(), "claims", claims)
+			next.ServeHTTP(w, r.WithContext(ctxWithUser))
+		}
+	})
 }
