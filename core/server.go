@@ -13,6 +13,7 @@ import (
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/staff"
 	"github.com/nus-utils/nus-peer-review/student"
+	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
 
 	"github.com/gorilla/mux"
@@ -22,6 +23,10 @@ func main() {
 	loggers.InitLoggers(os.Getenv("RUN_ENV"))
 	db := db.InitDB(os.Getenv("DATABASE_URL"))
 	InitServer(db)
+}
+
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	utils.HandleResponseWithObject(w, "Server is healthy", http.StatusOK)
 }
 
 func InitServer(pool *gorm.DB) {
@@ -40,10 +45,10 @@ func InitServer(pool *gorm.DB) {
 	studentRoute := student.StudentRoute{
 		DB: pool,
 	}
-
 	studentRoute.CreateRouters(route.PathPrefix("/student").Subrouter())
 	staff.StaffRouter(route.PathPrefix("/staff/auth").Subrouter(), pool)
 	admin.AdminRouter(route.PathPrefix("/admin/auth").Subrouter(), pool)
+	route.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
 
 	srv := &http.Server{
 		Addr:         ":5000",

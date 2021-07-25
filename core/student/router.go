@@ -18,11 +18,13 @@ func (ur StudentRoute) CreateRouters(route *mux.Router) {
 func (ur StudentRoute) CreateAuthRouter(route *mux.Router) {
 	route.Use(ur.DecodeUserJson)
 
-	signupRoute := route.HandleFunc("/signup", ur.SignUp).Methods(http.MethodPost)
-	signupRoute.Subrouter().Use(ur.SanitizeUserData)
-	signupRoute.Subrouter().Use(ur.PasswordHash)
+	signUpRoute := route.NewRoute().Subrouter()
+	signUpRoute.Use(ur.SanitizeUserData)
+	signUpRoute.Use(ur.PasswordHash)
+	signUpRoute.HandleFunc("/signup", ur.SignUp).Methods(http.MethodPost)
 
-	loginRoute := route.HandleFunc("/login", ur.Login).Methods(http.MethodGet)
-	loginRoute.Subrouter().Use(ur.EmailCheck)
-	loginRoute.Subrouter().Use(ur.PasswordCheck)
+	loginRoute := route.NewRoute().Subrouter()
+	loginRoute.HandleFunc("/login", ur.Login).Methods(http.MethodGet)
+	loginRoute.Use(ur.EmailCheck)
+	loginRoute.Use(ur.PasswordCheck)
 }
