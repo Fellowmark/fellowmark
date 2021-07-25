@@ -6,10 +6,17 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/nus-utils/nus-peer-review/loggers"
 )
+
+type ClaimsData struct {
+	Role string      `json:"role"`
+	Data interface{} `json:"data"`
+	jwt.StandardClaims
+}
 
 func DecodeBody(body io.ReadCloser, out interface{}) error {
 	var unmarshalErr *json.UnmarshalFieldError
@@ -45,18 +52,13 @@ func HandleResponseWithObject(w http.ResponseWriter, object interface{}, httpSta
 
 func GenerateJWT(role string, object interface{}) (string, error) {
 	var mySigningKey = []byte(os.Getenv("JWT_SECRET"))
-	type ClaimsData struct {
-		Role string
-		Data interface{} `json:"data"`
-		jwt.StandardClaims
-	}
 
 	claims := ClaimsData{
 		role,
 		object,
 		jwt.StandardClaims{
-			ExpiresAt: 15000,
-			Issuer:    "test",
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
+			Issuer:    "npr-api",
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -70,13 +72,14 @@ func GenerateJWT(role string, object interface{}) (string, error) {
 	return tokenString, nil
 }
 
-func ParseJWT(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func ParseJWT(tokenString string) (*ClaimsData, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &ClaimsData{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+
+	if claims, ok := token.Claims.(*ClaimsData); ok && token.Valid {
 		return claims, nil
 	} else {
-		return nil, err
+		return claims, err
 	}
 }
