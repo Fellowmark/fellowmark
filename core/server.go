@@ -50,9 +50,13 @@ func InitServer(pool *gorm.DB) {
 		DB: pool,
 	}
 
+	adminRoute := admin.AdminRoute{
+		DB: pool,
+	}
+
 	studentRoute.CreateRouters(route.PathPrefix("/student").Subrouter())
 	staffRoute.CreateRouters(route.PathPrefix("/staff").Subrouter())
-	admin.AdminRouter(route.PathPrefix("/admin/auth").Subrouter(), pool)
+	adminRoute.CreateRouters(route.PathPrefix("/admin").Subrouter())
 	route.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
 
 	srv := &http.Server{

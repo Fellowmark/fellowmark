@@ -7,6 +7,19 @@ import (
 	"gorm.io/gorm"
 )
 
-func AdminRouter(route *mux.Router, db *gorm.DB) {
-	route.HandleFunc("/login", Login(db)).Methods(http.MethodGet)
+type AdminRoute struct {
+	DB *gorm.DB
+}
+
+func (ur AdminRoute) CreateRouters(route *mux.Router) {
+	ur.CreateAuthRouter(route.PathPrefix("/auth").Subrouter())
+}
+
+func (ur AdminRoute) CreateAuthRouter(route *mux.Router) {
+	route.Use(ur.DecodeUserJson)
+
+	loginRoute := route.NewRoute().Subrouter()
+	loginRoute.HandleFunc("/login", ur.Login).Methods(http.MethodGet)
+	loginRoute.Use(ur.EmailCheck)
+	loginRoute.Use(ur.PasswordCheck)
 }

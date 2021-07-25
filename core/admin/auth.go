@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -10,30 +11,54 @@ import (
 	"gorm.io/gorm"
 )
 
-func SanitizeUserData(next http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-	}
+// Middleware used by both Login and Signup to decode body
+func (ur AdminRoute) DecodeUserJson(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var user models.Admin
+		if err := utils.DecodeBody(r.Body, &user); err != nil {
+			utils.HandleResponse(w, err.Error(), http.StatusBadRequest)
+		} else {
+			ctxWithUser := context.WithValue(r.Context(), "user", user)
+			next.ServeHTTP(w, r.WithContext(ctxWithUser))
+		}
+	})
 }
 
-func Login(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var reqUser models.Admin
+// Login middleware
+func (ur AdminRoute) EmailCheck(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var user models.Admin
-		if err := utils.DecodeBody(r.Body, &reqUser); err != nil {
-			utils.HandleResponse(w, err.Error(), http.StatusBadRequest)
-		}
-		result := db.Take(&user, "email = ?", reqUser.Email)
+		input := r.Context().Value("user").(models.Admin)
+		result := ur.DB.Take(&user, "email = ?", input.Email)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			utils.HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
 		} else {
-			isEqual, _ := argon2id.ComparePasswordAndHash(reqUser.Password, user.Password)
-			if isEqual {
-				token, err := utils.GenerateJWT("Admin", reqUser)
-				if err != nil {
-					utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
-				}
-				utils.HandleResponse(w, token, http.StatusOK)
-			}
+			ctxWithUser := context.WithValue(r.Context(), "user", user)
+			ctxWithInputAndUser := context.WithValue(ctxWithUser, "input", input)
+			next.ServeHTTP(w, r.WithContext(ctxWithInputAndUser))
 		}
+	})
+}
+
+func (ur AdminRoute) PasswordCheck(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		input := r.Context().Value("input").(models.Admin)
+		user := r.Context().Value("user").(models.Admin)
+		isEqual, _ := argon2id.ComparePasswordAndHash(input.Password, user.Password)
+		if !isEqual {
+			utils.HandleResponse(w, "Incorrect Password", http.StatusUnauthorized)
+		} else {
+			next.ServeHTTP(w, r)
+		}
+	})
+}
+
+func (ur AdminRoute) Login(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(models.Admin)
+	token, err := utils.GenerateJWT("Admin", user)
+	if err != nil {
+		utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
+	} else {
+		utils.HandleResponse(w, token, http.StatusOK)
 	}
 }
