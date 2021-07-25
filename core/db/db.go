@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/nus-utils/nus-peer-review/loggers"
@@ -72,7 +73,9 @@ func CloseDB(connection *gorm.DB) {
 func SetupAdmin(pool *gorm.DB, admin *models.Admin) {
 	hash, _ := argon2id.CreateHash(admin.Password, argon2id.DefaultParams)
 	admin.Password = hash
-	pool.FirstOrCreate(&admin)
+	pool.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&admin)
 }
 
 func InsertDummyData(db *gorm.DB) {
