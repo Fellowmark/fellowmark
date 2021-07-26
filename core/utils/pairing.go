@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
 
 	"gorm.io/gorm"
@@ -76,7 +75,6 @@ func deactivateOldPairings(db *gorm.DB) {
 
 func activateNewPairings(db *gorm.DB, pairings []models.Pairing) {
 	for _, pairing := range pairings {
-		loggers.InfoLogger.Println(pairing.ID)
 		db.Exec(
 			"UPDATE pairings SET active = ? WHERE id = ?",
 			true,
