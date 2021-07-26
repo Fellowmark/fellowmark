@@ -46,8 +46,12 @@ func (ur AdminRoute) CreateStaffOptsRouter(route *mux.Router) {
 }
 
 func (ur AdminRoute) CreateModuleOptsRouter(route *mux.Router) {
-	createStaffRoute := route.NewRoute().Subrouter()
-	createStaffRoute.Use(ur.DecodeModuleJson)
-	createStaffRoute.Use(ur.SanitizeModuleData)
-	createStaffRoute.HandleFunc("/", ur.CreateModule).Methods(http.MethodPost)
+	createModuleRoute := route.NewRoute().Subrouter()
+	createModuleRoute.Use(ur.DecodeModuleJson)
+	createModuleRoute.Use(ur.SanitizeModuleData)
+	createModuleRoute.HandleFunc("/", ur.CreateModule).Methods(http.MethodPost)
+
+	enrollModuleStaff := route.NewRoute().Subrouter()
+	enrollModuleStaff.Use(ur.DecodeEnrollmentJson)
+	enrollModuleStaff.HandleFunc("/enroll", ur.EnrollModuleForStudent).Methods(http.MethodPost)
 }

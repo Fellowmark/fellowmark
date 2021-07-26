@@ -44,3 +44,25 @@ func (ur AdminRoute) CreateModule(w http.ResponseWriter, r *http.Request) {
 		utils.HandleResponse(w, "Sucess", http.StatusOK)
 	}
 }
+
+func (ur AdminRoute) DecodeEnrollmentJson(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var enrollment models.Enrollment
+		if err := utils.DecodeBody(r.Body, &enrollment); err != nil {
+			utils.HandleResponse(w, err.Error(), http.StatusBadRequest)
+		} else {
+			ctxWithUser := context.WithValue(r.Context(), "enrollment", enrollment)
+			next.ServeHTTP(w, r.WithContext(ctxWithUser))
+		}
+	})
+}
+
+func (ur AdminRoute) EnrollModuleForStudent(w http.ResponseWriter, r *http.Request) {
+	data := r.Context().Value("enrollment").(models.Enrollment)
+	result := ur.DB.FirstOrCreate(&data)
+	if result.Error != nil {
+		utils.HandleResponse(w, "Something went wrong", http.StatusInternalServerError)
+	} else {
+		utils.HandleResponse(w, "Sucess", http.StatusOK)
+	}
+}
