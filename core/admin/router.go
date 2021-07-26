@@ -34,6 +34,7 @@ func (ur AdminRoute) CreatePrivilegedRouter(route *mux.Router) {
 	}
 
 	ur.CreateStaffOptsRouter(route.PathPrefix("/staff").Subrouter())
+	ur.CreateModuleOptsRouter(route.PathPrefix("/module").Subrouter())
 }
 
 func (ur AdminRoute) CreateStaffOptsRouter(route *mux.Router) {
@@ -42,4 +43,11 @@ func (ur AdminRoute) CreateStaffOptsRouter(route *mux.Router) {
 	createStaffRoute.Use(utils.SanitizeDataMiddleware("user"))
 	createStaffRoute.Use(ur.PasswordHash)
 	createStaffRoute.HandleFunc("/", utils.DBCreateHandleFunc(ur.DB, "staffs", "user")).Methods(http.MethodPost)
+}
+
+func (ur AdminRoute) CreateModuleOptsRouter(route *mux.Router) {
+	createStaffRoute := route.NewRoute().Subrouter()
+	createStaffRoute.Use(ur.DecodeModuleJson)
+	createStaffRoute.Use(ur.SanitizeModuleData)
+	createStaffRoute.HandleFunc("/", ur.CreateModule).Methods(http.MethodPost)
 }
