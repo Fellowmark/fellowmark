@@ -1,27 +1,38 @@
 package db
 
 import (
+	"os"
 	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
 )
 
-func InitDB(database string, databaseUrl string) *gorm.DB {
-	connection := GetDatabase(database, databaseUrl)
+func InitDB(databaseUrl string) *gorm.DB {
+	connection := GetDatabase(databaseUrl)
 	db, _ := connection.DB()
 	db.SetMaxIdleConns(10)
 	db.SetMaxOpenConns(100)
 	db.SetConnMaxLifetime(time.Hour)
 	InitialMigration(connection)
+	SetupAdmin(connection, &models.Admin{
+		Name:     os.Getenv("ADMIN_NAME"),
+		Email:    os.Getenv("ADMIN_EMAIL"),
+		Password: os.Getenv("ADMIN_PASSWORD"),
+	})
 	return connection
 }
 
-func GetDatabase(database string, databaseUrl string) *gorm.DB {
-	connection, err := gorm.Open(postgres.Open(databaseUrl), &gorm.Config{
+func GetDatabase(databaseUrl string) *gorm.DB {
+	connection, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  databaseUrl,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: false,
 	})
 	if err != nil {
@@ -40,23 +51,31 @@ func GetDatabase(database string, databaseUrl string) *gorm.DB {
 }
 
 func InitialMigration(connection *gorm.DB) {
-	defer CloseDB(connection)
-	connection.AutoMigrate(models.Student{})
-	connection.AutoMigrate(models.Staff{})
-	connection.AutoMigrate(models.Module{})
-	connection.AutoMigrate(models.Assignment{})
-	connection.AutoMigrate(models.Question{})
-	connection.AutoMigrate(models.Rubric{})
-	connection.AutoMigrate(models.Pairing{})
-	connection.AutoMigrate(models.Submission{})
-	connection.AutoMigrate(models.Grade{})
-	connection.AutoMigrate(models.Supervision{})
-	connection.AutoMigrate(models.Enrollment{})
+	connection.AutoMigrate(&models.Student{})
+	connection.AutoMigrate(&models.Staff{})
+	connection.AutoMigrate(&models.Module{})
+	connection.AutoMigrate(&models.Assignment{})
+	connection.AutoMigrate(&models.Question{})
+	connection.AutoMigrate(&models.Rubric{})
+	connection.AutoMigrate(&models.Pairing{})
+	connection.AutoMigrate(&models.Submission{})
+	connection.AutoMigrate(&models.Grade{})
+	connection.AutoMigrate(&models.Supervision{})
+	connection.AutoMigrate(&models.Enrollment{})
+	connection.AutoMigrate(&models.Admin{})
 }
 
 func CloseDB(connection *gorm.DB) {
 	db, _ := connection.DB()
 	db.Close()
+}
+
+func SetupAdmin(pool *gorm.DB, admin *models.Admin) {
+	hash, _ := argon2id.CreateHash(admin.Password, argon2id.DefaultParams)
+	admin.Password = hash
+	pool.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&admin)
 }
 
 func InsertDummyData(db *gorm.DB) {
