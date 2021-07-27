@@ -16,7 +16,17 @@ Education application for student to student cross reviewing of assignments.
 ```sh
 docker-compose --profile api-dev up
 ```
+
+Ping server for health
+```sh
+curl localhost:5000/health
+```
 ## Production API setup
 ```sh
 docker-compose --profile api up
+```
+
+Ping server for health
+```sh
+curl localhost:5000/health
 ```
