@@ -28,6 +28,9 @@ func InitDB(databaseUrl string) *gorm.DB {
 		Email:    os.Getenv("ADMIN_EMAIL"),
 		Password: os.Getenv("ADMIN_PASSWORD"),
 	})
+	if os.Getenv("RUN_ENV") != "production" {
+		InsertDummyData(connection)
+	}
 	return connection
 }
 
@@ -82,38 +85,38 @@ func SetupAdmin(pool *gorm.DB, admin *models.Admin) {
 }
 
 func InsertDummyData(db *gorm.DB) {
-	//defer CloseDB(db)
 	var result *gorm.DB
+	passwordHash := utils.HashString("password")
 	students := []models.Student{
 		{
 			Email:    "e0000000@u.nus.edu",
 			Name:     "Student A",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
 			Email:    "e0000001@u.nus.edu",
 			Name:     "Student B",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
 			Email:    "e0000002@u.nus.edu",
 			Name:     "Student C",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
 			Email:    "e0000003@u.nus.edu",
 			Name:     "Student D",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
 			Email:    "e0000004@u.nus.edu",
 			Name:     "Student E",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
 			Email:    "e0000005@u.nus.edu",
 			Name:     "Student F",
-			Password: "password",
+			Password: passwordHash,
 		},
 	}
 	result = db.Create(&students)
@@ -221,7 +224,7 @@ func InsertDummyData(db *gorm.DB) {
 
 func LogPairings(db *gorm.DB) {
 	result := []models.Pairing{}
-	db.Raw("SELECT * FROM pairings").Scan(&result)
+	db.Find(&result)
 	for _, pairing := range result {
 		loggers.InfoLogger.Println(
 			fmt.Sprintf("submitter: %v, marker: %v, active: %v", pairing.StudentID, pairing.MarkerID, pairing.Active),
@@ -231,7 +234,7 @@ func LogPairings(db *gorm.DB) {
 
 func LogStudents(db *gorm.DB) {
 	result := []models.Student{}
-	db.Raw("SELECT * FROM students").Scan(&result)
+	db.Find(&result)
 	for _, student := range result {
 		loggers.InfoLogger.Println(
 			fmt.Sprintf("email: %v, name: %v", student.Email, student.Name),
@@ -239,6 +242,7 @@ func LogStudents(db *gorm.DB) {
 	}
 }
 
+// (for testing only) resets DB data
 func ResetDatabase(db *gorm.DB) {
 	db.Exec("DROP TABLE IF EXISTS grades")
 	db.Exec("DROP TABLE IF EXISTS submissions")
