@@ -72,26 +72,12 @@ spec that has three components:
 
 This doc model is a higher-level aggregation of specs like OpenAPI and gRPC.
 
-### Assignment scenarios
-#### Create assignments, questions and pairings, rubric
-##### Action
+## Assignment scenarios
+### Create assignments, questions and pairings, rubric
+#### Action
 Staff creates all dependencies necessary for student submissions and reviews
-##### Steps
+#### Step 1
+
 Request|Response|Reaction
 ---|---|---
-POST request to create assignment
-```
-{
-  name: string,
-  module_id: int
-}
-```
-|
-Server returns id of new assignment
-```
-{
-  id: int
-}
-```
-|
-Server logs assignment id to post questions
+POST request to create assignment `{ name: string, module_id: int }` | Server returns id of new assignment `{ id: int }` | Server logs assignment id to post question
