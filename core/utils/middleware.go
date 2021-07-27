@@ -3,30 +3,31 @@ package utils
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"gopkg.in/validator.v2"
 	"gorm.io/gorm"
 )
 
-func DecodeBodyMiddleware(refType interface{}, objectName string) mux.MiddlewareFunc {
+func DecodeBodyMiddleware(refType interface{}, contextOutKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			parsedData := refType
 			if err := DecodeBody(r.Body, &parsedData); err != nil {
 				HandleResponse(w, err.Error(), http.StatusBadRequest)
 			} else {
-				ctxWithUser := context.WithValue(r.Context(), objectName, parsedData)
+				ctxWithUser := context.WithValue(r.Context(), contextOutKey, parsedData)
 				next.ServeHTTP(w, r.WithContext(ctxWithUser))
 			}
 		})
 	}
 }
 
-func SanitizeData(objectName string) mux.MiddlewareFunc {
+func SanitizeDataMiddleware(contextInKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			err := validator.Validate(r.Context().Value(objectName))
+			err := validator.Validate(r.Context().Value(contextInKey))
 			if err != nil {
 				HandleResponse(w, err.Error(), http.StatusBadRequest)
 			} else {
@@ -71,5 +72,26 @@ func LoginHandleFunc(db *gorm.DB, role string, contextInKey string) http.Handler
 		} else {
 			HandleResponse(w, token, http.StatusOK)
 		}
+	}
+}
+
+func ValidateJWTMiddleware(role string, contextOutKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if !strings.Contains(authHeader, "Bearer") {
+				HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			tokenString := strings.Split(authHeader, "Bearer ")[1]
+			claims, err := ParseJWT(tokenString)
+			if err != nil || claims.Role != role {
+				HandleResponse(w, err.Error(), http.StatusUnauthorized)
+			} else {
+				ctxWithUser := context.WithValue(r.Context(), contextOutKey, claims)
+				next.ServeHTTP(w, r.WithContext(ctxWithUser))
+			}
+		})
 	}
 }

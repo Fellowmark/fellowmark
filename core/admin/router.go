@@ -2,8 +2,11 @@ package admin
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/nus-utils/nus-peer-review/models"
+	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
 )
 
@@ -17,23 +20,26 @@ func (ur AdminRoute) CreateRouters(route *mux.Router) {
 }
 
 func (ur AdminRoute) CreateAuthRouter(route *mux.Router) {
-	route.Use(ur.DecodeUserJson)
+	route.Use(utils.DecodeBodyMiddleware(&models.Admin{}, "user"))
 
 	loginRoute := route.NewRoute().Subrouter()
-	loginRoute.HandleFunc("/login", ur.Login).Methods(http.MethodGet)
 	loginRoute.Use(ur.EmailCheck)
 	loginRoute.Use(ur.PasswordCheck)
+	loginRoute.HandleFunc("/login", utils.LoginHandleFunc(ur.DB, "Admin", "user")).Methods(http.MethodGet)
 }
 
 func (ur AdminRoute) CreatePrivilegedRouter(route *mux.Router) {
-	route.Use(ur.ValidateJWT)
+	if os.Getenv("RUN_ENV") != "production" {
+		route.Use(utils.ValidateJWTMiddleware("Admin", "claims"))
+	}
+
 	ur.CreateStaffOptsRouter(route.PathPrefix("/staff").Subrouter())
 }
 
 func (ur AdminRoute) CreateStaffOptsRouter(route *mux.Router) {
 	createStaffRoute := route.NewRoute().Subrouter()
-	createStaffRoute.Use(ur.DecodeStaffJson)
-	createStaffRoute.Use(ur.SanitizeStaffData)
+	createStaffRoute.Use(utils.DecodeBodyMiddleware(&models.Staff{}, "user"))
+	createStaffRoute.Use(utils.SanitizeDataMiddleware("user"))
 	createStaffRoute.Use(ur.PasswordHash)
-	createStaffRoute.HandleFunc("/", ur.CreateStaff).Methods(http.MethodPost)
+	createStaffRoute.HandleFunc("/", utils.DBCreateHandleFunc(ur.DB, "staffs", "user")).Methods(http.MethodPost)
 }

@@ -21,7 +21,7 @@ func (ur StudentRoute) CreateAuthRouter(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Student{}, "user"))
 
 	signUpRoute := route.NewRoute().Subrouter()
-	signUpRoute.Use(utils.SanitizeData("user"))
+	signUpRoute.Use(utils.SanitizeDataMiddleware("user"))
 	signUpRoute.Use(ur.PasswordHash)
 	signUpRoute.HandleFunc("/signup", utils.DBCreateHandleFunc(ur.DB, "students", "user")).Methods(http.MethodPost)
 
