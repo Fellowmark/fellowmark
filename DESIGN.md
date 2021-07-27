@@ -76,7 +76,7 @@ This doc model is a higher-level aggregation of specs like OpenAPI and gRPC.
 ### Create assignments, questions and pairings, rubric
 #### Action
 Staff creates all dependencies necessary for student submissions and reviews
-#### Step 1
+#### Steps
 <table>
   <tr>
     <th>Request</th>
@@ -88,7 +88,7 @@ Staff creates all dependencies necessary for student submissions and reviews
 
     POST request to create assignment 
 
-    ```
+    ```json
     { 
       name: string, 
       module_id: int 
@@ -99,7 +99,7 @@ Staff creates all dependencies necessary for student submissions and reviews
 
     Server returns id of new assignment 
 
-    ```
+    ```json
     { 
       id: int 
     }
