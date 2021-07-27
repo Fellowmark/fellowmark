@@ -61,6 +61,47 @@ ______________________
 |_____________________|
 ```
 
+## API code structure
+.env variable to store config variables at root. API is a monolith but multithreaded.
+
+### docker-compose
+1. API-DEV profile to start api and db with dev locals
+2. API profile to start api and db with production locals
+
+### main package
+Links to:
+1. db package
+2. route builder packages, `student`, `staff`, `admin`
+3. loggers package (persistant logging in production)
+
+### db package
+1. Open connection with db
+2. Migrate schemas
+3. Connection pool
+4. Return pointer to `*gorm.DB` for pooled interfacing
+
+### student package
+1. StudentRoute struct that stores injectable dependencies
+2. RouteBuilders
+3. Route specific middleware
+4. Package is used to create routes students use to send and retrieve data.
+
+### staff package
+1. StaffRoute struct that stores injectable dependencies
+2. RouteBuilders
+3. Route specific middleware
+4. Package is used to create routes staff use to send and retrieve data.
+
+### admin package
+1. AdminRoute struct that stores injectable dependencies
+2. RouteBuilders
+3. Route specific middleware
+4. Package is used to create routes admin use to send and retrieve data.
+
+### utils package
+1. Auth utils for functions and http handlers used by auth components of route based packages
+1. Middleware utils for reusable middlewares across all route packages to reduce code redundancy
+
 ## Frontend to API Interfacing
 This design spec uses F2A interfacing for documentation: F2A is a custom design
 spec that has three components:
