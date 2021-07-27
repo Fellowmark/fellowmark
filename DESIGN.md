@@ -86,7 +86,7 @@ Staff creates all dependencies necessary for student submissions and reviews
   <tr>
   <td>
     POST request to create assignment 
-    <pre lang="json">
+    <pre>
     { 
       name: string, 
       module_id: int 
@@ -94,15 +94,63 @@ Staff creates all dependencies necessary for student submissions and reviews
     </pre>
   </td>
   <td>
-    Server returns id of new assignment 
-    <pre lang="json">
+    API returns id of new assignment 
+    <pre>
     { 
       id: int 
     }
     </pre>
   </td>
   <td>
-    Server logs assignment id to post question
+    Frontend logs assignment id to post question
+  </td>
+</tr>
+  <tr>
+  <td>
+    POST request to create question
+    <pre>
+    { 
+      assign_id: int, 
+      question_number: int,
+      question_text: string 
+    }
+    </pre>
+  </td>
+  <td>
+    API returns id of question
+    <pre>
+    { 
+      id: int 
+    }
+    </pre>
+  </td>
+  <td>
+    Frontend logs question id to post rubric criterias
+  </td>
+</tr>
+  <tr>
+  <td>
+    POST request to rubric criteria
+    <pre>
+    { 
+      question_id: int, 
+      criteria: string,
+      description: string,
+      min_mark: int,
+      max_mark: int
+    }
+    </pre>
+  </td>
+  <td>
+    API returns id of rubric criteria
+    <pre>
+    { 
+      id: int 
+    }
+    </pre>
+  </td>
+  <td>
+    Frontend keep sending rubric requests until rubric is complete
   </td>
 </tr>
 </table>
