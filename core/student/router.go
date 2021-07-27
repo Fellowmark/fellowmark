@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/nus-utils/nus-peer-review/models"
+	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
 )
 
@@ -16,15 +18,15 @@ func (ur StudentRoute) CreateRouters(route *mux.Router) {
 }
 
 func (ur StudentRoute) CreateAuthRouter(route *mux.Router) {
-	route.Use(ur.DecodeUserJson)
+	route.Use(utils.DecodeBodyMiddleware(&models.Student{}, "user"))
 
 	signUpRoute := route.NewRoute().Subrouter()
-	signUpRoute.Use(ur.SanitizeUserData)
+	signUpRoute.Use(utils.SanitizeData("user"))
 	signUpRoute.Use(ur.PasswordHash)
-	signUpRoute.HandleFunc("/signup", ur.SignUp).Methods(http.MethodPost)
+	signUpRoute.HandleFunc("/signup", utils.DBCreateHandleFunc(ur.DB, "students", "user")).Methods(http.MethodPost)
 
 	loginRoute := route.NewRoute().Subrouter()
-	loginRoute.HandleFunc("/login", ur.Login).Methods(http.MethodGet)
 	loginRoute.Use(ur.EmailCheck)
 	loginRoute.Use(ur.PasswordCheck)
+	loginRoute.HandleFunc("/login", utils.LoginHandleFunc(ur.DB, "Student", "user")).Methods(http.MethodGet)
 }
