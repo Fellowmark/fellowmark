@@ -85,7 +85,9 @@ Staff creates all dependencies necessary for student submissions and reviews
   </tr>
   <tr>
   <td>
+
     POST request to create assignment 
+
     ```
     { 
       name: string, 
@@ -94,7 +96,9 @@ Staff creates all dependencies necessary for student submissions and reviews
     ```
   </td>
   <td>
+
     Server returns id of new assignment 
+
     ```
     { 
       id: int 
