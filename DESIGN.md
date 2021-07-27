@@ -77,7 +77,32 @@ This doc model is a higher-level aggregation of specs like OpenAPI and gRPC.
 #### Action
 Staff creates all dependencies necessary for student submissions and reviews
 #### Step 1
-
-Request|Response|Reaction
----|---|---
-POST request to create assignment `{ name: string, module_id: int }` | Server returns id of new assignment `{ id: int }` | Server logs assignment id to post question
+<table>
+  <tr>
+    <th>Request</th>
+    <th>Response</th>
+    <th>Reaction</th>
+  </tr>
+  <tr>
+  <td>
+    POST request to create assignment 
+    ```
+    { 
+      name: string, 
+      module_id: int 
+    }
+    ```
+  </td>
+  <td>
+    Server returns id of new assignment 
+    ```
+    { 
+      id: int 
+    }
+    ```
+  </td>
+  <td>
+    Server logs assignment id to post question
+  </td>
+</tr>
+</table>
