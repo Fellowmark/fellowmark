@@ -61,3 +61,37 @@ ______________________
 |_____________________|
 ```
 
+## Frontend to API Interfacing
+This design spec uses F2A interfacing for documentation: F2A is a custom design
+spec that has three components:
+1. Action: NFR scenario to be handled through series of Request, Endpoint and Responses called steps.
+2. Steps: Series of RER to perform an action.
+  - Request: Request from frontend with data schema (can be `NULL`)
+  - Response: Response if any from API with data schema (can be `NULL`)
+  - Reaction: Reaction of the frontend to the data from the API (can be `NULL`)
+
+This doc model is a higher-level aggregation of specs like OpenAPI and gRPC.
+
+### Assignment scenarios
+#### Create assignments, questions and pairings, rubric
+##### Action
+Staff creates all dependencies necessary for student submissions and reviews
+##### Steps
+Request|Response|Reaction
+---|---|---
+POST request to create assignment
+```
+{
+  name: string,
+  module_id: int
+}
+```
+|
+Server returns id of new assignment
+```
+{
+  id: int
+}
+```
+|
+Server logs assignment id to post questions
