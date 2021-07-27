@@ -23,3 +23,9 @@ func (ur StaffRoute) CreateAuthRouter(route *mux.Router) {
 	loginRoute.Use(ur.EmailCheck)
 	loginRoute.Use(ur.PasswordCheck)
 }
+
+func (ur StaffRoute) CreateAssignmentRouter(route *mux.Router) {
+	assignPairingRoute := route.NewRoute().Subrouter()
+	assignPairingRoute.HandleFunc("/assignment/pairing/reset", ur.ResetPairings).Methods(http.MethodPost)
+	assignPairingRoute.HandleFunc("/assignment/pairing/assign", ur.AssignPairings).Methods(http.MethodPost)
+}

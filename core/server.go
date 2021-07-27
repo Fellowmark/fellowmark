@@ -22,7 +22,6 @@ import (
 func main() {
 	loggers.InitLoggers(os.Getenv("RUN_ENV"))
 	db := DB.InitDB(os.Getenv("DATABASE_URL"))
-	DB.LogPairings(db)
 	InitServer(db)
 }
 

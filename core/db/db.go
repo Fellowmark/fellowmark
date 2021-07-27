@@ -22,7 +22,7 @@ func InitDB(databaseUrl string) *gorm.DB {
 	db.SetMaxOpenConns(100)
 	db.SetConnMaxLifetime(time.Hour)
 	InitialMigration(connection)
-	ResetDatabase(connection)
+	// ResetDatabase(connection)
 	SetupAdmin(connection, &models.Admin{
 		Name:     os.Getenv("ADMIN_NAME"),
 		Email:    os.Getenv("ADMIN_EMAIL"),

@@ -87,14 +87,7 @@ func ParseJWT(tokenString string) (*ClaimsData, error) {
 
 // returns argon2 hash of strings such as email recovery tokens
 func HashString(token string) string {
-	params := &argon2id.Params{
-		Memory:      128 * 1024,
-		Iterations:  4,
-		Parallelism: 4,
-		SaltLength:  16,
-		KeyLength:   32,
-	}
-	hash, err := argon2id.CreateHash(token, params)
+	hash, err := argon2id.CreateHash(token, argon2id.DefaultParams)
 	if err != nil {
 		loggers.ErrorLogger.Println("Something Went Wrong: %s" + err.Error())
 	}

@@ -6,9 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
-func ResetPairings(db *gorm.DB, assignment models.Assignment) {
-	db.Delete(&models.Pairing{}, assignment.ID)
-	db.Exec(
+func ResetPairings(db *gorm.DB, assignment models.Assignment) *gorm.DB {
+	result := db.Delete(&models.Pairing{}, assignment.ID)
+	if result.Error != nil {
+		return result
+	}
+
+	result = db.Exec(
 		`INSERT INTO pairings(assignment_id, student_id, marker_id, active) (
 			SELECT ?, A.id, B.id, ?
 			FROM students AS A
@@ -27,17 +31,28 @@ func ResetPairings(db *gorm.DB, assignment models.Assignment) {
 		assignment.Module.ID,
 		assignment.Module.ID,
 	)
+	return result
 }
 
-func SetNewPairings(db *gorm.DB, assignment models.Assignment) {
-	newPairings := getNewPairings(db, assignment)
-	deactivateOldPairings(db)
-	activateNewPairings(db, newPairings)
+func SetNewPairings(db *gorm.DB, assignment models.Assignment) *gorm.DB {
+	newPairings, result := getNewPairings(db, assignment)
+	if result.Error != nil {
+		return result
+	}
+
+	result = deactivateOldPairings(db)
+	if result.Error != nil {
+		return result
+	}
+
+	result = activateNewPairings(db, newPairings)
+	return result
 }
 
-func getNewPairings(db *gorm.DB, assignment models.Assignment) []models.Pairing {
+func getNewPairings(db *gorm.DB, assignment models.Assignment) ([]models.Pairing, *gorm.DB) {
 	var enrolledStudents []models.Student
-	db.Raw(
+	var result *gorm.DB
+	result = db.Raw(
 		`SELECT students.id, email, name, password FROM students
 		INNER JOIN enrollments
 		ON enrollments.student_id = students.id
@@ -46,21 +61,31 @@ func getNewPairings(db *gorm.DB, assignment models.Assignment) []models.Pairing 
 	).Scan(&enrolledStudents)
 
 	var newPairings []models.Pairing
+	if result.Error != nil {
+		return newPairings, result
+	}
+
 	for _, student := range enrolledStudents {
 		var newPairingForStudent []models.Pairing
 		db.Where("active = ? AND student_id = ?", false, student.ID).Order("random()").Limit(assignment.GroupSize).Find(&newPairingForStudent)
 		newPairings = append(newPairings, newPairingForStudent...)
 	}
 
-	return newPairings
+	return newPairings, result
 }
 
-func deactivateOldPairings(db *gorm.DB) {
-	db.Model(&models.Pairing{}).Where("active = ?", true).Update("active", false)
+func deactivateOldPairings(db *gorm.DB) *gorm.DB {
+	return db.Model(&models.Pairing{}).Where("active = ?", true).Update("active", false)
 }
 
-func activateNewPairings(db *gorm.DB, pairings []models.Pairing) {
+func activateNewPairings(db *gorm.DB, pairings []models.Pairing) *gorm.DB {
+	var result *gorm.DB
 	for _, pairing := range pairings {
-		db.Model(&pairing).Update("active", true)
+		result = db.Model(&pairing).Update("active", true)
+		if result.Error != nil {
+			return result
+		}
 	}
+
+	return result
 }
