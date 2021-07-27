@@ -85,25 +85,21 @@ Staff creates all dependencies necessary for student submissions and reviews
   </tr>
   <tr>
   <td>
-
     POST request to create assignment 
-
-    ```json
+    <pre lang="json">
     { 
       name: string, 
       module_id: int 
     }
-    ```
+    </pre>
   </td>
   <td>
-
     Server returns id of new assignment 
-
-    ```json
+    <pre lang="json">
     { 
       id: int 
     }
-    ```
+    </pre>
   </td>
   <td>
     Server logs assignment id to post question
