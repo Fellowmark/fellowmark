@@ -18,6 +18,7 @@
 2. Students submitting appeals
 3. Staff review appeals
 4. Staff moderate rubrics markings.
+5. Maintain number of truant students. No reviews means that you don't get the marks that reviewers gave you.
 
 ## FRs
 ### API
