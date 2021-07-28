@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/nus-utils/nus-peer-review/models"
 	"gopkg.in/validator.v2"
 	"gorm.io/gorm"
 )
@@ -101,8 +102,40 @@ func ValidateJWTMiddleware(role string, contextOutKey string) mux.MiddlewareFunc
 			if err != nil || claims.Role != role {
 				HandleResponse(w, err.Error(), http.StatusUnauthorized)
 			} else {
-				ctxWithUser := context.WithValue(r.Context(), contextOutKey, claims)
+				ctxWithUser := context.WithValue(r.Context(), contextOutKey, &claims)
 				next.ServeHTTP(w, r.WithContext(ctxWithUser))
+			}
+		})
+	}
+}
+
+func EnrollmentCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(contextInKey).(*models.Student)
+			moduleId := mux.Vars(r)[muxVarKey]
+			var count int64
+			db.Model(&models.Enrollment{}).Where("student_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Not enrolled in module", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
+
+func SupervisionCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(contextInKey).(*models.Staff)
+			moduleId := mux.Vars(r)[muxVarKey]
+			var count int64
+			db.Model(&models.Enrollment{}).Where("staff_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Not enrolled in module", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
 			}
 		})
 	}
