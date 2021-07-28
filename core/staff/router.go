@@ -15,6 +15,7 @@ type StaffRoute struct {
 
 func (ur StaffRoute) CreateRouters(route *mux.Router) {
 	ur.CreateAuthRouter(route.PathPrefix("/auth").Subrouter())
+	ur.CreateAssignmentRouter(route.PathPrefix("/assignment").Subrouter())
 }
 
 func (ur StaffRoute) CreateAuthRouter(route *mux.Router) {
@@ -27,7 +28,9 @@ func (ur StaffRoute) CreateAuthRouter(route *mux.Router) {
 }
 
 func (ur StaffRoute) CreateAssignmentRouter(route *mux.Router) {
+	utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment")
+
 	assignPairingRoute := route.NewRoute().Subrouter()
-	assignPairingRoute.HandleFunc("/assignment/pairing/reset", ur.ResetPairings).Methods(http.MethodPost)
-	assignPairingRoute.HandleFunc("/assignment/pairing/assign", ur.AssignPairings).Methods(http.MethodPost)
+	assignPairingRoute.HandleFunc("/pairing/reset", ur.ResetPairings).Methods(http.MethodPost)
+	assignPairingRoute.HandleFunc("/pairing/assign", ur.AssignPairings).Methods(http.MethodPost)
 }
