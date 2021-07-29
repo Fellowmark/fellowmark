@@ -1,12 +1,15 @@
 package utils
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/nus-utils/nus-peer-review/models"
 
 	"gorm.io/gorm"
 )
 
-func ResetPairings(db *gorm.DB, assignment models.Assignment) *gorm.DB {
+func InitializePairings(db *gorm.DB, assignment models.Assignment) *gorm.DB {
 	result := db.Delete(&models.Pairing{}, assignment.ID)
 	if result.Error != nil {
 		return result
@@ -65,11 +68,18 @@ func getNewPairings(db *gorm.DB, assignment models.Assignment) ([]models.Pairing
 		return newPairings, result
 	}
 
-	for _, student := range enrolledStudents {
-		var newPairingForStudent []models.Pairing
-		db.Where("active = ? AND student_id = ?", false, student.ID).Order("random()").Limit(assignment.GroupSize).Find(&newPairingForStudent)
-		newPairings = append(newPairings, newPairingForStudent...)
+	noOfSmallerGroups := 0
+	noOfLargerGroups := len(enrolledStudents) / assignment.GroupSize
+	if len(enrolledStudents)%assignment.GroupSize != 0 {
+		noOfSmallerGroups := assignment.GroupSize - (len(enrolledStudents) % assignment.GroupSize) // groups of size GroupSize - 1
+		noOfLargerGroups = (len(enrolledStudents) / assignment.GroupSize) + 1 - noOfSmallerGroups  // groups of size GroupSize
 	}
+
+	shuffleStudents(enrolledStudents)
+	index := 0
+
+	newPairings = append(newPairings, generateGroupPairings(db, noOfLargerGroups, assignment.GroupSize, &index, enrolledStudents)...)
+	newPairings = append(newPairings, generateGroupPairings(db, noOfSmallerGroups, assignment.GroupSize-1, &index, enrolledStudents)...)
 
 	return newPairings, result
 }
@@ -88,4 +98,33 @@ func activateNewPairings(db *gorm.DB, pairings []models.Pairing) *gorm.DB {
 	}
 
 	return result
+}
+
+func generateGroupPairings(db *gorm.DB, noOfGroups, groupSize int, index *int, students []models.Student) []models.Pairing {
+	var pairings []models.Pairing
+	for i := 0; i < noOfGroups; i++ {
+		var group []models.Student
+		for j := 0; j < groupSize; j++ {
+			group = append(group, students[*index])
+			*index++
+		}
+		for _, student := range group {
+			for _, marker := range group {
+				if student.ID != marker.ID {
+					var newPairingForStudent models.Pairing
+					db.Where("student_id = ? AND marker_id = ?", student.ID, marker.ID).Find(&newPairingForStudent)
+					pairings = append(pairings, newPairingForStudent)
+				}
+			}
+		}
+	}
+	return pairings
+}
+
+func shuffleStudents(students []models.Student) {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	for i := len(students); i > 0; i-- {
+		randomIndex := r.Intn(i)
+		students[i-1], students[randomIndex] = students[randomIndex], students[i-1]
+	}
 }

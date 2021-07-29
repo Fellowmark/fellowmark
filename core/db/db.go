@@ -22,7 +22,7 @@ func InitDB(databaseUrl string) *gorm.DB {
 	db.SetMaxOpenConns(100)
 	db.SetConnMaxLifetime(time.Hour)
 	InitialMigration(connection)
-	// ResetDatabase(connection)
+	ResetDatabase(connection)
 	SetupAdmin(connection, &models.Admin{
 		Name:     os.Getenv("ADMIN_NAME"),
 		Email:    os.Getenv("ADMIN_EMAIL"),
@@ -31,6 +31,7 @@ func InitDB(databaseUrl string) *gorm.DB {
 	if os.Getenv("RUN_ENV") != "production" {
 		InsertDummyData(connection)
 	}
+	LogPairings(connection)
 	return connection
 }
 
@@ -206,7 +207,7 @@ func InsertDummyData(db *gorm.DB) {
 		loggers.ErrorLogger.Fatal("rubric entry failed")
 	}
 
-	utils.ResetPairings(db, assignment)
+	utils.InitializePairings(db, assignment)
 	utils.SetNewPairings(db, assignment)
 
 	submission := []models.Submission{

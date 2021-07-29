@@ -31,6 +31,6 @@ func (ur StaffRoute) CreateAssignmentRouter(route *mux.Router) {
 	utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment")
 
 	assignPairingRoute := route.NewRoute().Subrouter()
-	assignPairingRoute.HandleFunc("/pairing/reset", ur.ResetPairings).Methods(http.MethodPost)
+	assignPairingRoute.HandleFunc("/pairing/initialize", ur.InitializePairings).Methods(http.MethodPost)
 	assignPairingRoute.HandleFunc("/pairing/assign", ur.AssignPairings).Methods(http.MethodPost)
 }
