@@ -52,6 +52,7 @@ type Assignment struct {
 	Module    Module `gorm:"foreignKey:ModuleID"`
 	ModuleID  uint   `gorm:"column:module_id;not null"`
 	GroupSize int    `gorm:"column:group_size;not null;check:group_size > 0"`
+	Duration  int64  `gorm:"not null;default 86400"`
 }
 
 type Question struct {
