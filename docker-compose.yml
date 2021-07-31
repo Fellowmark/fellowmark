@@ -55,6 +55,16 @@ services:
             - '5000:5000'
         profiles: ['api']
 
+    frontend:
+        build:
+            context: ./frontend
+        volumes:
+            - /app/node_modules
+            - ./frontend:/app
+        ports:
+            - '3000:3000'
+        stdin_open: true
+
 volumes:
     dbdata:
 
