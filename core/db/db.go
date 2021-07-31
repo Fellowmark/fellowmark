@@ -119,6 +119,11 @@ func InsertDummyData(db *gorm.DB) {
 			Name:     "Student F",
 			Password: passwordHash,
 		},
+		{
+			Email:    "e0000006@u.nus.edu",
+			Name:     "Student G",
+			Password: passwordHash,
+		},
 	}
 	result = db.Create(&students)
 	if result.Error != nil {

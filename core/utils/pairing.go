@@ -71,8 +71,8 @@ func getNewPairings(db *gorm.DB, assignment models.Assignment) ([]models.Pairing
 	noOfSmallerGroups := 0
 	noOfLargerGroups := len(enrolledStudents) / assignment.GroupSize
 	if len(enrolledStudents)%assignment.GroupSize != 0 {
-		noOfSmallerGroups := assignment.GroupSize - (len(enrolledStudents) % assignment.GroupSize) // groups of size GroupSize - 1
-		noOfLargerGroups = (len(enrolledStudents) / assignment.GroupSize) + 1 - noOfSmallerGroups  // groups of size GroupSize
+		noOfSmallerGroups = assignment.GroupSize - (len(enrolledStudents) % assignment.GroupSize) // groups of size GroupSize - 1
+		noOfLargerGroups = (len(enrolledStudents) / assignment.GroupSize) + 1 - noOfSmallerGroups // groups of size GroupSize
 	}
 
 	shuffleStudents(enrolledStudents)
