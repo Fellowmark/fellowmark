@@ -51,15 +51,15 @@ func (ur StaffRoute) CreateAssignmentRouter(route *mux.Router) {
 	createAssignmentRoute := route.NewRoute().Subrouter()
 	createAssignmentRoute.Use(utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment"))
 	createAssignmentRoute.Use(utils.SanitizeDataMiddleware("assignment"))
-	createAssignmentRoute.HandleFunc("", utils.DBCreateHandleFunc(ur.DB, "assignments", "assigment")).Methods(http.MethodGet)
+	createAssignmentRoute.HandleFunc("", utils.DBCreateHandleFunc(ur.DB, "assignments", "assigment", true)).Methods(http.MethodGet)
 
 	createQuestionRoute := route.NewRoute().Subrouter()
 	createQuestionRoute.Use(utils.DecodeBodyMiddleware(&models.Question{}, "question"))
 	createQuestionRoute.Use(utils.SanitizeDataMiddleware("question"))
-	createQuestionRoute.HandleFunc("/question", utils.DBCreateHandleFunc(ur.DB, "questions", "question")).Methods(http.MethodGet)
+	createQuestionRoute.HandleFunc("/question", utils.DBCreateHandleFunc(ur.DB, "questions", "question", true)).Methods(http.MethodGet)
 
 	createRubricRoute := route.NewRoute().Subrouter()
 	createRubricRoute.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
 	createRubricRoute.Use(utils.SanitizeDataMiddleware("rubric"))
-	createRubricRoute.HandleFunc("/rubric", utils.DBCreateHandleFunc(ur.DB, "rubrics", "rubric")).Methods(http.MethodGet)
+	createRubricRoute.HandleFunc("/rubric", utils.DBCreateHandleFunc(ur.DB, "rubrics", "rubric", true)).Methods(http.MethodGet)
 }

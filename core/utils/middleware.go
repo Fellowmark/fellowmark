@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -38,10 +39,28 @@ func SanitizeDataMiddleware(contextInKey string) mux.MiddlewareFunc {
 	}
 }
 
-func DBCreateHandleFunc(db *gorm.DB, tableName string, contextInKey string) http.HandlerFunc {
+func DBCreateHandleFunc(db *gorm.DB, model interface{}, contextInKey string, update bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := r.Context().Value(contextInKey)
-		result := db.Table(tableName).Omit("ID").Create(data)
+		result := db.Model(model).Omit("ID").Create(data)
+		if result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRegistered) {
+				if update {
+					DBUpdateHandleFunc(db, model, contextInKey).ServeHTTP(w, r)
+				}
+			} else {
+				HandleResponse(w, "Already Exists", http.StatusBadRequest)
+			}
+		} else {
+			HandleResponse(w, "Sucess", http.StatusOK)
+		}
+	}
+}
+
+func DBUpdateHandleFunc(db *gorm.DB, model interface{}, contextInKey string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := r.Context().Value(contextInKey)
+		result := db.Model(model).Updates(data)
 		if result.Error != nil {
 			HandleResponse(w, "Already Exists", http.StatusBadRequest)
 		} else {
@@ -50,17 +69,9 @@ func DBCreateHandleFunc(db *gorm.DB, tableName string, contextInKey string) http
 	}
 }
 
-func DBCreateMiddleware(db *gorm.DB, tableName string, contextInKey string, contextOutKey string) mux.MiddlewareFunc {
+func DBCreateMiddleware(db *gorm.DB, tableName string, contextInKey string, update bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			data := r.Context().Value(contextInKey)
-			result := db.Table(tableName).Create(data)
-			if result.Error != nil {
-				HandleResponse(w, "Already Exists", http.StatusBadRequest)
-			} else {
-				next.ServeHTTP(w, r)
-			}
-		})
+		return http.HandlerFunc(DBCreateHandleFunc(db, tableName, contextInKey, update))
 	}
 }
 
