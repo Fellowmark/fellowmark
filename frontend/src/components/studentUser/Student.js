@@ -1,8 +1,8 @@
 import { Component } from "react";
 import NavBar from "../NavBar";
 import { Auth } from "../../context/authContext";
-import GDocs from "./GDocs";
-import Comments from "./Comments";
+import Assignment from "./Assignment";
+import Grades from "./Grades";
 import PeerReview from "./PeerReview";
 
 class Student extends Component {
@@ -10,7 +10,7 @@ class Student extends Component {
     super(props);
     this.updatePage = this.updatePage.bind(this);
     this.state = {
-      page: "Google Docs",
+      page: "Assignment",
     };
   }
 
@@ -20,11 +20,10 @@ class Student extends Component {
 
   pageComponent() {
     switch (this.state.page) {
-      case "Google Docs":
+      case "Assignment":
         return (
-          <GDocs
-            moduleCode={this.props.moduleCode}
-            updateStudentGroup={this.props.updateStudentGroup}
+          <Assignment
+            module={this.props.moduleId}
           />
         );
       case "Peer Review":
@@ -36,12 +35,9 @@ class Student extends Component {
             version={this.props.version}
           />
         );
-      case "Comments":
+      case "Grades":
         return (
-          <Comments
-            moduleCode={this.props.moduleCode}
-            assignments={this.props.assignments}
-            version={this.props.version}
+          <Grades
           />
         );
       default:
@@ -50,7 +46,7 @@ class Student extends Component {
   }
 
   render() {
-    const pageList = ["Google Docs", "Peer Review", "Comments"];
+    const pageList = ["Assignment", "Peer Review", "Grades"];
     return (
       <div>
         <NavBar
