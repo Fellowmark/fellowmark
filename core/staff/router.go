@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/nus-utils/nus-peer-review/assignment"
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
@@ -30,12 +31,13 @@ func (ur StaffRoute) CreateAuthRouter(route *mux.Router) {
 }
 
 func (ur StaffRoute) CreatePrivilegedRouter(route *mux.Router) {
-	if os.Getenv("RUN_ENV") != "production" {
+	if os.Getenv("RUN_ENV") == "production" {
 		route.Use(utils.ValidateJWTMiddleware("Staff", "claims"))
-		route.Use(utils.SupervisionCheckMiddleware(ur.DB, "Staff", "claims"))
+		route.Use(utils.SupervisionCheckMiddleware(ur.DB, "claims", "moduleId"))
 	}
 
-	ur.CreateAssignmentRouter(route.PathPrefix("/assignment").Subrouter())
+	ar := assignment.AssignmentRoute{DB: ur.DB}
+	ar.CreateAssigmentRouter(route.PathPrefix("/assignment").Subrouter())
 	ur.CreatePairingsRouter(route.PathPrefix("/pairing").Subrouter())
 }
 
@@ -45,21 +47,4 @@ func (ur StaffRoute) CreatePairingsRouter(route *mux.Router) {
 	assignPairingRoute := route.NewRoute().Subrouter()
 	assignPairingRoute.HandleFunc("/pairing/initialize", ur.InitializePairings).Methods(http.MethodPost)
 	assignPairingRoute.HandleFunc("/pairing/assign", ur.AssignPairings).Methods(http.MethodPost)
-}
-
-func (ur StaffRoute) CreateAssignmentRouter(route *mux.Router) {
-	createAssignmentRoute := route.NewRoute().Subrouter()
-	createAssignmentRoute.Use(utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment"))
-	createAssignmentRoute.Use(utils.SanitizeDataMiddleware("assignment"))
-	createAssignmentRoute.HandleFunc("", utils.DBCreateHandleFunc(ur.DB, "assignments", "assigment", true)).Methods(http.MethodGet)
-
-	createQuestionRoute := route.NewRoute().Subrouter()
-	createQuestionRoute.Use(utils.DecodeBodyMiddleware(&models.Question{}, "question"))
-	createQuestionRoute.Use(utils.SanitizeDataMiddleware("question"))
-	createQuestionRoute.HandleFunc("/question", utils.DBCreateHandleFunc(ur.DB, "questions", "question", true)).Methods(http.MethodGet)
-
-	createRubricRoute := route.NewRoute().Subrouter()
-	createRubricRoute.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
-	createRubricRoute.Use(utils.SanitizeDataMiddleware("rubric"))
-	createRubricRoute.HandleFunc("/rubric", utils.DBCreateHandleFunc(ur.DB, "rubrics", "rubric", true)).Methods(http.MethodGet)
 }

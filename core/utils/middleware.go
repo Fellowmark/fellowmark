@@ -69,9 +69,9 @@ func DBUpdateHandleFunc(db *gorm.DB, model interface{}, contextInKey string) htt
 	}
 }
 
-func DBCreateMiddleware(db *gorm.DB, tableName string, contextInKey string, update bool) mux.MiddlewareFunc {
+func DBCreateMiddleware(db *gorm.DB, model interface{}, contextInKey string, update bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(DBCreateHandleFunc(db, tableName, contextInKey, update))
+		return http.HandlerFunc(DBCreateHandleFunc(db, model, contextInKey, update))
 	}
 }
 
