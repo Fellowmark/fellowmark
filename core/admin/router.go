@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
+	"github.com/nus-utils/nus-peer-review/module"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
 )
@@ -29,33 +30,24 @@ func (ur AdminRoute) CreateAuthRouter(route *mux.Router) {
 }
 
 func (ur AdminRoute) CreatePrivilegedRouter(route *mux.Router) {
-	if os.Getenv("RUN_ENV") != "production" {
+	if os.Getenv("RUN_ENV") == "production" {
 		route.Use(utils.ValidateJWTMiddleware("Admin", "claims"))
 	}
 
+	mr := module.ModuleRoute{
+		DB: ur.DB,
+	}
+
+	mr.CreateModuleRouter(route.PathPrefix("/module").Subrouter())
+	mr.CreateEnrollmentRoute(route.PathPrefix("/module/enroll").Subrouter())
+	mr.CreateSupervisionRoute(route.PathPrefix("/module/supervise").Subrouter())
+
 	ur.CreateStaffOptsRouter(route.PathPrefix("/staff").Subrouter())
-	ur.CreateModuleOptsRouter(route.PathPrefix("/module").Subrouter())
 }
 
 func (ur AdminRoute) CreateStaffOptsRouter(route *mux.Router) {
-	createStaffRoute := route.NewRoute().Subrouter()
-	createStaffRoute.Use(utils.DecodeBodyMiddleware(&models.Staff{}, "user"))
-	createStaffRoute.Use(utils.SanitizeDataMiddleware("user"))
-	createStaffRoute.Use(ur.PasswordHash)
-	createStaffRoute.HandleFunc("/", utils.DBCreateHandleFunc(ur.DB, "staffs", "user")).Methods(http.MethodPost)
-}
-
-func (ur AdminRoute) CreateModuleOptsRouter(route *mux.Router) {
-	createModuleRoute := route.NewRoute().Subrouter()
-	createModuleRoute.Use(ur.DecodeModuleJson)
-	createModuleRoute.Use(ur.SanitizeModuleData)
-	createModuleRoute.HandleFunc("/", ur.CreateModule).Methods(http.MethodPost)
-
-	enrollModuleStaffRoute := route.NewRoute().Subrouter()
-	enrollModuleStaffRoute.Use(ur.DecodeEnrollmentJson)
-	enrollModuleStaffRoute.HandleFunc("/enroll", ur.EnrollModuleForStudent).Methods(http.MethodPost)
-
-	superviseModuleRoute := route.NewRoute().Subrouter()
-	superviseModuleRoute.Use(ur.DecodeSupervisesJson)
-	superviseModuleRoute.HandleFunc("/supervision", ur.SuperviseModuleWithStaff).Methods(http.MethodPost)
+	route.Use(utils.DecodeBodyMiddleware(&models.Staff{}, "user"))
+	route.Use(utils.SanitizeDataMiddleware("user"))
+	route.Use(ur.PasswordHash)
+	route.HandleFunc("", utils.DBCreateHandleFunc(ur.DB, "staffs", "user")).Methods(http.MethodPost)
 }

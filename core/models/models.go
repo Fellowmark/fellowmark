@@ -25,25 +25,25 @@ type Staff struct {
 
 type Module struct {
 	gorm.Model
-	Code     string `gorm:"type:varchar(8);column:code;not null"`
+	Code     string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null"`
 	Semester string `gorm:"type:varchar(6);column:semester;not null"`
-	Name     string `gorm:"column:name;not null"`
+	Name     string `gorm:"uniqueIndex:moduleIdx;column:name;not null"`
 }
 
 type Enrollment struct {
 	gorm.Model
 	Module    Module  `gorm:"foreignKey:ModuleID;references:ID"`
-	ModuleID  uint    `gorm:"column:module_id;not null"`
+	ModuleID  uint    `gorm:"uniqueIndex:enrollmentIdx;column:module_id;not null;unique:student_id"`
 	Student   Student `gorm:"foreignKey:StudentID"`
-	StudentID uint    `gorm:"column:student_id;not null"`
+	StudentID uint    `gorm:"uniqueIndex:enrollmentIdx;column:student_id;not null"`
 }
 
 type Supervision struct {
 	gorm.Model
 	Module   Module `gorm:"foreignKey:ModuleID"`
-	ModuleID uint   `gorm:"column:module_id;not null"`
+	ModuleID uint   `gorm:"uniqueIndex:supervisionIdx;column:module_id;not null"`
 	Staff    Staff  `gorm:"foreignKey:StaffID"`
-	StaffID  uint   `gorm:"column:staff_id;not null"`
+	StaffID  uint   `gorm:"uniqueIndex:supervisionIdx;column:staff_id;not null"`
 }
 
 type Assignment struct {
