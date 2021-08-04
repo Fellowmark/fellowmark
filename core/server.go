@@ -11,6 +11,7 @@ import (
 	"github.com/nus-utils/nus-peer-review/admin"
 	"github.com/nus-utils/nus-peer-review/db"
 	"github.com/nus-utils/nus-peer-review/loggers"
+	"github.com/nus-utils/nus-peer-review/module"
 	"github.com/nus-utils/nus-peer-review/staff"
 	"github.com/nus-utils/nus-peer-review/student"
 	"github.com/nus-utils/nus-peer-review/utils"
@@ -54,9 +55,16 @@ func InitServer(pool *gorm.DB) {
 		DB: pool,
 	}
 
+	moduleRoute := module.ModuleRoute{
+		DB: pool,
+	}
+
 	studentRoute.CreateRouters(route.PathPrefix("/student").Subrouter())
 	staffRoute.CreateRouters(route.PathPrefix("/staff").Subrouter())
 	adminRoute.CreateRouters(route.PathPrefix("/admin").Subrouter())
+	moduleRoute.GetModulesRoute(route.PathPrefix("/module").Subrouter())
+	moduleRoute.GetEnrollments(route.PathPrefix("/module/enroll").Subrouter())
+	moduleRoute.GetSupervisions(route.PathPrefix("/module/supervise").Subrouter())
 	route.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
 
 	srv := &http.Server{

@@ -63,6 +63,18 @@ func DBCreateMiddleware(db *gorm.DB, tableName string, contextInKey string, cont
 	}
 }
 
+func DBGetFromData(db *gorm.DB, tableName string, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := r.Context().Value(contextInKey)
+		result := db.Table(tableName).Where(data).Find(arrayRefType)
+		if result.Error != nil {
+			HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
+		} else {
+			HandleResponseWithObject(w, arrayRefType, http.StatusOK)
+		}
+	}
+}
+
 func LoginHandleFunc(db *gorm.DB, role string, contextInKey string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(contextInKey)
