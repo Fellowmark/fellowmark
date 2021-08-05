@@ -15,6 +15,9 @@ type AssignmentRoute struct {
 }
 
 func (ar AssignmentRoute) CreateRouters(route *mux.Router) {
+	ar.GetAssignmentsRoute(route)
+	ar.GetQuestionsRoute(route.PathPrefix("/question").Subrouter())
+	ar.GetRubricsRoute(route.PathPrefix("/rubric").Subrouter())
 	ar.CreatePrivilegedRouters(route.NewRoute().Subrouter())
 }
 
@@ -44,4 +47,19 @@ func (ar AssignmentRoute) CreateRubricsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
 	route.Use(utils.SanitizeDataMiddleware("rubric"))
 	route.HandleFunc("/rubric", utils.DBCreateHandleFunc(ar.DB, &models.Rubric{}, "rubric", true)).Methods(http.MethodGet)
+}
+
+func (ar AssignmentRoute) GetAssignmentsRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment"))
+	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Assignment{}, "assignment", &[]models.Supervision{})).Methods(http.MethodGet)
+}
+
+func (ar AssignmentRoute) GetQuestionsRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Question{}, "question"))
+	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Question{}, "question", &[]models.Question{})).Methods(http.MethodGet)
+}
+
+func (ar AssignmentRoute) GetRubricsRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
+	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Rubric{}, "rubric", &[]models.Rubric{})).Methods(http.MethodGet)
 }
