@@ -2,6 +2,7 @@ package module
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
@@ -11,6 +12,22 @@ import (
 
 type ModuleRoute struct {
 	DB *gorm.DB
+}
+
+func (mr ModuleRoute) CreateRouters(route *mux.Router) {
+	mr.CreatePrivilegedRouter(route.NewRoute().Subrouter())
+	mr.GetModulesRoute(route.NewRoute().Subrouter())
+	mr.GetEnrollmentsRoute(route.PathPrefix("/enroll").Subrouter())
+	mr.GetSupervisionsRoute(route.PathPrefix("/supervise").Subrouter())
+}
+func (mr ModuleRoute) CreatePrivilegedRouter(route *mux.Router) {
+	if os.Getenv("RUN_ENV") == "production" {
+		route.Use(utils.ValidateJWTMiddleware("Admin", "claims"))
+	}
+
+	mr.CreateModuleRouter(route)
+	mr.CreateEnrollmentRoute(route.PathPrefix("/enroll").Subrouter())
+	mr.CreateSupervisionRoute(route.PathPrefix("/supervise").Subrouter())
 }
 
 func (mr ModuleRoute) CreateModuleRouter(route *mux.Router) {

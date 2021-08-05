@@ -6,7 +6,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
-	"github.com/nus-utils/nus-peer-review/module"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
 )
@@ -33,14 +32,6 @@ func (ur AdminRoute) CreatePrivilegedRouter(route *mux.Router) {
 	if os.Getenv("RUN_ENV") == "production" {
 		route.Use(utils.ValidateJWTMiddleware("Admin", "claims"))
 	}
-
-	mr := module.ModuleRoute{
-		DB: ur.DB,
-	}
-
-	mr.CreateModuleRouter(route.PathPrefix("/module").Subrouter())
-	mr.CreateEnrollmentRoute(route.PathPrefix("/module/enroll").Subrouter())
-	mr.CreateSupervisionRoute(route.PathPrefix("/module/supervise").Subrouter())
 
 	ur.CreateStaffOptsRouter(route.PathPrefix("/staff").Subrouter())
 }

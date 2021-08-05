@@ -6,21 +6,21 @@ type Admin struct {
 	gorm.Model
 	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
 	Name     string `gorm:"type:varchar(255);column:name;not null"`
-	Password string `gorm:"column:password;not null" validate:"min=8"`
+	Password string `gorm:"column:password;not null" validate:"min=8" json:"-"`
 }
 
 type Student struct {
 	gorm.Model
 	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
 	Name     string `gorm:"type:varchar(255);column:name;not null"`
-	Password string `gorm:"column:password;not null" validate:"min=8"`
+	Password string `gorm:"column:password;not null" validate:"min=8" json:"-"`
 }
 
 type Staff struct {
 	gorm.Model
 	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
 	Name     string `gorm:"type:varchar(255);column:name;not null"`
-	Password string `gorm:"column:password;not null" validate:"min=8"`
+	Password string `gorm:"column:password;not null" validate:"min=8" json:"-"`
 }
 
 type Module struct {

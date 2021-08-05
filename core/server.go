@@ -62,9 +62,7 @@ func InitServer(pool *gorm.DB) {
 	studentRoute.CreateRouters(route.PathPrefix("/student").Subrouter())
 	staffRoute.CreateRouters(route.PathPrefix("/staff").Subrouter())
 	adminRoute.CreateRouters(route.PathPrefix("/admin").Subrouter())
-	moduleRoute.GetModulesRoute(route.PathPrefix("/module").Subrouter())
-	moduleRoute.GetEnrollmentsRoute(route.PathPrefix("/module/enroll").Subrouter())
-	moduleRoute.GetSupervisionsRoute(route.PathPrefix("/module/supervise").Subrouter())
+	moduleRoute.CreateRouters(route.PathPrefix("/module").Subrouter())
 	route.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
 
 	srv := &http.Server{
