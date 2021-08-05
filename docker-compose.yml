@@ -24,7 +24,6 @@ services:
             - ADMIN_NAME=admin
             - ADMIN_EMAIL=admin@local.com
             - ADMIN_PASSWORD=admin
-            - INSERT_DUMMY=false
         build:
             context: ./core/.
             target: builder
