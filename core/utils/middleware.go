@@ -75,10 +75,10 @@ func DBCreateMiddleware(db *gorm.DB, model interface{}, contextInKey string, upd
 	}
 }
 
-func DBGetFromData(db *gorm.DB, tableName string, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
+func DBGetFromData(db *gorm.DB, model interface{}, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := r.Context().Value(contextInKey)
-		result := db.Table(tableName).Where(data).Find(arrayRefType)
+		result := db.Model(model).Where(data).Find(arrayRefType)
 		if result.Error != nil {
 			HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
 		} else {

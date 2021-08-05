@@ -2,6 +2,7 @@ package assignment
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
@@ -13,19 +14,34 @@ type AssignmentRoute struct {
 	DB *gorm.DB
 }
 
-func (ur AssignmentRoute) CreateAssigmentRouter(route *mux.Router) {
-	createAssignmentRoute := route.NewRoute().Subrouter()
-	createAssignmentRoute.Use(utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment"))
-	createAssignmentRoute.Use(utils.SanitizeDataMiddleware("assignment"))
-	createAssignmentRoute.HandleFunc("", utils.DBCreateHandleFunc(ur.DB, &models.Assignment{}, "assigment", true)).Methods(http.MethodGet)
+func (ar AssignmentRoute) CreateRouters(route *mux.Router) {
+	ar.CreatePrivilegedRouters(route.NewRoute().Subrouter())
+}
 
-	createQuestionRoute := route.NewRoute().Subrouter()
-	createQuestionRoute.Use(utils.DecodeBodyMiddleware(&models.Question{}, "question"))
-	createQuestionRoute.Use(utils.SanitizeDataMiddleware("question"))
-	createQuestionRoute.HandleFunc("/question", utils.DBCreateHandleFunc(ur.DB, &models.Question{}, "question", true)).Methods(http.MethodGet)
+func (ar AssignmentRoute) CreatePrivilegedRouters(route *mux.Router) {
+	if os.Getenv("RUN_ENV") == "production" {
+		route.Use(utils.ValidateJWTMiddleware("Staff", "claims"))
+	}
 
-	createRubricRoute := route.NewRoute().Subrouter()
-	createRubricRoute.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
-	createRubricRoute.Use(utils.SanitizeDataMiddleware("rubric"))
-	createRubricRoute.HandleFunc("/rubric", utils.DBCreateHandleFunc(ur.DB, &models.Rubric{}, "rubric", true)).Methods(http.MethodGet)
+	ar.CreateAssigmentRouter(route)
+	ar.CreateQuestionsRouter(route.PathPrefix("/question").Subrouter())
+	ar.CreateRubricsRoute(route.PathPrefix("/rubric").Subrouter())
+}
+
+func (ar AssignmentRoute) CreateAssigmentRouter(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment"))
+	route.Use(utils.SanitizeDataMiddleware("assignment"))
+	route.HandleFunc("", utils.DBCreateHandleFunc(ar.DB, &models.Assignment{}, "assigment", true)).Methods(http.MethodGet)
+}
+
+func (ar AssignmentRoute) CreateQuestionsRouter(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Question{}, "question"))
+	route.Use(utils.SanitizeDataMiddleware("question"))
+	route.HandleFunc("/question", utils.DBCreateHandleFunc(ar.DB, &models.Question{}, "question", true)).Methods(http.MethodGet)
+}
+
+func (ar AssignmentRoute) CreateRubricsRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
+	route.Use(utils.SanitizeDataMiddleware("rubric"))
+	route.HandleFunc("/rubric", utils.DBCreateHandleFunc(ar.DB, &models.Rubric{}, "rubric", true)).Methods(http.MethodGet)
 }
