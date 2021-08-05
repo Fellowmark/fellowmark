@@ -34,12 +34,12 @@ func (mr ModuleRoute) GetModulesRoute(route *mux.Router) {
 	route.HandleFunc("", utils.DBGetFromData(mr.DB, "modules", "module", &[]models.Module{})).Methods(http.MethodGet)
 }
 
-func (mr ModuleRoute) GetEnrollments(route *mux.Router) {
+func (mr ModuleRoute) GetEnrollmentsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Enrollment{}, "enrollment"))
 	route.HandleFunc("", utils.DBGetFromData(mr.DB, "enrollments", "enrollment", &[]models.Enrollment{})).Methods(http.MethodGet)
 }
 
-func (mr ModuleRoute) GetSupervisions(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Enrollment{}, "enrollment"))
-	route.HandleFunc("", utils.DBGetFromData(mr.DB, "enrollments", "enrollment", &[]models.Enrollment{})).Methods(http.MethodGet)
+func (mr ModuleRoute) GetSupervisionsRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Supervision{}, "supervision"))
+	route.HandleFunc("", utils.DBGetFromData(mr.DB, "supervisions", "supervision", &[]models.Supervision{})).Methods(http.MethodGet)
 }
