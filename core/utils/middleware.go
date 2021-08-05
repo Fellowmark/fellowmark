@@ -40,11 +40,11 @@ func SanitizeDataMiddleware(contextInKey string) mux.MiddlewareFunc {
 func DBCreateHandleFunc(db *gorm.DB, tableName string, contextInKey string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := r.Context().Value(contextInKey)
-		result := db.Table(tableName).Create(data)
+		result := db.Table(tableName).Omit("ID").Create(data)
 		if result.Error != nil {
 			HandleResponse(w, "Already Exists", http.StatusBadRequest)
 		} else {
-			HandleResponse(w, "Sucess", http.StatusOK)
+			HandleResponseWithObject(w, data, http.StatusOK)
 		}
 	}
 }
@@ -60,6 +60,18 @@ func DBCreateMiddleware(db *gorm.DB, tableName string, contextInKey string, cont
 				next.ServeHTTP(w, r)
 			}
 		})
+	}
+}
+
+func DBGetFromData(db *gorm.DB, tableName string, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := r.Context().Value(contextInKey)
+		result := db.Table(tableName).Where(data).Find(arrayRefType)
+		if result.Error != nil {
+			HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
+		} else {
+			HandleResponseWithObject(w, arrayRefType, http.StatusOK)
+		}
 	}
 }
 
