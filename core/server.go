@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/nus-utils/nus-peer-review/admin"
-	"github.com/nus-utils/nus-peer-review/db"
+	DB "github.com/nus-utils/nus-peer-review/db"
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/module"
 	"github.com/nus-utils/nus-peer-review/staff"
@@ -22,7 +22,7 @@ import (
 
 func main() {
 	loggers.InitLoggers(os.Getenv("RUN_ENV"))
-	db := db.InitDB(os.Getenv("DATABASE_URL"))
+	db := DB.InitDB(os.Getenv("DATABASE_URL"))
 	InitServer(db)
 }
 
@@ -86,7 +86,7 @@ func InitServer(pool *gorm.DB) {
 	<-c
 
 	// Immediately release DB connections
-	db.CloseDB(pool)
+	DB.CloseDB(pool)
 
 	// Create a deadline to wait for.
 	ctx, cancel := context.WithTimeout(context.Background(), wait)

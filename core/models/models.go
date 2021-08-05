@@ -48,9 +48,11 @@ type Supervision struct {
 
 type Assignment struct {
 	gorm.Model
-	Name     string `gorm:"column:name;not null"`
-	Module   Module `gorm:"foreignKey:ModuleID"`
-	ModuleID uint   `gorm:"column:module_id;not null"`
+	Name      string `gorm:"column:name;not null"`
+	Module    Module `gorm:"foreignKey:ModuleID"`
+	ModuleID  uint   `gorm:"column:module_id;not null"`
+	GroupSize int    `gorm:"column:group_size;not null;check:group_size > 0"`
+	Duration  int64  `gorm:"not null;default 86400"`
 }
 
 type Question struct {
@@ -79,6 +81,7 @@ type Pairing struct {
 	StudentID    uint       `gorm:"column:student_id;not null"`
 	Marker       Student    `gorm:"foreignKey:MarkerID"`
 	MarkerID     uint       `gorm:"column:marker_id;not null"`
+	Active       bool       `gorm:"not null"`
 }
 
 type Submission struct {
