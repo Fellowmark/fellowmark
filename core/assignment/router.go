@@ -15,7 +15,7 @@ type AssignmentRoute struct {
 }
 
 func (ar AssignmentRoute) CreateRouters(route *mux.Router) {
-	ar.GetAssignmentsRoute(route)
+	ar.GetAssignmentsRoute(route.NewRoute().Subrouter())
 	ar.GetQuestionsRoute(route.PathPrefix("/question").Subrouter())
 	ar.GetRubricsRoute(route.PathPrefix("/rubric").Subrouter())
 	ar.CreatePrivilegedRouters(route.NewRoute().Subrouter())
@@ -26,27 +26,27 @@ func (ar AssignmentRoute) CreatePrivilegedRouters(route *mux.Router) {
 		route.Use(utils.ValidateJWTMiddleware("Staff", "claims"))
 	}
 
-	ar.CreateAssigmentRouter(route)
+	ar.CreateAssignmentRouter(route.NewRoute().Subrouter())
 	ar.CreateQuestionsRouter(route.PathPrefix("/question").Subrouter())
 	ar.CreateRubricsRoute(route.PathPrefix("/rubric").Subrouter())
 }
 
-func (ar AssignmentRoute) CreateAssigmentRouter(route *mux.Router) {
+func (ar AssignmentRoute) CreateAssignmentRouter(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment"))
 	route.Use(utils.SanitizeDataMiddleware("assignment"))
-	route.HandleFunc("", utils.DBCreateHandleFunc(ar.DB, &models.Assignment{}, "assigment", true)).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBCreateHandleFunc(ar.DB, &models.Assignment{}, "assignment", true)).Methods(http.MethodPost)
 }
 
 func (ar AssignmentRoute) CreateQuestionsRouter(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Question{}, "question"))
 	route.Use(utils.SanitizeDataMiddleware("question"))
-	route.HandleFunc("/question", utils.DBCreateHandleFunc(ar.DB, &models.Question{}, "question", true)).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBCreateHandleFunc(ar.DB, &models.Question{}, "question", true)).Methods(http.MethodPost)
 }
 
 func (ar AssignmentRoute) CreateRubricsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
 	route.Use(utils.SanitizeDataMiddleware("rubric"))
-	route.HandleFunc("/rubric", utils.DBCreateHandleFunc(ar.DB, &models.Rubric{}, "rubric", true)).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBCreateHandleFunc(ar.DB, &models.Rubric{}, "rubric", true)).Methods(http.MethodPost)
 }
 
 func (ar AssignmentRoute) GetAssignmentsRoute(route *mux.Router) {

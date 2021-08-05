@@ -25,7 +25,7 @@ func (mr ModuleRoute) CreatePrivilegedRouter(route *mux.Router) {
 		route.Use(utils.ValidateJWTMiddleware("Admin", "claims"))
 	}
 
-	mr.CreateModuleRouter(route)
+	mr.CreateModuleRouter(route.NewRoute().Subrouter())
 	mr.CreateEnrollmentRoute(route.PathPrefix("/enroll").Subrouter())
 	mr.CreateSupervisionRoute(route.PathPrefix("/supervise").Subrouter())
 }

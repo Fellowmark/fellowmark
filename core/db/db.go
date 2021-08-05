@@ -84,7 +84,7 @@ func SetupAdmin(pool *gorm.DB, admin *models.Admin) {
 	admin.Password = hash
 	pool.Clauses(clause.OnConflict{
 		UpdateAll: true,
-	}).Create(&admin)
+	}).Omit("ID").Create(&admin)
 }
 
 func InsertDummyData(db *gorm.DB) {

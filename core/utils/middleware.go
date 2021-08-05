@@ -52,7 +52,7 @@ func DBCreateHandleFunc(db *gorm.DB, model interface{}, contextInKey string, upd
 				HandleResponse(w, "Already Exists", http.StatusBadRequest)
 			}
 		} else {
-			HandleResponse(w, "Sucess", http.StatusOK)
+			HandleResponseWithObject(w, data, http.StatusOK)
 		}
 	}
 }

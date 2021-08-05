@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/nus-utils/nus-peer-review/assignment"
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
@@ -36,8 +35,6 @@ func (ur StaffRoute) CreatePrivilegedRouter(route *mux.Router) {
 		route.Use(utils.SupervisionCheckMiddleware(ur.DB, "claims", "moduleId"))
 	}
 
-	ar := assignment.AssignmentRoute{DB: ur.DB}
-	ar.CreateAssigmentRouter(route.PathPrefix("/assignment").Subrouter())
 	ur.CreatePairingsRouter(route.PathPrefix("/pairing").Subrouter())
 }
 
