@@ -72,7 +72,7 @@ func (ar AssignmentRoute) GetStudentPairingsRoute(route *mux.Router) {
 		route.Use(utils.EnrollmentCheckMiddleware(ar.DB, "claims", "moduleId"))
 	}
 
-	route.HandleFunc("", utils.GetAssignedPairingsHandlerFunc(ar.DB, "claims", "assignmentId"))
+	route.HandleFunc("", utils.GetAssignedPairingsHandlerFunc(ar.DB, "claims", "assignmentId")).Methods(http.MethodGet)
 }
 
 func (ar AssignmentRoute) GetAllAssignmentPairings(route *mux.Router) {
@@ -83,5 +83,5 @@ func (ar AssignmentRoute) GetAllAssignmentPairings(route *mux.Router) {
 		route.Use(utils.SupervisionCheckMiddleware(ar.DB, "claims", "moduleId"))
 	}
 
-	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Pairing{}, "pairing", &[]models.Pairing{}))
+	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Pairing{}, "pairing", &[]models.Pairing{})).Methods(http.MethodGet)
 }

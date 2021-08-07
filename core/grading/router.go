@@ -1,6 +1,7 @@
 package grading
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
@@ -31,5 +32,5 @@ func (gr GradingRoute) CreateGradeRouter(route *mux.Router) {
 	if os.Getenv("RUN_ENV") == "production" {
 		route.Use(utils.MarkerCheckMiddleware(gr.DB, "grade", "claims"))
 	}
-	route.HandleFunc("", utils.DBCreateHandleFunc(gr.DB, &models.Grade{}, "grade", true))
+	route.HandleFunc("", utils.DBCreateHandleFunc(gr.DB, &models.Grade{}, "grade", true)).Methods(http.MethodPost)
 }
