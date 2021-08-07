@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt"
 	"github.com/nus-utils/nus-peer-review/loggers"
 )
@@ -82,4 +83,14 @@ func ParseJWT(tokenString string) (*ClaimsData, error) {
 	} else {
 		return claims, err
 	}
+}
+
+// returns argon2 hash of strings such as email recovery tokens
+func HashString(token string) string {
+	hash, err := argon2id.CreateHash(token, argon2id.DefaultParams)
+	if err != nil {
+		loggers.ErrorLogger.Println("Something Went Wrong: %s" + err.Error())
+	}
+
+	return hash
 }

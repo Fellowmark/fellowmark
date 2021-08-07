@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/alexedwards/argon2id"
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
+	"github.com/nus-utils/nus-peer-review/utils"
 )
 
 func InitDB(databaseUrl string) *gorm.DB {
@@ -20,11 +22,17 @@ func InitDB(databaseUrl string) *gorm.DB {
 	db.SetMaxOpenConns(100)
 	db.SetConnMaxLifetime(time.Hour)
 	InitialMigration(connection)
+	// ResetDatabase(connection)
 	SetupAdmin(connection, &models.Admin{
 		Name:     os.Getenv("ADMIN_NAME"),
 		Email:    os.Getenv("ADMIN_EMAIL"),
 		Password: os.Getenv("ADMIN_PASSWORD"),
 	})
+
+	if os.Getenv("RUN_ENV") != "production" && os.Getenv("INSERT_DUMMY") == "true" {
+		InsertDummyData(connection)
+	}
+	// LogPairings(connection)
 	return connection
 }
 
@@ -34,6 +42,7 @@ func GetDatabase(databaseUrl string) *gorm.DB {
 		PreferSimpleProtocol: true,
 	}), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: false,
+		AllowGlobalUpdate:                        true,
 	})
 	if err != nil {
 		loggers.ErrorLogger.Fatalln(err)
@@ -75,42 +84,47 @@ func SetupAdmin(pool *gorm.DB, admin *models.Admin) {
 	admin.Password = hash
 	pool.Clauses(clause.OnConflict{
 		UpdateAll: true,
-	}).Create(&admin)
+	}).Omit("ID").Create(&admin)
 }
 
 func InsertDummyData(db *gorm.DB) {
-	defer CloseDB(db)
 	var result *gorm.DB
+	passwordHash := utils.HashString("password")
 	students := []models.Student{
 		{
 			Email:    "e0000000@u.nus.edu",
 			Name:     "Student A",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
 			Email:    "e0000001@u.nus.edu",
 			Name:     "Student B",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
-			Email:    "e00000002@u.nus.edu",
+			Email:    "e0000002@u.nus.edu",
 			Name:     "Student C",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
 			Email:    "e0000003@u.nus.edu",
 			Name:     "Student D",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
 			Email:    "e0000004@u.nus.edu",
 			Name:     "Student E",
-			Password: "password",
+			Password: passwordHash,
 		},
 		{
 			Email:    "e0000005@u.nus.edu",
 			Name:     "Student F",
-			Password: "password",
+			Password: passwordHash,
+		},
+		{
+			Email:    "e0000006@u.nus.edu",
+			Name:     "Student G",
+			Password: passwordHash,
 		},
 	}
 	result = db.Create(&students)
@@ -160,8 +174,9 @@ func InsertDummyData(db *gorm.DB) {
 	}
 
 	assignment := models.Assignment{
-		Name:   "Lecture 1 Quiz",
-		Module: module,
+		Name:      "Lecture 1 Quiz",
+		Module:    module,
+		GroupSize: 3,
 	}
 	result = db.Create(&assignment)
 	if result.Error != nil {
@@ -199,24 +214,8 @@ func InsertDummyData(db *gorm.DB) {
 		loggers.ErrorLogger.Fatal("rubric entry failed")
 	}
 
-	pairings := []models.Pairing{}
-	// trivial cartesian product of students with each other
-	// TODO replace with proper pair assignment
-	for idx1, student := range students {
-		for idx2, marker := range students {
-			if idx1 != idx2 {
-				pairings = append(pairings, models.Pairing{
-					Assignment: assignment,
-					Student:    student,
-					Marker:     marker,
-				})
-			}
-		}
-	}
-	result = db.Create(&pairings)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("pairing entry failed")
-	}
+	utils.InitializePairings(db, assignment)
+	utils.SetNewPairings(db, assignment)
 
 	submission := []models.Submission{
 		{
@@ -229,4 +228,41 @@ func InsertDummyData(db *gorm.DB) {
 	if result.Error != nil {
 		loggers.ErrorLogger.Fatal("submission entry failed")
 	}
+}
+
+func LogPairings(db *gorm.DB) {
+	result := []models.Pairing{}
+	db.Find(&result)
+	for _, pairing := range result {
+		loggers.InfoLogger.Println(
+			fmt.Sprintf("submitter: %v, marker: %v, active: %v", pairing.StudentID, pairing.MarkerID, pairing.Active),
+		)
+	}
+}
+
+func LogStudents(db *gorm.DB) {
+	result := []models.Student{}
+	db.Find(&result)
+	for _, student := range result {
+		loggers.InfoLogger.Println(
+			fmt.Sprintf("email: %v, name: %v", student.Email, student.Name),
+		)
+	}
+}
+
+// (for testing only) resets DB data
+func ResetDatabase(db *gorm.DB) {
+	db.Exec("DROP TABLE IF EXISTS grades")
+	db.Exec("DROP TABLE IF EXISTS submissions")
+	db.Exec("DROP TABLE IF EXISTS pairings")
+	db.Exec("DROP TABLE IF EXISTS rubrics")
+	db.Exec("DROP TABLE IF EXISTS questions")
+	db.Exec("DROP TABLE IF EXISTS assignments")
+	db.Exec("DROP TABLE IF EXISTS supervisions")
+	db.Exec("DROP TABLE IF EXISTS enrollments")
+	db.Exec("DROP TABLE IF EXISTS modules")
+	db.Exec("DROP TABLE IF EXISTS students")
+	db.Exec("DROP TABLE IF EXISTS staffs")
+	db.Exec("DROP TABLE IF EXISTS admins")
+	InitialMigration(db)
 }

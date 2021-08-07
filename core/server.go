@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"github.com/nus-utils/nus-peer-review/admin"
-	"github.com/nus-utils/nus-peer-review/db"
+	"github.com/nus-utils/nus-peer-review/assignment"
+	DB "github.com/nus-utils/nus-peer-review/db"
 	"github.com/nus-utils/nus-peer-review/loggers"
+	"github.com/nus-utils/nus-peer-review/module"
 	"github.com/nus-utils/nus-peer-review/staff"
 	"github.com/nus-utils/nus-peer-review/student"
 	"github.com/nus-utils/nus-peer-review/utils"
@@ -21,7 +23,7 @@ import (
 
 func main() {
 	loggers.InitLoggers(os.Getenv("RUN_ENV"))
-	db := db.InitDB(os.Getenv("DATABASE_URL"))
+	db := DB.InitDB(os.Getenv("DATABASE_URL"))
 	InitServer(db)
 }
 
@@ -54,9 +56,19 @@ func InitServer(pool *gorm.DB) {
 		DB: pool,
 	}
 
+	moduleRoute := module.ModuleRoute{
+		DB: pool,
+	}
+
+	assignmentRoute := assignment.AssignmentRoute{
+		DB: pool,
+	}
+
 	studentRoute.CreateRouters(route.PathPrefix("/student").Subrouter())
 	staffRoute.CreateRouters(route.PathPrefix("/staff").Subrouter())
 	adminRoute.CreateRouters(route.PathPrefix("/admin").Subrouter())
+	moduleRoute.CreateRouters(route.PathPrefix("/module").Subrouter())
+	assignmentRoute.CreateRouters(route.PathPrefix("/assignment").Subrouter())
 	route.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
 
 	srv := &http.Server{
@@ -80,7 +92,7 @@ func InitServer(pool *gorm.DB) {
 	<-c
 
 	// Immediately release DB connections
-	db.CloseDB(pool)
+	DB.CloseDB(pool)
 
 	// Create a deadline to wait for.
 	ctx, cancel := context.WithTimeout(context.Background(), wait)

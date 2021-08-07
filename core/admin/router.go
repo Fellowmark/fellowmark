@@ -29,7 +29,7 @@ func (ur AdminRoute) CreateAuthRouter(route *mux.Router) {
 }
 
 func (ur AdminRoute) CreatePrivilegedRouter(route *mux.Router) {
-	if os.Getenv("RUN_ENV") != "production" {
+	if os.Getenv("RUN_ENV") == "production" {
 		route.Use(utils.ValidateJWTMiddleware("Admin", "claims"))
 	}
 
@@ -37,9 +37,8 @@ func (ur AdminRoute) CreatePrivilegedRouter(route *mux.Router) {
 }
 
 func (ur AdminRoute) CreateStaffOptsRouter(route *mux.Router) {
-	createStaffRoute := route.NewRoute().Subrouter()
-	createStaffRoute.Use(utils.DecodeBodyMiddleware(&models.Staff{}, "user"))
-	createStaffRoute.Use(utils.SanitizeDataMiddleware("user"))
-	createStaffRoute.Use(ur.PasswordHash)
-	createStaffRoute.HandleFunc("/", utils.DBCreateHandleFunc(ur.DB, "staffs", "user")).Methods(http.MethodPost)
+	route.Use(utils.DecodeBodyMiddleware(&models.Staff{}, "user"))
+	route.Use(utils.SanitizeDataMiddleware("user"))
+	route.Use(ur.PasswordHash)
+	route.HandleFunc("", utils.DBCreateHandleFunc(ur.DB, &models.Staff{}, "user", true)).Methods(http.MethodPost)
 }

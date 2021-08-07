@@ -6,67 +6,69 @@ type Admin struct {
 	gorm.Model
 	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
 	Name     string `gorm:"type:varchar(255);column:name;not null"`
-	Password string `gorm:"column:password;not null" validate:"min=8"`
+	Password string `gorm:"column:password;not null" validate:"min=8" json:"-"`
 }
 
 type Student struct {
 	gorm.Model
 	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
 	Name     string `gorm:"type:varchar(255);column:name;not null"`
-	Password string `gorm:"column:password;not null" validate:"min=8"`
+	Password string `gorm:"column:password;not null" validate:"min=8" json:"-"`
 }
 
 type Staff struct {
 	gorm.Model
 	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
 	Name     string `gorm:"type:varchar(255);column:name;not null"`
-	Password string `gorm:"column:password;not null" validate:"min=8"`
+	Password string `gorm:"column:password;not null" validate:"min=8" json:"-"`
 }
 
 type Module struct {
 	gorm.Model
-	Code     string `gorm:"type:varchar(8);column:code;not null"`
+	Code     string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null"`
 	Semester string `gorm:"type:varchar(6);column:semester;not null"`
-	Name     string `gorm:"column:name;not null"`
+	Name     string `gorm:"uniqueIndex:moduleIdx;column:name;not null"`
 }
 
 type Enrollment struct {
 	gorm.Model
 	Module    Module  `gorm:"foreignKey:ModuleID;references:ID"`
-	ModuleID  uint    `gorm:"column:module_id;not null"`
+	ModuleID  uint    `gorm:"uniqueIndex:enrollmentIdx;column:module_id;not null;unique:student_id"`
 	Student   Student `gorm:"foreignKey:StudentID"`
-	StudentID uint    `gorm:"column:student_id;not null"`
+	StudentID uint    `gorm:"uniqueIndex:enrollmentIdx;column:student_id;not null"`
 }
 
 type Supervision struct {
 	gorm.Model
 	Module   Module `gorm:"foreignKey:ModuleID"`
-	ModuleID uint   `gorm:"column:module_id;not null"`
+	ModuleID uint   `gorm:"uniqueIndex:supervisionIdx;column:module_id;not null"`
 	Staff    Staff  `gorm:"foreignKey:StaffID"`
-	StaffID  uint   `gorm:"column:staff_id;not null"`
+	StaffID  uint   `gorm:"uniqueIndex:supervisionIdx;column:staff_id;not null"`
 }
 
 type Assignment struct {
 	gorm.Model
-	Name     string `gorm:"column:name;not null"`
-	Module   Module `gorm:"foreignKey:ModuleID"`
-	ModuleID uint   `gorm:"column:module_id;not null"`
+	Name      string `gorm:"uniqueIndex:assignmentIdx;column:name;not null"`
+	Module    Module `gorm:"foreignKey:ModuleID"`
+	ModuleID  uint   `gorm:"column:module_id;not null"`
+	GroupSize int    `gorm:"uniqueIndex:assignmentIdx;column:group_size;not null;check:group_size > 0"`
+	Duration  int64  `gorm:"not null;default 86400"`
 }
 
 type Question struct {
 	gorm.Model
-	QuestionNumber uint       `gorm:"column:question_number;not null"`
+	QuestionNumber uint       `gorm:"uniqueIndex:questionIdx;column:question_number;not null"`
 	QuestionText   string     `gorm:"column:question_text;not null"`
 	Assignment     Assignment `gorm:"foreignKey:AssignmentID"`
-	AssignmentID   uint       `gorm:"column:assignment_id;not null"`
+	AssignmentID   uint       `gorm:"uniqueIndex:questionIdx;column:assignment_id;not null"`
 }
 
 type Rubric struct {
 	gorm.Model
 	Question    Question `gorm:"foreignKey:QuestionID"`
-	QuestionID  uint     `gorm:"column:question_id;not null"`
-	Criteria    string   `gorm:"not null"`
-	Description string   `gorm:"not null"`
+	QuestionID  uint     `gorm:"uniqueIndex:rubricIdx;column:question_id;not null"`
+	Criteria    string   `gorm:"uniqueIndex:rubricIdx;not null"`
+	Description string   `gorm:"uniqueIndex:rubricIdx;not null"`
 	MinMark     int      `gorm:"column:min_mark;default:0"`
 	MaxMark     int      `gorm:"column:max_mark;default:10"`
 }
@@ -79,6 +81,7 @@ type Pairing struct {
 	StudentID    uint       `gorm:"column:student_id;not null"`
 	Marker       Student    `gorm:"foreignKey:MarkerID"`
 	MarkerID     uint       `gorm:"column:marker_id;not null"`
+	Active       bool       `gorm:"not null"`
 }
 
 type Submission struct {
