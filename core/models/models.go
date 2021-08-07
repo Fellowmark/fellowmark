@@ -48,27 +48,27 @@ type Supervision struct {
 
 type Assignment struct {
 	gorm.Model
-	Name      string `gorm:"column:name;not null"`
+	Name      string `gorm:"uniqueIndex:assignmentIdx;column:name;not null"`
 	Module    Module `gorm:"foreignKey:ModuleID"`
 	ModuleID  uint   `gorm:"column:module_id;not null"`
-	GroupSize int    `gorm:"column:group_size;not null;check:group_size > 0"`
+	GroupSize int    `gorm:"uniqueIndex:assignmentIdx;column:group_size;not null;check:group_size > 0"`
 	Duration  int64  `gorm:"not null;default 86400"`
 }
 
 type Question struct {
 	gorm.Model
-	QuestionNumber uint       `gorm:"column:question_number;not null"`
+	QuestionNumber uint       `gorm:"uniqueIndex:questionIdx;column:question_number;not null"`
 	QuestionText   string     `gorm:"column:question_text;not null"`
 	Assignment     Assignment `gorm:"foreignKey:AssignmentID"`
-	AssignmentID   uint       `gorm:"column:assignment_id;not null"`
+	AssignmentID   uint       `gorm:"uniqueIndex:questionIdx;column:assignment_id;not null"`
 }
 
 type Rubric struct {
 	gorm.Model
 	Question    Question `gorm:"foreignKey:QuestionID"`
-	QuestionID  uint     `gorm:"column:question_id;not null"`
-	Criteria    string   `gorm:"not null"`
-	Description string   `gorm:"not null"`
+	QuestionID  uint     `gorm:"uniqueIndex:rubricIdx;column:question_id;not null"`
+	Criteria    string   `gorm:"uniqueIndex:rubricIdx;not null"`
+	Description string   `gorm:"uniqueIndex:rubricIdx;not null"`
 	MinMark     int      `gorm:"column:min_mark;default:0"`
 	MaxMark     int      `gorm:"column:max_mark;default:10"`
 }

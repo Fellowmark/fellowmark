@@ -28,7 +28,8 @@ func InitDB(databaseUrl string) *gorm.DB {
 		Email:    os.Getenv("ADMIN_EMAIL"),
 		Password: os.Getenv("ADMIN_PASSWORD"),
 	})
-	if os.Getenv("RUN_ENV") != "production" {
+
+	if os.Getenv("RUN_ENV") != "production" && os.Getenv("INSERT_DUMMY") == "true" {
 		InsertDummyData(connection)
 	}
 	// LogPairings(connection)
@@ -41,6 +42,7 @@ func GetDatabase(databaseUrl string) *gorm.DB {
 		PreferSimpleProtocol: true,
 	}), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: false,
+		AllowGlobalUpdate:                        true,
 	})
 	if err != nil {
 		loggers.ErrorLogger.Fatalln(err)
@@ -82,7 +84,7 @@ func SetupAdmin(pool *gorm.DB, admin *models.Admin) {
 	admin.Password = hash
 	pool.Clauses(clause.OnConflict{
 		UpdateAll: true,
-	}).Create(&admin)
+	}).Omit("ID").Create(&admin)
 }
 
 func InsertDummyData(db *gorm.DB) {

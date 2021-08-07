@@ -40,5 +40,5 @@ func (ur AdminRoute) CreateStaffOptsRouter(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Staff{}, "user"))
 	route.Use(utils.SanitizeDataMiddleware("user"))
 	route.Use(ur.PasswordHash)
-	route.HandleFunc("", utils.DBCreateHandleFunc(ur.DB, "staffs", "user")).Methods(http.MethodPost)
+	route.HandleFunc("", utils.DBCreateHandleFunc(ur.DB, &models.Staff{}, "user", true)).Methods(http.MethodPost)
 }
