@@ -19,6 +19,7 @@ func (ar AssignmentRoute) CreateRouters(route *mux.Router) {
 	ar.GetQuestionsRoute(route.PathPrefix("/question").Subrouter())
 	ar.GetRubricsRoute(route.PathPrefix("/rubric").Subrouter())
 	ar.CreatePrivilegedRouters(route.NewRoute().Subrouter())
+	ar.GetStudentPairingsRoute(route.PathPrefix("/{assignmentId}/pairs").Subrouter())
 }
 
 func (ar AssignmentRoute) CreatePrivilegedRouters(route *mux.Router) {
@@ -62,4 +63,25 @@ func (ar AssignmentRoute) GetQuestionsRoute(route *mux.Router) {
 func (ar AssignmentRoute) GetRubricsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
 	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Rubric{}, "rubric", &[]models.Rubric{})).Methods(http.MethodGet)
+}
+
+func (ar AssignmentRoute) GetStudentPairingsRoute(route *mux.Router) {
+	if os.Getenv("RUN_ENV") == "production" {
+		route.Use(utils.ValidateJWTMiddleware("Student", "claims"))
+		route.Use(utils.ValidateAssignmentIdMiddlware(ar.DB, "assignmentId", "moduleId"))
+		route.Use(utils.EnrollmentCheckMiddleware(ar.DB, "claims", "moduleId"))
+	}
+
+	route.HandleFunc("", utils.GetAssignedPairingsHandlerFunc(ar.DB, "claims", "assignmentId"))
+}
+
+func (ar AssignmentRoute) GetAllAssignmentPairings(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Pairing{}, "pairing"))
+	if os.Getenv("RUN_ENV") == "production" {
+		route.Use(utils.ValidateJWTMiddleware("Student", "claims"))
+		route.Use(utils.ValidateAssignmentIdMiddlware(ar.DB, "assignmentId", "moduleId"))
+		route.Use(utils.SupervisionCheckMiddleware(ar.DB, "claims", "moduleId"))
+	}
+
+	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Pairing{}, "pairing", &[]models.Pairing{}))
 }
