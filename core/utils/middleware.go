@@ -165,3 +165,35 @@ func SupervisionCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey stri
 		})
 	}
 }
+
+func MarkerCheckMiddleware(db *gorm.DB, contextInKey string, claimsContextKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var count int64
+			data := r.Context().Value(contextInKey).(*models.Grade)
+			claims := r.Context().Value(claimsContextKey).(*ClaimsData)
+			db.Model(&models.Pairing{}).Where("id = ? AND marker_id = ?", data.PairingID, claims.Data.(*models.Student).ID).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Please don't cheat", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
+
+func MarkeeCheckMiddleware(db *gorm.DB, contextInKey string, claimsContextKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var count int64
+			data := r.Context().Value(contextInKey).(*models.Grade)
+			claims := r.Context().Value(claimsContextKey).(*ClaimsData)
+			db.Model(&models.Pairing{}).Where("id = ? AND student_id = ?", data.PairingID, claims.Data.(*models.Student).ID).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Please don't cheat", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
