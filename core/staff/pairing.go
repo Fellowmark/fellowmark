@@ -9,23 +9,37 @@ import (
 )
 
 func (ur StaffRoute) AssignPairings(w http.ResponseWriter, r *http.Request) {
-	assignment := r.Context().Value("assignment").(models.Assignment)
-	result := utils.SetNewPairings(ur.DB, assignment)
+	data := r.Context().Value("assignment")
+	assignment := &models.Assignment{}
+	result := ur.DB.Model(&models.Assignment{}).Where(data).Find(assignment)
 	if result.Error != nil {
 		loggers.ErrorLogger.Println(result.Error.Error())
 		utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
 	} else {
-		utils.HandleResponse(w, "Success", http.StatusCreated)
+		result = utils.SetNewPairings(ur.DB, (*assignment))
+		if result.Error != nil {
+			loggers.ErrorLogger.Println(result.Error.Error())
+			utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
+		} else {
+			utils.HandleResponse(w, "Success", http.StatusCreated)
+		}
 	}
 }
 
 func (ur StaffRoute) InitializePairings(w http.ResponseWriter, r *http.Request) {
-	assignment := r.Context().Value("assignment").(models.Assignment)
-	result := utils.InitializePairings(ur.DB, assignment)
+	data := r.Context().Value("assignment")
+	assignment := &models.Assignment{}
+	result := ur.DB.Model(&models.Assignment{}).Where(data).Find(assignment)
 	if result.Error != nil {
 		loggers.ErrorLogger.Println(result.Error.Error())
 		utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
 	} else {
-		utils.HandleResponse(w, "Success", http.StatusOK)
+		result = utils.InitializePairings(ur.DB, (*assignment))
+		if result.Error != nil {
+			loggers.ErrorLogger.Println(result.Error.Error())
+			utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
+		} else {
+			utils.HandleResponse(w, "Success", http.StatusCreated)
+		}
 	}
 }

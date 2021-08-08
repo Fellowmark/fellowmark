@@ -31,8 +31,8 @@ func InitializePairings(db *gorm.DB, assignment models.Assignment) *gorm.DB {
 		) RETURNING *`,
 		assignment.ID,
 		false,
-		assignment.Module.ID,
-		assignment.Module.ID,
+		assignment.ModuleID,
+		assignment.ModuleID,
 	)
 	return result
 }
@@ -60,7 +60,7 @@ func getNewPairings(db *gorm.DB, assignment models.Assignment) ([]models.Pairing
 		INNER JOIN enrollments
 		ON enrollments.student_id = students.id
 		WHERE module_id = ?`,
-		assignment.Module.ID,
+		assignment.ModuleID,
 	).Scan(&enrolledStudents)
 
 	var newPairings []models.Pairing

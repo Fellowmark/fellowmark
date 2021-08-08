@@ -22,17 +22,15 @@ func InitDB(databaseUrl string) *gorm.DB {
 	db.SetMaxOpenConns(100)
 	db.SetConnMaxLifetime(time.Hour)
 	InitialMigration(connection)
-	// ResetDatabase(connection)
+	if os.Getenv("RUN_ENV") != "production" && os.Getenv("INSERT_DUMMY") == "true" {
+		ResetDatabase(connection)
+		InsertDummyData(connection)
+	}
 	SetupAdmin(connection, &models.Admin{
 		Name:     os.Getenv("ADMIN_NAME"),
 		Email:    os.Getenv("ADMIN_EMAIL"),
 		Password: os.Getenv("ADMIN_PASSWORD"),
 	})
-
-	if os.Getenv("RUN_ENV") != "production" && os.Getenv("INSERT_DUMMY") == "true" {
-		InsertDummyData(connection)
-	}
-	// LogPairings(connection)
 	return connection
 }
 

@@ -33,7 +33,7 @@ type Module struct {
 type Enrollment struct {
 	gorm.Model
 	Module    Module  `gorm:"foreignKey:ModuleID;references:ID"`
-	ModuleID  uint    `gorm:"uniqueIndex:enrollmentIdx;column:module_id;not null;unique:student_id"`
+	ModuleID  uint    `gorm:"uniqueIndex:enrollmentIdx;column:module_id;not null"`
 	Student   Student `gorm:"foreignKey:StudentID"`
 	StudentID uint    `gorm:"uniqueIndex:enrollmentIdx;column:student_id;not null"`
 }
@@ -52,7 +52,7 @@ type Assignment struct {
 	Module    Module `gorm:"foreignKey:ModuleID"`
 	ModuleID  uint   `gorm:"column:module_id;not null"`
 	GroupSize int    `gorm:"uniqueIndex:assignmentIdx;column:group_size;not null;check:group_size > 0"`
-	Duration  int64  `gorm:"not null;default 86400"`
+	Duration  int64  `gorm:"not null;default:86400"`
 }
 
 type Question struct {

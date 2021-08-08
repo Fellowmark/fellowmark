@@ -16,7 +16,7 @@ type StaffRoute struct {
 
 func (ur StaffRoute) CreateRouters(route *mux.Router) {
 	ur.CreateAuthRouter(route.PathPrefix("/auth").Subrouter())
-	ur.CreatePairingsRouter(route.PathPrefix("/assignment").Subrouter())
+	// ur.CreatePairingsRoute(route.PathPrefix("/assignment").Subrouter())
 	ur.CreatePrivilegedRouter(route.PathPrefix("/module/{moduleId}").Subrouter())
 }
 
@@ -35,13 +35,17 @@ func (ur StaffRoute) CreatePrivilegedRouter(route *mux.Router) {
 		route.Use(utils.SupervisionCheckMiddleware(ur.DB, "claims", "moduleId"))
 	}
 
-	ur.CreatePairingsRouter(route.PathPrefix("/pairing").Subrouter())
+	ur.CreatePairingsRoute(route.PathPrefix("/pairing").Subrouter())
+	ur.GetPairingsRoute(route.PathPrefix("/pairing").Subrouter())
 }
 
-func (ur StaffRoute) CreatePairingsRouter(route *mux.Router) {
-	utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment")
+func (ur StaffRoute) CreatePairingsRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment"))
+	route.HandleFunc("/initialize", ur.InitializePairings).Methods(http.MethodPost)
+	route.HandleFunc("/assign", ur.AssignPairings).Methods(http.MethodPost)
+}
 
-	assignPairingRoute := route.NewRoute().Subrouter()
-	assignPairingRoute.HandleFunc("/pairing/initialize", ur.InitializePairings).Methods(http.MethodPost)
-	assignPairingRoute.HandleFunc("/pairing/assign", ur.AssignPairings).Methods(http.MethodPost)
+func (ur StaffRoute) GetPairingsRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Pairing{}, "pairing"))
+	route.HandleFunc("", utils.DBGetFromData(ur.DB, &models.Pairing{}, "pairing", &[]models.Pairing{})).Methods(http.MethodGet)
 }
