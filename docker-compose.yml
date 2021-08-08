@@ -21,6 +21,7 @@ services:
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
             - JWT_SECRET=${JWT_SECRET}
             - RUN_ENV=local
+            - INSERT_DUMMY=${INSERT_DUMMY}
             - ADMIN_NAME=admin
             - ADMIN_EMAIL=admin@local.com
             - ADMIN_PASSWORD=admin
