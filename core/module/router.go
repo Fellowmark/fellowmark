@@ -8,6 +8,7 @@ import (
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ModuleRoute struct {
@@ -48,15 +49,15 @@ func (mr ModuleRoute) CreateSupervisionRoute(route *mux.Router) {
 
 func (mr ModuleRoute) GetModulesRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Module{}, "module"))
-	route.HandleFunc("", utils.DBGetFromData(mr.DB, &models.Module{}, "module", &[]models.Module{})).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBGetFromData(mr.DB.Preload(clause.Associations), &models.Module{}, "module", &[]models.Module{})).Methods(http.MethodGet)
 }
 
 func (mr ModuleRoute) GetEnrollmentsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Enrollment{}, "enrollment"))
-	route.HandleFunc("", utils.DBGetFromData(mr.DB, &models.Enrollment{}, "enrollment", &[]models.Enrollment{})).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBGetFromData(mr.DB.Preload(clause.Associations), &models.Enrollment{}, "enrollment", &[]models.Enrollment{})).Methods(http.MethodGet)
 }
 
 func (mr ModuleRoute) GetSupervisionsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Supervision{}, "supervision"))
-	route.HandleFunc("", utils.DBGetFromData(mr.DB, &models.Supervision{}, "supervision", &[]models.Supervision{})).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBGetFromData(mr.DB.Preload(clause.Associations), &models.Supervision{}, "supervision", &[]models.Supervision{})).Methods(http.MethodGet)
 }

@@ -25,14 +25,14 @@ type Staff struct {
 
 type Module struct {
 	gorm.Model
-	Code     string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null"`
+	Code     string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null" json:"omitempty"`
 	Semester string `gorm:"type:varchar(6);column:semester;not null"`
 	Name     string `gorm:"uniqueIndex:moduleIdx;column:name;not null"`
 }
 
 type Enrollment struct {
 	gorm.Model
-	Module    Module  `gorm:"foreignKey:ModuleID;references:ID"`
+	Module    Module  `gorm:"foreignKey:ModuleID;references:ID" json:"-"`
 	ModuleID  uint    `gorm:"uniqueIndex:enrollmentIdx;column:module_id;not null;unique:student_id"`
 	Student   Student `gorm:"foreignKey:StudentID"`
 	StudentID uint    `gorm:"uniqueIndex:enrollmentIdx;column:student_id;not null"`
@@ -40,7 +40,7 @@ type Enrollment struct {
 
 type Supervision struct {
 	gorm.Model
-	Module   Module `gorm:"foreignKey:ModuleID"`
+	Module   Module `gorm:"foreignKey:ModuleID" json:"-"`
 	ModuleID uint   `gorm:"uniqueIndex:supervisionIdx;column:module_id;not null"`
 	Staff    Staff  `gorm:"foreignKey:StaffID"`
 	StaffID  uint   `gorm:"uniqueIndex:supervisionIdx;column:staff_id;not null"`
@@ -49,7 +49,7 @@ type Supervision struct {
 type Assignment struct {
 	gorm.Model
 	Name      string `gorm:"uniqueIndex:assignmentIdx;column:name;not null"`
-	Module    Module `gorm:"foreignKey:ModuleID"`
+	Module    Module `gorm:"foreignKey:ModuleID" json:"-"`
 	ModuleID  uint   `gorm:"column:module_id;not null"`
 	GroupSize int    `gorm:"uniqueIndex:assignmentIdx;column:group_size;not null;check:group_size > 0"`
 	Duration  int64  `gorm:"not null;default 86400"`
@@ -59,13 +59,13 @@ type Question struct {
 	gorm.Model
 	QuestionNumber uint       `gorm:"uniqueIndex:questionIdx;column:question_number;not null"`
 	QuestionText   string     `gorm:"column:question_text;not null"`
-	Assignment     Assignment `gorm:"foreignKey:AssignmentID"`
+	Assignment     Assignment `gorm:"foreignKey:AssignmentID" json:"-"`
 	AssignmentID   uint       `gorm:"uniqueIndex:questionIdx;column:assignment_id;not null"`
 }
 
 type Rubric struct {
 	gorm.Model
-	Question    Question `gorm:"foreignKey:QuestionID"`
+	Question    Question `gorm:"foreignKey:QuestionID" json:"-"`
 	QuestionID  uint     `gorm:"uniqueIndex:rubricIdx;column:question_id;not null"`
 	Criteria    string   `gorm:"uniqueIndex:rubricIdx;not null"`
 	Description string   `gorm:"uniqueIndex:rubricIdx;not null"`
@@ -75,7 +75,7 @@ type Rubric struct {
 
 type Pairing struct {
 	gorm.Model
-	Assignment   Assignment `gorm:"foreignKey:AssignmentID"`
+	Assignment   Assignment `gorm:"foreignKey:AssignmentID" json:"-"`
 	AssignmentID uint       `gorm:"column:assignment_id;not null"`
 	Student      Student    `gorm:"foreignKey:StudentID"`
 	StudentID    uint       `gorm:"column:student_id;not null"`
@@ -88,7 +88,7 @@ type Submission struct {
 	gorm.Model
 	SubmittedBy Student  `gorm:"foreignKey:StudentID"`
 	StudentID   uint     `gorm:"column:submitted_by;not null"`
-	Question    Question `gorm:"foreignKey:QuestionID"`
+	Question    Question `gorm:"foreignKey:QuestionID" json:"-"`
 	QuestionID  uint     `gorm:"column:question_id;not null"`
 	ContentFile string   `gorm:"column:content_file_location"`
 	Content     string   `gorm:"column:content"`
