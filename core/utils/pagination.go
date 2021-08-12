@@ -3,7 +3,9 @@ package utils
 import (
 	"math"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
@@ -41,17 +43,20 @@ func (p *Pagination) GetSort() string {
 	return p.Sort
 }
 
-func GetPagination(r *http.Request) {
-  urlVars := mux.Vars(r)
-	pagination := Pagination {
-    Limit := urlVars["limit"],
-    Page := urlVars["page"],
-    Sort := urlVars["sort"],
-  }
+func GetPagination(r *http.Request) Pagination {
+	urlVars := mux.Vars(r)
+	limit, _ := strconv.Atoi(urlVars["limit"])
+	page, _ := strconv.Atoi(urlVars["page"])
+	pagination := Pagination{
+		Limit: limit,
+		Page:  page,
+		Sort:  urlVars["sort"],
+	}
+	return pagination
 }
 
 func paginate(value interface{}, r *http.Request, db *gorm.DB) func(db *gorm.DB) *gorm.DB {
-  pagination := &GetPagination(r)
+	pagination := GetPagination(r)
 	var totalRows int64
 	db.Model(value).Count(&totalRows)
 	pagination.TotalRows = totalRows
