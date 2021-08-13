@@ -110,6 +110,98 @@ create/get questions
 create/get rubrics
 */
 
+/**
+ * Creates assignment using given data
+ * 
+ * @param {string} name name of the assignment to be created
+ * @param {int} moduleId ModuleID of the module
+ * @param {int} groupSize size of each group of student-marker pairings
+ * @param {int} [duration=86400] time in seconds assignment should be open for submissions [default: `86400` (1 day)]
+ */
+export const createAssignment = (name, moduleId, groupSize, duration = 86400) => {
+  const deadline = Math.floor(Date.now() / 1000) + duration;
+  axios.post(`/assignment`, { Name: name, ModuleID: moduleId, GroupSize: groupSize, Deadline: deadline }).catch((err) => {
+    console.error(err);
+  });
+};
+
+/**
+ * Creates question using given data
+ * 
+ * @param {int} questionNumber question number in the context of the assignment
+ * @param {string} questionText question text
+ * @param {int} assignmentId AssignmentID of corresponding assignment
+ */
+export const createQuestion = (questionNumber, questionText, assignmentId) => {
+  axios.post(`/assignment/question`, { QuestionNumber: questionNumber, QuestionText: questionText, AssignmentID: assignmentId }).catch((err) => {
+    console.error(err);
+  });
+};
+
+/**
+ * Creates rubric for a question using given data
+ * 
+ * @param {int} questionId QuestionID of question rubric references
+ * @param {string} criteria rubric criteria to be marked on
+ * @param {string} description description of levels of correctness/answer quality and corresponding marks
+ * @param {int} [maxMark=10] maximum amount of marks for the question (default: `10`)  
+ * @param {int} [minMark=0] minimum amount of marks for the question (default: `0`) 
+ */
+export const createRubrics = (questionId, criteria, description, maxMark = 10, minMark = 0) => {
+  axios.post(`/assignment/rubric`, {
+    QuestionID: questionId,
+    Criteria: criteria,
+    Description: description,
+    MinMark: minMark,
+    MaxMark: maxMark
+  }).catch((err) => {
+    console.error(err);
+  });
+};
+
+/**
+ * Returns Assignments data that matches given data
+ * 
+ * @param {Object} assignmentData can consist of Name, ModuleID, GroupSize and/or Deadline
+ */
+export const getAssignments = (assignmentData) => {
+  axios.get(`/assignment`, {
+    method: 'GET',
+    body: JSON.stringify(assignmentData)
+  }).catch((err) => {
+    console.log(err);
+  });
+};
+
+/**
+ * Returns Questions data that matches given data
+ * 
+ * @param {Object} questionData can consist of QuestionNumber, QuestionText and/or AssignmentID
+ */
+export const getQuestions = (questionData) => {
+  axios.get(`/assignment/question`, {
+    method: 'GET',
+    body: JSON.stringify(questionData)
+  }).catch((err) => {
+    console.log(err);
+  });
+};
+
+/**
+ * Returns Rubrics data that matches given data
+ * 
+ * @param {Object} rubricData can consist of QuestionID, Criteria, Description, MinMark and/or MaxMark
+ */
+export const getQuestions = (rubricData) => {
+  axios.get(`/assignment/rubric`, {
+    method: 'GET',
+    body: JSON.stringify(rubricData)
+  }).catch((err) => {
+    console.log(err);
+  });
+};;
+
+
 // TODO remove invalid functions below
 
 /*

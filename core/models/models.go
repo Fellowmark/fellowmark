@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type Admin struct {
 	gorm.Model
@@ -52,7 +54,7 @@ type Assignment struct {
 	Module    Module `gorm:"foreignKey:ModuleID"`
 	ModuleID  uint   `gorm:"column:module_id;not null"`
 	GroupSize int    `gorm:"uniqueIndex:assignmentIdx;column:group_size;not null;check:group_size > 0"`
-	Duration  int64  `gorm:"not null;default:86400"`
+	Deadline  int64  `gorm:"not null"`
 }
 
 type Question struct {
