@@ -25,7 +25,7 @@ type Staff struct {
 
 type Module struct {
 	gorm.Model
-	Code     string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null" json:"omitempty"`
+	Code     string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null"`
 	Semester string `gorm:"type:varchar(6);column:semester;not null"`
 	Name     string `gorm:"uniqueIndex:moduleIdx;column:name;not null"`
 }

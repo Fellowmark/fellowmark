@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
@@ -33,6 +32,12 @@ func (p *Pagination) GetPage() int {
 	if p.Page == 0 {
 		p.Page = 1
 	}
+	if p.Page > p.TotalPages {
+		p.Page = p.TotalPages
+	}
+	if p.Page < 1 {
+		p.Page = 1
+	}
 	return p.Page
 }
 
@@ -44,23 +49,22 @@ func (p *Pagination) GetSort() string {
 }
 
 func GetPagination(r *http.Request) Pagination {
-	urlVars := mux.Vars(r)
-	limit, _ := strconv.Atoi(urlVars["limit"])
-	page, _ := strconv.Atoi(urlVars["page"])
+	urlVars := r.URL.Query()
+	limit, _ := strconv.Atoi(urlVars.Get("limit"))
+	page, _ := strconv.Atoi(urlVars.Get("page"))
 	pagination := Pagination{
 		Limit: limit,
 		Page:  page,
-		Sort:  urlVars["sort"],
+		Sort:  urlVars.Get("sort"),
 	}
 	return pagination
 }
 
-func paginate(value interface{}, r *http.Request, db *gorm.DB) func(db *gorm.DB) *gorm.DB {
-	pagination := GetPagination(r)
+func Paginate(tx *gorm.DB, r *http.Request, pagination *Pagination) func(db *gorm.DB) *gorm.DB {
 	var totalRows int64
-	db.Model(value).Count(&totalRows)
+	tx.Count(&totalRows)
 	pagination.TotalRows = totalRows
-	totalPages := int(math.Ceil(float64(totalRows) / float64(pagination.Limit)))
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pagination.GetLimit())))
 	pagination.TotalPages = totalPages
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Offset(pagination.GetOffset()).Limit(pagination.GetLimit()).Order(pagination.GetSort())

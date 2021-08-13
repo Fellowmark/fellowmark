@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -15,8 +16,8 @@ import (
 func DecodeBodyMiddleware(refType interface{}, contextOutKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			parsedData := refType
-			if err := DecodeBody(r.Body, &parsedData); err != nil {
+			parsedData := reflect.New(reflect.TypeOf(refType)).Interface()
+			if err := DecodeBody(r.Body, &refType); err != nil {
 				HandleResponse(w, err.Error(), http.StatusBadRequest)
 			} else {
 				ctxWithUser := context.WithValue(r.Context(), contextOutKey, parsedData)
@@ -75,14 +76,26 @@ func DBCreateMiddleware(db *gorm.DB, model interface{}, contextInKey string, upd
 	}
 }
 
-func DBGetFromData(db *gorm.DB, model interface{}, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
+func SuccessMiddleware(db *gorm.DB, contextInKey string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := r.Context().Value(contextInKey)
-		result := db.Scopes(paginate(model, r, db)).Model(model).Where(data).Find(arrayRefType)
+		HandleResponseWithObject(w, data, http.StatusOK)
+	}
+}
+
+func DBGetFromData(db *gorm.DB, model interface{}, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		arrayOfData := reflect.New(reflect.TypeOf(arrayRefType)).Interface()
+		data := r.Context().Value(contextInKey)
+		tx := db.Model(model).Where(data)
+		pagination := GetPagination(r)
+		scope := Paginate(tx, r, &pagination)
+		result := tx.Scopes(scope).Find(arrayOfData)
+		pagination.Rows = arrayOfData
 		if result.Error != nil {
 			HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
 		} else {
-			HandleResponseWithObject(w, arrayRefType, http.StatusOK)
+			HandleResponseWithObject(w, pagination, http.StatusOK)
 		}
 	}
 }
