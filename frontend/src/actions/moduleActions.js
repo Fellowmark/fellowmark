@@ -192,14 +192,14 @@ export const getQuestions = (questionData) => {
  * 
  * @param {Object} rubricData can consist of QuestionID, Criteria, Description, MinMark and/or MaxMark
  */
-export const getQuestions = (rubricData) => {
+export const getRubrics = (rubricData) => {
   axios.get(`/assignment/rubric`, {
     method: 'GET',
     body: JSON.stringify(rubricData)
   }).catch((err) => {
     console.log(err);
   });
-};;
+};
 
 
 // TODO remove invalid functions below
