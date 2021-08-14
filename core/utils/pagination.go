@@ -17,18 +17,18 @@ type Pagination struct {
 	Rows       interface{} `json:"rows"`
 }
 
-func (p *Pagination) GetOffset() int {
+func (p Pagination) GetOffset() int {
 	return (p.GetPage() - 1) * p.GetLimit()
 }
 
-func (p *Pagination) GetLimit() int {
+func (p Pagination) GetLimit() int {
 	if p.Limit == 0 {
 		p.Limit = 10
 	}
 	return p.Limit
 }
 
-func (p *Pagination) GetPage() int {
+func (p Pagination) GetPage() int {
 	if p.Page == 0 {
 		p.Page = 1
 	}
@@ -41,7 +41,7 @@ func (p *Pagination) GetPage() int {
 	return p.Page
 }
 
-func (p *Pagination) GetSort() string {
+func (p Pagination) GetSort() string {
 	if p.Sort == "" {
 		p.Sort = "id desc"
 	}
@@ -61,11 +61,8 @@ func GetPagination(r *http.Request) Pagination {
 }
 
 func Paginate(tx *gorm.DB, r *http.Request, pagination *Pagination) func(db *gorm.DB) *gorm.DB {
-	var totalRows int64
-	tx.Count(&totalRows)
-	pagination.TotalRows = totalRows
-	totalPages := int(math.Ceil(float64(totalRows) / float64(pagination.GetLimit())))
-	pagination.TotalPages = totalPages
+	tx.Count(&pagination.TotalRows)
+	pagination.TotalPages = int(math.Ceil(float64(pagination.TotalRows) / float64(pagination.GetLimit())))
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Offset(pagination.GetOffset()).Limit(pagination.GetLimit()).Order(pagination.GetSort())
 	}
