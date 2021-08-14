@@ -11,13 +11,14 @@ import (
 	"github.com/nus-utils/nus-peer-review/models"
 	"gopkg.in/validator.v2"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func DecodeBodyMiddleware(refType interface{}, contextOutKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			parsedData := reflect.New(reflect.TypeOf(refType)).Interface()
-			if err := DecodeBody(r.Body, &refType); err != nil {
+			if err := DecodeBody(r.Body, parsedData); err != nil {
 				HandleResponse(w, err.Error(), http.StatusBadRequest)
 			} else {
 				ctxWithUser := context.WithValue(r.Context(), contextOutKey, parsedData)
@@ -85,13 +86,13 @@ func SuccessMiddleware(db *gorm.DB, contextInKey string) http.HandlerFunc {
 
 func DBGetFromData(db *gorm.DB, model interface{}, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		arrayOfData := reflect.New(reflect.TypeOf(arrayRefType)).Interface()
-		data := r.Context().Value(contextInKey)
-		tx := db.Model(model).Where(data)
 		pagination := GetPagination(r)
-		scope := Paginate(tx, r, &pagination)
-		result := tx.Scopes(scope).Find(arrayOfData)
-		pagination.Rows = arrayOfData
+		pagination.Rows = &[]models.Question{}
+		data := r.Context().Value(contextInKey)
+		scope := Paginate(db, func(tx *gorm.DB) *gorm.DB {
+			return tx.Model(model).Where(data)
+		}, r, &pagination)
+		result := db.Scopes(scope).Preload(clause.Associations).Where(data).Find(pagination.Rows)
 		if result.Error != nil {
 			HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
 		} else {

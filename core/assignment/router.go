@@ -8,7 +8,6 @@ import (
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type AssignmentRoute struct {
@@ -52,15 +51,15 @@ func (ar AssignmentRoute) CreateRubricsRoute(route *mux.Router) {
 
 func (ar AssignmentRoute) GetAssignmentsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment"))
-	route.HandleFunc("", utils.DBGetFromData(ar.DB.Preload(clause.Associations), &models.Assignment{}, "assignment", &[]models.Supervision{})).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Assignment{}, "assignment", &[]models.Supervision{})).Methods(http.MethodGet)
 }
 
 func (ar AssignmentRoute) GetQuestionsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Question{}, "question"))
-	route.HandleFunc("", utils.DBGetFromData(ar.DB.Preload(clause.Associations), &models.Question{}, "question", &[]models.Question{})).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Question{}, "question", &[]models.Question{})).Methods(http.MethodGet)
 }
 
 func (ar AssignmentRoute) GetRubricsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
-	route.HandleFunc("", utils.DBGetFromData(ar.DB.Preload(clause.Associations), &models.Rubric{}, "rubric", &[]models.Rubric{})).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Rubric{}, "rubric", &[]models.Rubric{})).Methods(http.MethodGet)
 }
