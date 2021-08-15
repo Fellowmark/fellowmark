@@ -1,7 +1,7 @@
 import { Component } from "react";
 import NavBar from "../NavBar";
 import { Auth } from "../../context/authContext";
-import Assignment from "./Assignment";
+import Module from "./Module";
 import Grades from "./Grades";
 import PeerReview from "./PeerReview";
 
@@ -10,7 +10,7 @@ class Student extends Component {
     super(props);
     this.updatePage = this.updatePage.bind(this);
     this.state = {
-      page: "Assignment",
+      page: "Module",
     };
   }
 
@@ -20,11 +20,9 @@ class Student extends Component {
 
   pageComponent() {
     switch (this.state.page) {
-      case "Assignment":
+      case "Module":
         return (
-          <Assignment
-            module={this.props.moduleId}
-          />
+          <Module />
         );
       case "Peer Review":
         return (
@@ -46,7 +44,7 @@ class Student extends Component {
   }
 
   render() {
-    const pageList = ["Assignment", "Peer Review", "Grades"];
+    const pageList = ["Module", "Peer Review", "Grades"];
     return (
       <div>
         <NavBar
