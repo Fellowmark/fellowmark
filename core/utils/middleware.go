@@ -88,7 +88,7 @@ func SuccessMiddleware(db *gorm.DB, contextInKey string) http.HandlerFunc {
 func DBGetFromData(db *gorm.DB, model interface{}, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pagination := GetPagination(r)
-		pagination.Rows = &[]models.Question{}
+		pagination.Rows = reflect.New(reflect.TypeOf(arrayRefType)).Interface()
 		data := r.Context().Value(contextInKey)
 		scope := Paginate(db, func(tx *gorm.DB) *gorm.DB {
 			return tx.Model(model).Where(data)
