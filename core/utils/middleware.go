@@ -4,19 +4,21 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
 	"gopkg.in/validator.v2"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func DecodeBodyMiddleware(refType interface{}, contextOutKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			parsedData := refType
-			if err := DecodeBody(r.Body, &parsedData); err != nil {
+			parsedData := reflect.New(reflect.TypeOf(refType)).Interface()
+			if err := DecodeBody(r.Body, parsedData); err != nil {
 				HandleResponse(w, err.Error(), http.StatusBadRequest)
 			} else {
 				ctxWithUser := context.WithValue(r.Context(), contextOutKey, parsedData)
@@ -75,14 +77,26 @@ func DBCreateMiddleware(db *gorm.DB, model interface{}, contextInKey string, upd
 	}
 }
 
-func DBGetFromData(db *gorm.DB, model interface{}, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
+func SuccessMiddleware(db *gorm.DB, contextInKey string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := r.Context().Value(contextInKey)
-		result := db.Model(model).Where(data).Find(arrayRefType)
+		HandleResponseWithObject(w, data, http.StatusOK)
+	}
+}
+
+func DBGetFromData(db *gorm.DB, model interface{}, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		pagination := GetPagination(r)
+		pagination.Rows = &[]models.Question{}
+		data := r.Context().Value(contextInKey)
+		scope := Paginate(db, func(tx *gorm.DB) *gorm.DB {
+			return tx.Model(model).Where(data)
+		}, r, &pagination)
+		result := db.Scopes(scope).Preload(clause.Associations).Where(data).Find(pagination.Rows)
 		if result.Error != nil {
 			HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
 		} else {
-			HandleResponseWithObject(w, arrayRefType, http.StatusOK)
+			HandleResponseWithObject(w, pagination, http.StatusOK)
 		}
 	}
 }
