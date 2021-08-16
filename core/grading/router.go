@@ -16,9 +16,9 @@ type GradingRoute struct {
 
 func (gr GradingRoute) CreateRouters(route *mux.Router) {
 	gr.CreatePrivilegedRouter(route.NewRoute().Subrouter())
-	gr.GetGradesForMarkee(route.PathPrefix("/marker").Subrouter())
-	gr.GetGradesForMarkee(route.PathPrefix("/markee").Subrouter())
-	gr.GetGradesForMarkee(route.NewRoute().Subrouter())
+	gr.GetGradesForStudent(route.PathPrefix("/markee").Subrouter())
+	gr.GetGradesForMarker(route.PathPrefix("/marker").Subrouter())
+	gr.GetGradesForStaff(route.NewRoute().Subrouter())
 }
 
 func (gr GradingRoute) CreatePrivilegedRouter(route *mux.Router) {
@@ -38,7 +38,7 @@ func (gr GradingRoute) CreateGradeRouter(route *mux.Router) {
 	route.HandleFunc("", utils.DBCreateHandleFunc(gr.DB, &models.Grade{}, "grade", true)).Methods(http.MethodPost)
 }
 
-func (gr GradingRoute) GetGradesForMarkee(route *mux.Router) {
+func (gr GradingRoute) GetGradesForStudent(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}, "grade"))
 	if os.Getenv("RUN_ENV") == "production" {
 		route.Use(utils.ValidateJWTMiddleware("Student", "claims"))
