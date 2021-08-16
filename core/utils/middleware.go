@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -87,7 +88,7 @@ func SuccessMiddleware(db *gorm.DB, contextInKey string) http.HandlerFunc {
 func DBGetFromData(db *gorm.DB, model interface{}, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pagination := GetPagination(r)
-		pagination.Rows = &[]models.Question{}
+		pagination.Rows = reflect.New(reflect.TypeOf(arrayRefType)).Interface()
 		data := r.Context().Value(contextInKey)
 		scope := Paginate(db, func(tx *gorm.DB) *gorm.DB {
 			return tx.Model(model).Where(data)
@@ -127,7 +128,7 @@ func ValidateJWTMiddleware(role string, contextOutKey string) mux.MiddlewareFunc
 			if err != nil || claims.Role != role {
 				HandleResponse(w, err.Error(), http.StatusUnauthorized)
 			} else {
-				ctxWithUser := context.WithValue(r.Context(), contextOutKey, &claims)
+				ctxWithUser := context.WithValue(r.Context(), contextOutKey, &claims.Data)
 				next.ServeHTTP(w, r.WithContext(ctxWithUser))
 			}
 		})
@@ -163,5 +164,70 @@ func SupervisionCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey stri
 				next.ServeHTTP(w, r)
 			}
 		})
+	}
+}
+
+func MarkerCheckMiddleware(db *gorm.DB, contextInKey string, studentContextKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var count int64
+			data := r.Context().Value(contextInKey).(*models.Grade)
+			claims := r.Context().Value(studentContextKey).(*models.Student)
+			db.Model(&models.Pairing{}).Where("id = ? AND marker_id = ?", data.PairingID, claims.ID).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Please don't cheat", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
+
+func MarkeeCheckMiddleware(db *gorm.DB, contextInKey string, claimsContextKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var count int64
+			data := r.Context().Value(contextInKey).(*models.Grade)
+			student := r.Context().Value(claimsContextKey).(*models.Student)
+			db.Model(&models.Pairing{}).Where("id = ? AND student_id = ?", data.PairingID, student.ID).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Please don't cheat", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
+
+func ValidateAssignmentIdMiddlware(db *gorm.DB, muxVarKey string, moduleIdMuxVarKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var assignment models.Assignment
+			urlVars := mux.Vars(r)
+			assignmentId := urlVars[muxVarKey]
+			result := db.Model(&models.Assignment{}).Where("id = ?", assignmentId).First(&assignment)
+			urlVars[moduleIdMuxVarKey] = strconv.Itoa(int(assignment.ModuleID))
+			if result.Error != nil {
+				HandleResponse(w, "Assignment not found", http.StatusNotFound)
+			} else {
+				next.ServeHTTP(w, mux.SetURLVars(r, urlVars))
+			}
+		})
+	}
+}
+
+func GetAssignedPairingsHandlerFunc(db *gorm.DB, claimsContextKey string, muxVarKey string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var pairings []models.Pairing
+		assignmentId := mux.Vars(r)[muxVarKey]
+		student := r.Context().Value(claimsContextKey).(*models.Student)
+		result := db.Model(&models.Pairing{}).Where("assignment_id = ? AND (student_id = ? OR marker_id = ?)", assignmentId, student.ID, student.ID).Find(&pairings)
+		if result.Error != nil {
+			HandleResponse(w, "Something went wrong", http.StatusInternalServerError)
+		} else if len(pairings) == 0 {
+			HandleResponse(w, "No pairing found", http.StatusNotFound)
+		} else {
+			HandleResponseWithObject(w, pairings, http.StatusOK)
+		}
 	}
 }
