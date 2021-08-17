@@ -7,7 +7,6 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/nus-utils/nus-peer-review/loggers"
@@ -41,6 +40,7 @@ func GetDatabase(databaseUrl string) *gorm.DB {
 	}), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: false,
 		AllowGlobalUpdate:                        true,
+		FullSaveAssociations:                     true,
 	})
 	if err != nil {
 		loggers.ErrorLogger.Fatalln(err)
@@ -80,9 +80,7 @@ func CloseDB(connection *gorm.DB) {
 func SetupAdmin(pool *gorm.DB, admin *models.Admin) {
 	hash, _ := argon2id.CreateHash(admin.Password, argon2id.DefaultParams)
 	admin.Password = hash
-	pool.Clauses(clause.OnConflict{
-		UpdateAll: true,
-	}).Omit("ID").Create(&admin)
+	pool.Omit("ID").Where(&models.Admin{Email: admin.Email}).Updates(&admin)
 }
 
 func InsertDummyData(db *gorm.DB) {
