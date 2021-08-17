@@ -16,7 +16,7 @@ type GradingRoute struct {
 
 func (gr GradingRoute) CreateRouters(route *mux.Router) {
 	gr.CreatePrivilegedRouter(route.NewRoute().Subrouter())
-	gr.GetGradesForStudent(route.PathPrefix("/markee").Subrouter())
+	gr.GetGradesForStudent(route.PathPrefix("/student").Subrouter())
 	gr.GetGradesForMarker(route.PathPrefix("/marker").Subrouter())
 	gr.GetGradesForStaff(route.NewRoute().Subrouter())
 }
@@ -35,6 +35,7 @@ func (gr GradingRoute) CreateGradeRouter(route *mux.Router) {
 	if os.Getenv("RUN_ENV") == "production" {
 		route.Use(utils.MarkerCheckMiddleware(gr.DB, "grade", "claims"))
 	}
+	// TODO check if grade is valid (i.e., between min and max mark)
 	route.HandleFunc("", utils.DBCreateHandleFunc(gr.DB, &models.Grade{}, "grade", true)).Methods(http.MethodPost)
 }
 

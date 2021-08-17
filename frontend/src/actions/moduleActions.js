@@ -70,6 +70,8 @@ export const getModules = (moduleData) => {
   axios.get(`/module`, {
     method: 'GET',
     body: JSON.stringify(moduleData)
+  }).then((res) => {
+    return res.data;
   }).catch((err) => {
     console.log(err);
   });
@@ -84,6 +86,8 @@ export const getEnrollments = (enrollmentData) => {
   axios.get(`/module`, {
     method: 'GET',
     body: JSON.stringify(enrollmentData)
+  }).then((res) => {
+    return res.data;
   }).catch((err) => {
     console.log(err);
   });
@@ -98,6 +102,8 @@ export const getSupervisions = (supervisionData) => {
   axios.get(`/module`, {
     method: 'GET',
     body: JSON.stringify(supervisionData)
+  }).then((res) => {
+    return res.data;
   }).catch((err) => {
     console.log(err);
   });
@@ -120,7 +126,12 @@ create/get rubrics
  */
 export const createAssignment = (name, moduleId, groupSize, duration = 86400) => {
   const deadline = Math.floor(Date.now() / 1000) + duration;
-  axios.post(`/assignment`, { Name: name, ModuleID: moduleId, GroupSize: groupSize, Deadline: deadline }).catch((err) => {
+  axios.post(`/assignment`, {
+    Name: name,
+    ModuleID: moduleId,
+    GroupSize: groupSize,
+    Deadline: deadline
+  }).catch((err) => {
     console.error(err);
   });
 };
@@ -133,7 +144,11 @@ export const createAssignment = (name, moduleId, groupSize, duration = 86400) =>
  * @param {int} assignmentId AssignmentID of corresponding assignment
  */
 export const createQuestion = (questionNumber, questionText, assignmentId) => {
-  axios.post(`/assignment/question`, { QuestionNumber: questionNumber, QuestionText: questionText, AssignmentID: assignmentId }).catch((err) => {
+  axios.post(`/assignment/question`, {
+    QuestionNumber: questionNumber,
+    QuestionText: questionText,
+    AssignmentID: assignmentId
+  }).catch((err) => {
     console.error(err);
   });
 };
@@ -162,12 +177,14 @@ export const createRubrics = (questionId, criteria, description, maxMark = 10, m
 /**
  * Returns Assignments data that matches given data
  * 
- * @param {Object} assignmentData can consist of Name, ModuleID, GroupSize and/or Deadline
+ * @param {Object} assignmentData can consist of AssignmentID, Name, ModuleID, GroupSize and/or Deadline
  */
 export const getAssignments = (assignmentData) => {
   axios.get(`/assignment`, {
     method: 'GET',
     body: JSON.stringify(assignmentData)
+  }).then((res) => {
+    return res.data;
   }).catch((err) => {
     console.log(err);
   });
@@ -176,12 +193,14 @@ export const getAssignments = (assignmentData) => {
 /**
  * Returns Questions data that matches given data
  * 
- * @param {Object} questionData can consist of QuestionNumber, QuestionText and/or AssignmentID
+ * @param {Object} questionData can consist of QuestionID, QuestionNumber, QuestionText and/or AssignmentID
  */
 export const getQuestions = (questionData) => {
   axios.get(`/assignment/question`, {
     method: 'GET',
     body: JSON.stringify(questionData)
+  }).then((res) => {
+    return res.data;
   }).catch((err) => {
     console.log(err);
   });
@@ -190,69 +209,80 @@ export const getQuestions = (questionData) => {
 /**
  * Returns Rubrics data that matches given data
  * 
- * @param {Object} rubricData can consist of QuestionID, Criteria, Description, MinMark and/or MaxMark
+ * @param {Object} rubricData can consist of RubricID, QuestionID, Criteria, Description, MinMark and/or MaxMark
  */
 export const getRubrics = (rubricData) => {
   axios.get(`/assignment/rubric`, {
     method: 'GET',
     body: JSON.stringify(rubricData)
+  }).then((res) => {
+    return res.data;
   }).catch((err) => {
     console.log(err);
   });
 };
 
-
-// TODO remove invalid functions below
-
-/*
-export const listModules = (updateModuleList) => {
-  axios
-    .get("/module/list")
-    .then((res) => {
-      updateModuleList(res.data);
-    })
-    .catch((err) => {
-      console.error(err);
-    });
-};
-
-export const getModuleInfo = (moduleCode, updateModuleInfo) => {
-  axios
-    .get(`/module/${moduleCode}`)
-    .then((res) => {
-      updateModuleInfo(res.data);
-    })
-    .catch((err) => {
-      if (err.response.status === 503) {
-        createModule(moduleCode);
-        getModuleInfo(moduleCode, updateModuleInfo);
-      }
-    });
-};
-
-export const addUserToModule = (moduleCode, userHandle) => {
-  axios.get(`/module/${moduleCode}/add/${userHandle}`).catch((err) => {
+export const createGrade = (pairingId, rubricId, grade) => {
+  // const rubric = getRubrics({ RubricID: rubricId })[0];
+  // if (grade < rubric.MinMark || grade > rubric.MaxMark) {
+  //   console.error('Please provide a valid grade');
+  //   return;
+  // }
+  axios.post(`/assignment/rubric`, {
+    PairingID: pairingId,
+    RubricID: rubricId,
+    Grade: grade,
+  }).catch((err) => {
     console.error(err);
   });
 };
 
-export const updateGroupings = (moduleCode, groupings) => {
-  axios.post(`/module/${moduleCode}/groups/update`, groupings).catch((err) => {
-    console.error(err);
+export const getGradesForStudent = (gradeData) => {
+  axios.get('/grading/student', {
+    method: 'GET',
+    body: JSON.stringify(gradeData)
+  }).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    console.log(err);
   });
 };
 
-export const updateAssignments = (moduleCode, assignments) => {
-  axios
-    .post(`/module/${moduleCode}/assignments/update`, assignments)
-    .catch((err) => {
-      console.error(err);
-    });
-};
-
-export const updateQuestion = (moduleCode, newQuestion) => {
-  axios.post(`/module/${moduleCode}/version/${newQuestion}`).catch((err) => {
-    console.error(err);
+export const getGradesForMarker = (gradeData) => {
+  axios.get('/grading/marker', {
+    method: 'GET',
+    body: JSON.stringify(gradeData)
+  }).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    console.log(err);
   });
 };
-*/
+
+export const getGradesForStaff = (gradeData) => {
+  axios.get('/grading', {
+    method: 'GET',
+    body: JSON.stringify(gradeData)
+  }).then((res) => {
+    return res.data;
+  }).catch((err) => {
+    console.log(err);
+  });
+};
+
+export const getAssignmentGradesForStudent = (assignmentData) => {
+  let assignment = getAssignments(assignmentData)[0];
+  let questions = getQuestions({ AssignmentID: assignment.ID });
+  let questionsGrades = {};
+  for (let question of questions) {
+    rubric = getRubrics({ QuestionID: question.ID })[0];
+    questionsGrades[question.ID] = getGradesForStudent({ RubricID: rubric.ID });
+  }
+  return questionsGrades;
+};
+
+export const getQuestionGradesForStudent = (questionData) => {
+  let question = getQuestions(questionData)[0];
+  rubric = getRubrics({ QuestionID: question.ID })[0];
+  return getGradesForStudent({ RubricID: rubric.ID });
+};
