@@ -1,5 +1,7 @@
 import { Component } from "react";
-import { Auth } from "../../context/authContext";
+
+import { Auth } from "../../context/context";
+
 import "./PeerReview.css";
 
 /**

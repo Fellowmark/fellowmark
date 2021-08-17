@@ -1,14 +1,15 @@
 import React from "react";
-import { firebaseAuth } from "../reducers/authReducer";
+import { updateContext } from "../reducers/reducer";
 
 export const Auth = React.createContext();
 const initialState = {
-    user: {}
+    user: {},
+    module: localStorage.getItem("module")
 };
 
 export const AuthProvider = (props) => {
 
-    const [state, dispatch] = React.useReducer(firebaseAuth, initialState);
+    const [state, dispatch] = React.useReducer(updateContext, initialState);
     const value = { state, dispatch };
 
     return <Auth.Provider value={value}>

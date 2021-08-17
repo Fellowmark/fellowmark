@@ -15,7 +15,10 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 
+import { Auth } from '../context/context';
+
 export default function ModuleSelector(props) {
+    const { state, dispatch } = useContext(Auth);
     const [isOpen, setDialog] = useState(false);
     const [moduleId, setModuleId] = useState('');
 
@@ -30,6 +33,10 @@ export default function ModuleSelector(props) {
     const setModule = () => {
         localStorage.remove('module');
         localStorage.setItem('module', moduleId);
+        dispatch({
+            type: "MODULE",
+            payload: moduleId
+        });
         window.location.reload();
     };
 

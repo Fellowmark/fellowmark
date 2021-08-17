@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Auth } from "../../context/authContext";
+
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
@@ -9,6 +9,8 @@ import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
 import { withStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
+
+import { Auth } from "../../context/context";
 
 const StyledTableCell = withStyles((theme) => ({
   head: {

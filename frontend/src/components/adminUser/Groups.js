@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Auth } from "../../context/authContext";
+import { Auth } from "../../context/context";
 
 /**
  * Groups consists of the displaying the different groups for a chosen assignment

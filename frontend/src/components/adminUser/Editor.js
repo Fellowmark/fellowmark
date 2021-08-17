@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Auth } from "../../context/authContext";
+import { Auth } from "../../context/context";
 
 /**
  * Editor is the assignment editor, where the module supervisor can edit an assignment,

@@ -4,7 +4,7 @@ import jwtDecode from "jwt-decode";
 import CircularProgress from "@material-ui/core/CircularProgress";
 
 import { logoutUser, getUserDetails } from "../actions/userActions";
-import { Auth } from "../context/authContext";
+import { Auth } from "../context/context";
 
 class Home extends Component {
     constructor(props) {

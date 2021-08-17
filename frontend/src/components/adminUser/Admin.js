@@ -1,6 +1,6 @@
 import { Component } from "react";
 import NavBar from "../NavBar";
-import { Auth } from "../../context/authContext";
+import { Auth } from "../../context/context";
 import Students from "./Students";
 import GroupWork from "./GroupWork";
 import Assessments from "./Assessments";

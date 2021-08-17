@@ -1,6 +1,7 @@
 import { Component } from "react";
+
+import { Auth } from "../../context/context";
 import NavBar from "../NavBar";
-import { Auth } from "../../context/authContext";
 import Module from "./Module";
 import Grades from "./Grades";
 import PeerReview from "./PeerReview";

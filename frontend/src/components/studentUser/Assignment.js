@@ -1,6 +1,8 @@
 import { Component } from 'react';
+
 import Button from '@material-ui/core/Button';
-import { Auth } from '../../context/authContext';
+
+import { Auth } from '../../context/context';
 
 /** 
  * Assignment consists of:

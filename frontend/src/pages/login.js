@@ -1,12 +1,15 @@
 import React, { Component } from "react";
-import { loginUser } from "../actions/userActions";
-import { Auth } from "../context/authContext";
+import { Link } from "react-router-dom";
+
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
-import { Link } from "react-router-dom";
+
+import { Auth } from "../context/context";
+import { loginUser } from "../actions/userActions";
+
 import "./login.css";
 
 class Login extends Component {
