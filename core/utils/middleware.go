@@ -3,7 +3,14 @@ package utils
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"math/rand"
+	"mime"
 	"net/http"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -135,6 +142,36 @@ func ValidateJWTMiddleware(role string, contextOutKey string) mux.MiddlewareFunc
 	}
 }
 
+func Contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
+func ValidateJWTMiddlewareMultipleRoles(roles []string, contextOutKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if !strings.Contains(authHeader, "Bearer") {
+				HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			tokenString := strings.Split(authHeader, "Bearer ")[1]
+			claims, err := ParseJWT(tokenString)
+			if err != nil || Contains(roles, claims.Role) {
+				HandleResponse(w, err.Error(), http.StatusUnauthorized)
+			} else {
+				ctxWithUser := context.WithValue(r.Context(), contextOutKey, &claims)
+				next.ServeHTTP(w, r.WithContext(ctxWithUser))
+			}
+		})
+	}
+}
+
 func EnrollmentCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +194,7 @@ func SupervisionCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey stri
 			data := r.Context().Value(contextInKey).(*models.Staff)
 			moduleId := mux.Vars(r)[muxVarKey]
 			var count int64
-			db.Model(&models.Enrollment{}).Where("staff_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
+			db.Model(&models.Supervision{}).Where("staff_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
 			if count == 0 {
 				HandleResponse(w, "Not enrolled in module", http.StatusUnauthorized)
 			} else {
@@ -229,5 +266,114 @@ func GetAssignedPairingsHandlerFunc(db *gorm.DB, claimsContextKey string, muxVar
 		} else {
 			HandleResponseWithObject(w, pairings, http.StatusOK)
 		}
+	}
+}
+
+func RandToken(len int) string {
+	b := make([]byte, len)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)
+}
+
+func UploadMiddleware(uploadPath string, filePathContextOutKey string, maxUploadSize int64) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+				HandleResponse(w, "CANT_PARSE_FORM", http.StatusInternalServerError)
+				return
+			}
+
+			// parse and validate file and post parameters
+			file, fileHeader, err := r.FormFile("uploadFile")
+			if err != nil {
+				HandleResponse(w, "INVALID_FILE", http.StatusBadRequest)
+				return
+			}
+
+			defer file.Close()
+			// Get and print out file size
+			fileSize := fileHeader.Size
+			// validate file size
+			if fileSize > maxUploadSize {
+				HandleResponse(w, "FILE_TOO_BIG", http.StatusBadRequest)
+				return
+			}
+			fileBytes, err := ioutil.ReadAll(file)
+			if err != nil {
+				HandleResponse(w, "INVALID_FILE", http.StatusBadRequest)
+				return
+			}
+
+			// check file type, detectcontenttype only needs the first 512 bytes
+			detectedFileType := http.DetectContentType(fileBytes)
+			switch detectedFileType {
+			case "image/jpeg", "image/jpg":
+			case "image/gif", "image/png":
+			case "application/pdf":
+				break
+			default:
+				HandleResponse(w, "INVALID_FILE_TYPE", http.StatusBadRequest)
+				return
+			}
+			fileName := RandToken(20)
+			fileEndings, err := mime.ExtensionsByType(detectedFileType)
+			if err != nil {
+				HandleResponse(w, "CANT_READ_FILE_TYPE", http.StatusInternalServerError)
+				return
+			}
+			newPath := filepath.Join(uploadPath, fileName+fileEndings[0])
+
+			// write file
+			newFile, err := os.Create(newPath)
+			if err != nil {
+				HandleResponse(w, "CANT_WRITE_FILE", http.StatusInternalServerError)
+				return
+			}
+			defer newFile.Close() // idempotent, okay to call twice
+			if _, err := newFile.Write(fileBytes); err != nil || newFile.Close() != nil {
+				HandleResponse(w, "CANT_WRITE_FILE", http.StatusInternalServerError)
+				return
+			}
+			ctxWithPath := context.WithValue(r.Context(), filePathContextOutKey, newPath)
+			next.ServeHTTP(w, r.WithContext(ctxWithPath))
+		})
+	}
+}
+
+func DownloadHandlerFunc(dbDataContextInKey string, pathContextInKey string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		filePath := r.Context().Value(pathContextInKey).(string)
+		data := r.Context().Value(dbDataContextInKey)
+		fn := filepath.Base(filePath)
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", fn))
+		file, err := os.Open(filePath)
+		if err != nil {
+			HandleResponse(w, "FILE_NOT_FOUND", http.StatusNotFound)
+		}
+		defer file.Close()
+		io.Copy(w, file)
+		HandleResponseWithObject(w, data, http.StatusOK)
+	})
+}
+
+func ModulePermCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			moduleId := mux.Vars(r)[muxVarKey]
+			var count int64
+
+			switch data := r.Context().Value(contextInKey).(type) {
+			case *models.Student:
+				db.Model(&models.Enrollment{}).Where("student_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
+			case *models.Staff:
+				db.Model(&models.Supervision{}).Where("staff_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
+			}
+			if count == 0 {
+				HandleResponse(w, "Not enrolled in module", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
 	}
 }

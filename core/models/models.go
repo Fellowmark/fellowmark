@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Admin struct {
 	gorm.Model
@@ -61,6 +65,8 @@ type Question struct {
 	QuestionText   string     `gorm:"column:question_text;not null"`
 	Assignment     Assignment `gorm:"foreignKey:AssignmentID" json:"-"`
 	AssignmentID   uint       `gorm:"uniqueIndex:questionIdx;column:assignment_id;not null"`
+	StartDate      time.Time  `gorm:"column:start_date"`
+	EndDate        time.Time  `gorm:"column:end_date"`
 }
 
 type Rubric struct {
@@ -90,7 +96,7 @@ type Submission struct {
 	StudentID   uint     `gorm:"column:submitted_by;not null"`
 	Question    Question `gorm:"foreignKey:QuestionID" json:"-"`
 	QuestionID  uint     `gorm:"column:question_id;not null"`
-	ContentFile string   `gorm:"column:content_file_location"`
+	ContentFile string   `gorm:"column:content_file_location" json:"-"`
 	Content     string   `gorm:"column:content"`
 }
 
