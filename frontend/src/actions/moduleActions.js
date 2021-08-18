@@ -83,7 +83,7 @@ export const getModules = (moduleData) => {
  * @param {Object} enrollmentData can consist of ID, ModuleID, and/or StudentID
  */
 export const getEnrollments = (enrollmentData) => {
-  axios.get(`/module`, {
+  axios.get(`/module/enroll`, {
     method: 'GET',
     body: JSON.stringify(enrollmentData)
   }).then((res) => {
@@ -96,10 +96,10 @@ export const getEnrollments = (enrollmentData) => {
 /**
  * Returns Supervisions data that matches given data
  * 
- * @param {Object} enrollmentData can consist of ID, ModuleID, and/or StaffID
+ * @param {Object} supervisionData can consist of ID, ModuleID, and/or StaffID
  */
 export const getSupervisions = (supervisionData) => {
-  axios.get(`/module`, {
+  axios.get(`/module/supervise`, {
     method: 'GET',
     body: JSON.stringify(supervisionData)
   }).then((res) => {
@@ -108,13 +108,6 @@ export const getSupervisions = (supervisionData) => {
     console.log(err);
   });
 };
-
-/*
-TODO Assignment actions
-create/get assignments
-create/get questions
-create/get rubrics
-*/
 
 /**
  * Creates assignment using given data

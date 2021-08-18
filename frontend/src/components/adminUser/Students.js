@@ -8,9 +8,9 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
 import { withStyles } from "@material-ui/core/styles";
-import TextField from "@material-ui/core/TextField";
 
 import { Auth } from "../../context/context";
+import { getEnrollments } from "../../actions/moduleActions";
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
@@ -39,34 +39,25 @@ class Students extends Component {
   }
 
   componentDidMount() {
-    this.setState({ groupings: this.props.groupings });
+    const { state, dispatch } = this.context;
+    let enrollments = getEnrollments({ ModuleID: state.Module }).rows;
+    this.setState({ enrollments: enrollments });
   }
 
   render() {
-    const currentGroupings = this.state.groupings;
-    const studentRows = Object.keys(currentGroupings).map((key) => {
-      return currentGroupings[key].map((studentHandle) => {
-        return (
-          <StyledTableRow key={studentHandle}>
-            <StyledTableCell component="th" scope="row">
-              {studentHandle}
-            </StyledTableCell>
-            <StyledTableCell align="right">
-              <TextField
-                type="number"
-                key={studentHandle}
-                defaultValue={key}
-                onChange={(e) => {
-                  console.log(studentHandle);
-                  console.log(e.target.value);
-                  this.props.updateStudentGroup(studentHandle, e.target.value);
-                }}
-              />
-            </StyledTableCell>
-          </StyledTableRow>
-        );
-      });
+    const enrollments = this.state.enrollments;
+    const students = enrollments.map((enrollment) => enrollment.Student);
+    const studentRows = students.map((student) => {
+      <StyledTableRow key={student}>
+        <StyledTableCell component="th" scope="row">
+          {student.Name}
+        </StyledTableCell>
+        <StyledTableCell align="right">
+          {student.Email}
+        </StyledTableCell>
+      </StyledTableRow>;
     });
+
     return (
       <div>
         <TableContainer component={Paper}>
@@ -74,7 +65,7 @@ class Students extends Component {
             <TableHead>
               <TableRow>
                 <StyledTableCell>Student</StyledTableCell>
-                <StyledTableCell align="right">Group</StyledTableCell>
+                <StyledTableCell align="right">Email</StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>{studentRows}</TableBody>
@@ -84,6 +75,7 @@ class Students extends Component {
     );
   }
 }
+
 Students.contextType = Auth;
 
 export default Students;
