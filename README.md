@@ -1,4 +1,4 @@
-# NUS Peer Review
+# PeerMark
 Education application for student to student cross reviewing of assignments.
 
 # Requirements
