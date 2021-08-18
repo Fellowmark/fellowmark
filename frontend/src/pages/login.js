@@ -1,27 +1,30 @@
 import React, { Component } from "react";
-import { loginUser } from "../actions/userActions";
-import { Auth } from "../context/authContext";
+import { Link } from "react-router-dom";
+
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
-import { Link } from "react-router-dom";
+
+import { Auth } from "../context/context";
+import { loginUser } from "../actions/userActions";
+
 import "./login.css";
 
-class login extends Component {
+class Login extends Component {
     constructor(props) {
         super(props);
         this.state = {
             email: "",
             password: ""
-        }
+        };
     }
 
-    submitLogin (e) {
+    submitLogin(e) {
         e.preventDefault();
-        const {_, dispatch} = this.context;
-        const userDetails = {email: this.state.email, password: this.state.password};
+        const { _, dispatch } = this.context;
+        const userDetails = { email: this.state.email, password: this.state.password };
         console.log(userDetails);
         try {
             loginUser(userDetails, this.props.history)(dispatch);
@@ -30,7 +33,7 @@ class login extends Component {
         }
     }
 
-    render () {
+    render() {
         return (
             <div>
                 <Grid container spacing={0} justify="center" direction="row">
@@ -49,7 +52,7 @@ class login extends Component {
                             >
                                 <Grid item>
                                     <Typography component="h1" variant="h5">
-                                        Welcome to NUSColab!
+                                        Welcome to NUS Peermark!
                                     </Typography>
                                 </Grid>
                                 <Grid item>
@@ -62,7 +65,7 @@ class login extends Component {
                                                     fullWidth
                                                     name="email"
                                                     variant="outlined"
-                                                    onChange={(e) => this.setState({email: e.target.value})}
+                                                    onChange={(e) => this.setState({ email: e.target.value })}
                                                     required
                                                     autoFocus
                                                 />
@@ -75,7 +78,7 @@ class login extends Component {
                                                     name="password"
                                                     variant="outlined"
                                                     value={this.state.password}
-                                                    onChange={(e) => this.setState({password: e.target.value})}
+                                                    onChange={(e) => this.setState({ password: e.target.value })}
                                                     required
                                                 />
                                             </Grid>
@@ -90,11 +93,11 @@ class login extends Component {
                                                 </Button>
                                             </Grid>
                                             <Grid item>
-                                            <Link to="/signup">
-                                                <Button variant="contained" color="primary" className="button-block" > 
-                                                    Signup 
-                                                </Button>
-                                            </Link>
+                                                <Link to="/signup">
+                                                    <Button variant="contained" color="primary" className="button-block" >
+                                                        Sign Up
+                                                    </Button>
+                                                </Link>
                                             </Grid>
                                         </Grid>
                                     </form>
@@ -106,10 +109,10 @@ class login extends Component {
                     </Grid>
                 </Grid>
             </div>
-        )
+        );
     }
 }
 
-login.contextType = Auth;
+Login.contextType = Auth;
 
 export default login;

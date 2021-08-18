@@ -12,10 +12,8 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import "./login.css";
-import {Menu} from "@material-ui/core";
 
-
-class signup extends Component {
+class SignUp extends Component {
     constructor(props) {
         super(props);
         this.updateModuleList = this.updateModuleList.bind(this);
@@ -26,7 +24,7 @@ class signup extends Component {
             moduleCode: "CS2113T",
             email: "",
             password: ""
-        }
+        };
     }
 
     componentWillMount() {
@@ -37,10 +35,10 @@ class signup extends Component {
         this.setState({ moduleList: modules });
     }
 
-    submitSignup (e) {
+    submitSignup(e) {
         e.preventDefault();
-        const {_, dispatch} = this.context;
-        const userDetails = {email: this.state.email, password: this.state.password, status: this.state.status, handle: this.state.handle, moduleCode: this.state.moduleCode};
+        const { _, dispatch } = this.context;
+        const userDetails = { email: this.state.email, password: this.state.password, status: this.state.status, handle: this.state.handle, moduleCode: this.state.moduleCode };
         console.log(userDetails);
         try {
             signupUser(userDetails, this.props.history)(dispatch);
@@ -49,9 +47,9 @@ class signup extends Component {
         }
     }
 
-    render () {
+    render() {
         const moduleOptions = ["CS2113T"].map(code => {
-            return <MenuItem value={code}>{code}</MenuItem>
+            return <MenuItem value={code}>{code}</MenuItem>;
         });
 
         return (
@@ -72,7 +70,7 @@ class signup extends Component {
                             >
                                 <Grid item>
                                     <Typography component="h1" variant="h5">
-                                        Welcome to NUSColab!
+                                        Welcome to NUS Peermark!
                                     </Typography>
                                 </Grid>
                                 <Grid item>
@@ -85,7 +83,7 @@ class signup extends Component {
                                                     fullWidth
                                                     name="handle"
                                                     variant="outlined"
-                                                    onChange={(e) => this.setState({handle: e.target.value})}
+                                                    onChange={(e) => this.setState({ handle: e.target.value })}
                                                     required
                                                     autoFocus
                                                 />
@@ -97,7 +95,7 @@ class signup extends Component {
                                                     fullWidth
                                                     name="username"
                                                     variant="outlined"
-                                                    onChange={(e) => this.setState({email: e.target.value})}
+                                                    onChange={(e) => this.setState({ email: e.target.value })}
                                                     required
                                                     autoFocus
                                                 />
@@ -110,17 +108,17 @@ class signup extends Component {
                                                     name="password"
                                                     variant="outlined"
                                                     value={this.state.password}
-                                                    onChange={(e) => this.setState({password: e.target.value})}
+                                                    onChange={(e) => this.setState({ password: e.target.value })}
                                                     required
                                                 />
                                             </Grid>
                                             <Grid item>
                                                 <InputLabel>Module</InputLabel>
-                                                <Select name="moduleCode" fullWidth onChange={(e) => this.setState({moduleCode: e.target.value})}>{moduleOptions}</Select>
+                                                <Select name="moduleCode" fullWidth onChange={(e) => this.setState({ moduleCode: e.target.value })}>{moduleOptions}</Select>
                                             </Grid>
                                             <Grid item>
                                                 <InputLabel>Status</InputLabel>
-                                                <Select name="status" fullWidth onChange={(e) => this.setState({status: e.target.value})}>
+                                                <Select name="status" fullWidth onChange={(e) => this.setState({ status: e.target.value })}>
                                                     <MenuItem value="Module Admin">Module Admin</MenuItem>
                                                     <MenuItem value="Student">Student</MenuItem>
                                                     <MenuItem value="Tutor">Tutor</MenuItem>
@@ -133,15 +131,15 @@ class signup extends Component {
                                                     type="submit"
                                                     className="button-block"
                                                 >
-                                                    Sign up
+                                                    Sign Up
                                                 </Button>
                                             </Grid>
                                             <Grid item>
-                                            <Link to="/login">
-                                                <Button variant="contained" color="primary" className="button-block" > 
-                                                    Login 
-                                                </Button>
-                                            </Link>
+                                                <Link to="/login">
+                                                    <Button variant="contained" color="primary" className="button-block" >
+                                                        Login
+                                                    </Button>
+                                                </Link>
                                             </Grid>
                                         </Grid>
                                     </form>
@@ -154,10 +152,10 @@ class signup extends Component {
                 </Grid>
 
             </div>
-        )
+        );
     }
 }
 
-signup.contextType = Auth;
+SignUp.contextType = Auth;
 
 export default signup;

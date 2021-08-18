@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
@@ -12,6 +13,9 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 //import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+
+import ModuleSelector from './ModuleSelection';
+
 import "./NavBar.css";
 
 export default function ButtonAppBar(props) {
@@ -54,6 +58,7 @@ export default function ButtonAppBar(props) {
                     <Typography variant="h6" className="title">
                         {props.currentPage}
                     </Typography>
+                    <ModuleSelector />
                     <Button color="inherit" onClick={props.logout} component={Link} to="/login">Logout</Button>
                 </Toolbar>
             </AppBar>
