@@ -13,7 +13,7 @@ services:
         volumes:
             - dbdata:/var/lib/postgresql/data/
             - ./dbscripts:/docker-entrypoint-initdb.d
-        profiles: ['api-dev', 'api']
+        profiles: ['api-dev', 'api', 'dev']
 
     api-dev:
         image: nus-utils/peer-review-api:dev
@@ -30,13 +30,13 @@ services:
             target: builder
         volumes:
           - ./core:/app
-        command: go run .
+        command: CompileDaemon --build="go build -o server" --command="./server"
         container_name: api-dev
         depends_on:
             - db
         ports:
             - '5000:5000'
-        profiles: ['api-dev']
+        profiles: ['api-dev', 'dev']
 
     api:
         image: nus-utils/peer-review-api:latest
@@ -54,17 +54,28 @@ services:
             - db
         ports:
             - '5000:5000'
-        profiles: ['api']
+        profiles: ['api', 'prod']
+
+    frontend-dev:
+        build:
+            context: ./frontend
+            target: copy
+        volumes:
+            - /app/node_modules
+            - ./frontend:/app
+        command: npm run start
+        ports:
+            - '3000:3000'
+        stdin_open: true
+        profiles: ['dev', 'frontend-dev']
 
     frontend:
         build:
             context: ./frontend
-        volumes:
-            - /app/node_modules
-            - ./frontend:/app
         ports:
             - '3000:3000'
         stdin_open: true
+        profiles: ['prod', 'frontend']
 
 volumes:
     dbdata:
