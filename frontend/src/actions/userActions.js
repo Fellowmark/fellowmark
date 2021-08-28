@@ -1,22 +1,16 @@
 import axios from "axios";
 import { authenticate } from "../utils/auth";
 
-// import { addUserToModule } from "./moduleActions";
-
-// export const signupUser = (userData, history) => (dispatch) => {
-//   axios
-//     .post("/signup", userData)
-//     .then((res) => {
-//       console.log(res.data.token);
-//       setAuthorizationHeader(res.data.token);
-//       getUserDetails()(dispatch);
-//       addUserToModule(userData.moduleCode, userData.handle);
-//       history.push("/");
-//     })
-//     .catch((err) => {
-//       console.error(err.response);
-//     });
-// };
+export const signupUser = (role, userData, history) => (dispatch) => {
+  axios
+    .post(`${role.toLowerCase()}/auth/login`, userData)
+    .then(() => {
+      history.push("/login");
+    })
+    .catch((err) => {
+      console.error(err.response);
+    });
+};
 
 export const loginUser = (role, userData, history) => (dispatch) => {
   axios
@@ -26,7 +20,7 @@ export const loginUser = (role, userData, history) => (dispatch) => {
     .then((res) => {
       console.log(res)
       setAuthorizationHeader(res.data.message);
-      console.log(authenticate(dispatch));
+      authenticate(dispatch);
       history.push(`/${role.toLowerCase()}`);
     })
     .catch((err) => {
