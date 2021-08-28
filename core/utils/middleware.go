@@ -26,8 +26,29 @@ import (
 
 var SchemaDecoder = schema.NewDecoder()
 
-func SetupCors(route *mux.Router) {
-	route.Use(handlers.CORS(handlers.AllowedOrigins([]string{"http://localhost:3000"})))
+func SetupCors() mux.MiddlewareFunc {
+	return handlers.CORS(handlers.AllowedOrigins([]string{"http://localhost:3000"}),
+		handlers.AllowedMethods([]string{http.MethodPost, http.MethodGet, http.MethodOptions}))
+}
+
+func SetHeaders(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//anyone can make a CORS request (not recommended in production)
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		//only allow GET, POST, and OPTIONS
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		//Since I was building a REST API that returned JSON, I set the content type to JSON here.
+		w.Header().Set("Content-Type", "application/json")
+		//Allow requests to have the following headers
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, cache-control")
+		//if it's just an OPTIONS request, nothing other than the headers in the response is needed.
+		//This is essential because you don't need to handle the OPTIONS requests in your handlers now
+		if r.Method == "OPTIONS" {
+			return
+		}
+
+		h.ServeHTTP(w, r)
+	})
 }
 
 func DecodeParamsMiddleware(refType interface{}, contextOutKey string) mux.MiddlewareFunc {
@@ -143,7 +164,7 @@ func LoginHandleFunc(db *gorm.DB, role string, contextInKey string) http.Handler
 	}
 }
 
-func ValidateJWTMiddleware(role string, contextOutKey string) mux.MiddlewareFunc {
+func ValidateJWTMiddleware(role string, contextOutKey string, refType interface{}) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -151,13 +172,14 @@ func ValidateJWTMiddleware(role string, contextOutKey string) mux.MiddlewareFunc
 				HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-
 			tokenString := strings.Split(authHeader, "Bearer ")[1]
-			claims, err := ParseJWT(tokenString)
+			var claims ClaimsData
+			claims.Data = reflect.New(reflect.TypeOf(refType).Elem()).Interface()
+			err := ParseJWTWithClaims(tokenString, &claims)
 			if err != nil || claims.Role != role {
-				HandleResponse(w, err.Error(), http.StatusUnauthorized)
+				HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
 			} else {
-				ctxWithUser := context.WithValue(r.Context(), contextOutKey, &claims.Data)
+				ctxWithUser := context.WithValue(r.Context(), contextOutKey, &claims)
 				next.ServeHTTP(w, r.WithContext(ctxWithUser))
 			}
 		})
@@ -181,13 +203,12 @@ func ValidateJWTMiddlewareMultipleRoles(roles []string, contextOutKey string) mu
 				HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-
 			tokenString := strings.Split(authHeader, "Bearer ")[1]
 			claims, err := ParseJWT(tokenString)
 			if err != nil || Contains(roles, claims.Role) {
 				HandleResponse(w, err.Error(), http.StatusUnauthorized)
 			} else {
-				ctxWithUser := context.WithValue(r.Context(), contextOutKey, &claims)
+				ctxWithUser := context.WithValue(r.Context(), contextOutKey, &claims.Data)
 				next.ServeHTTP(w, r.WithContext(ctxWithUser))
 			}
 		})
@@ -208,6 +229,24 @@ func EnrollmentCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey strin
 			}
 		})
 	}
+}
+
+func GetStudentEnrollments(db *gorm.DB, claimsKey string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var modules []models.Module
+		user := r.Context().Value(claimsKey).(*ClaimsData).Data.(*models.Student)
+		db.Preload("modules").Joins("inner join enrollments e on modules.id = e.module_id").Where("e.student_id = ?", user.ID).Find(&modules)
+		HandleResponseWithObject(w, modules, http.StatusOK)
+	})
+}
+
+func GetStaffSupervisions(db *gorm.DB, claimsKey string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var modules *[]models.Module
+		user := r.Context().Value(claimsKey).(*models.Staff)
+		db.Model(&models.Supervision{}).Where("staff_id = ?", user.ID).Association("modules").Find(&modules)
+		HandleResponseWithObject(w, modules, http.StatusOK)
+	})
 }
 
 func SupervisionCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey string) mux.MiddlewareFunc {

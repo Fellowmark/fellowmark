@@ -66,12 +66,12 @@ export const initializePairings = (moduleId, assignmentData) => {
  * 
  * @param {Object} moduleData can consist of attributes ID, Code, Name, and/or Semester
  */
-export const getModules = (moduleData) => {
+export const getModules = (moduleData, setModules) => {
   axios.get(`/module`, {
-    method: 'GET',
-    body: JSON.stringify(moduleData)
+    method: "GET",
+    params: moduleData
   }).then((res) => {
-    return res.data;
+    return setModules(res.data);
   }).catch((err) => {
     console.log(err);
   });
@@ -83,11 +83,42 @@ export const getModules = (moduleData) => {
  * @param {Object} enrollmentData can consist of ID, ModuleID, and/or StudentID
  */
 export const getEnrollments = (enrollmentData) => {
-  axios.get(`/module/enroll`, {
+  axios.get(`/module/enrolls`, {
     method: 'GET',
-    body: JSON.stringify(enrollmentData)
+    params: enrollmentData
   }).then((res) => {
     return res.data;
+  }).catch((err) => {
+    console.log(err);
+  });
+};
+
+// /**
+//  * Returns Enrollments data that matches given data
+//  * 
+//  * @param {Object} enrollmentData can consist of ID, ModuleID, and/or StudentID
+//  */
+// export const getModu = (enrollmentData) => {
+//   axios.get(`/module/enroll`, {
+//     method: 'GET',
+//     params: enrollmentData
+//   }).then((res) => {
+//     return res.data;
+//   }).catch((err) => {
+//     console.log(err);
+//   });
+// };
+
+/**
+ * Returns Enrollments data that matches given data
+ * 
+ * @param {Object} enrollmentData can consist of ID, ModuleID, and/or StudentID
+ */
+export const getStudentModules = (setModules) => {
+  axios.get(`/module/enroll`).then((res) => {
+    return res.data;
+  }).then((res) => {
+    setModules(res);
   }).catch((err) => {
     console.log(err);
   });
@@ -98,12 +129,26 @@ export const getEnrollments = (enrollmentData) => {
  * 
  * @param {Object} supervisionData can consist of ID, ModuleID, and/or StaffID
  */
-export const getSupervisions = (supervisionData) => {
-  axios.get(`/module/supervise`, {
-    method: 'GET',
-    body: JSON.stringify(supervisionData)
-  }).then((res) => {
+export const getSupervisions = (setModules) => {
+  axios.get(`/module/supervises`).then((res) => {
     return res.data;
+  }).then((res) => {
+    setModules(res.data);
+  }).catch((err) => {
+    console.log(err);
+  });
+};
+
+/**
+ * Returns Supervisions data that matches given data
+ * 
+ * @param {Object} supervisionData can consist of ID, ModuleID, and/or StaffID
+ */
+export const getStaffModules = (setModules) => {
+  axios.get(`/module/supervise`).then((res) => {
+    return res.data;
+  }).then((res) => {
+    setModules(res);
   }).catch((err) => {
     console.log(err);
   });

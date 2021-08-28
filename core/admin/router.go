@@ -30,7 +30,7 @@ func (ur AdminRoute) CreateAuthRouter(route *mux.Router) {
 
 func (ur AdminRoute) CreatePrivilegedRouter(route *mux.Router) {
 	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Admin", "claims"))
+		route.Use(utils.ValidateJWTMiddleware("Admin", "claims", &models.Admin{}))
 	}
 
 	ur.CreateStaffOptsRouter(route.PathPrefix("/staff").Subrouter())

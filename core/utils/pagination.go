@@ -22,7 +22,11 @@ func (p *Pagination) GetOffset() int {
 }
 
 func (p *Pagination) SetTotalPages() {
-	p.TotalPages = int(math.Ceil(float64(p.TotalRows) / float64(p.Limit)))
+	if p.Limit == 0 {
+		p.TotalPages = 0
+	} else {
+		p.TotalPages = int(math.Ceil(float64(p.TotalRows) / float64(p.Limit)))
+	}
 }
 
 func (p *Pagination) SetTotalRows(totalRows int64) {
@@ -31,7 +35,8 @@ func (p *Pagination) SetTotalRows(totalRows int64) {
 		p.Limit = int(p.TotalRows)
 	}
 
-	p.TotalPages = int(math.Ceil(float64(p.TotalRows) / float64(p.Limit)))
+	// p.TotalPages = int(math.Ceil(float64(p.TotalRows) / float64(p.Limit)))
+	p.SetTotalPages()
 
 	if p.Page <= 0 || p.Page > int(p.TotalPages) {
 		p.Page = int(p.TotalPages)

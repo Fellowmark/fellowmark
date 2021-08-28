@@ -53,7 +53,6 @@ export default function ModuleSelector(props) {
                     <DialogContentText>
                         Please a select a module from below
                     </DialogContentText>
-                    // TODO update with list of enrolled/supervised modules based on whether user is a staff or student
                     <FormControl className={classes.formControl}>
                         <Select
                             value={moduleId}

@@ -21,7 +21,7 @@ export const updateContext = (
     case AuthType.UNAUTHENTICATED:
       return null;
     case AuthType.MODULE:
-      return { ...state, module: action.payload };
+      return { ...state, module: action.payload.module };
     default:
       return state;
   }

@@ -30,6 +30,7 @@ export const loginUser = (role, userData, history) => (dispatch) => {
       history.push(`/${role.toLowerCase()}`);
     })
     .catch((err) => {
+      alert("Email or password incorrect");
       throw new Error(err);
     });
 };
@@ -59,7 +60,7 @@ export const logoutUser = (history, dispatch) => {
   history.push("/login");
 };
 
-const setAuthorizationHeader = (token) => {
+export const setAuthorizationHeader = (token) => {
   const FBIdToken = `Bearer ${token}`;
   localStorage.setItem("FBIdToken", token);
   axios.defaults.headers.common["Authorization"] = FBIdToken;

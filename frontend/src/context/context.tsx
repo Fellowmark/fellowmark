@@ -1,11 +1,12 @@
 import { createContext, Dispatch, FC, useReducer } from "react";
 import { Role } from "../pages/Login";
+import { ModuleInfo } from "../pages/Modules";
 import { AuthType, updateContext } from "../reducers/reducer";
 
 export interface ContextPayload {
   role?: Role;
   user?: any;
-  module?: any;
+  module?: ModuleInfo;
 }
 
 export interface ContextState {

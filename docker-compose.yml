@@ -38,6 +38,29 @@ services:
             - '5000:5000'
         profiles: ['api-dev', 'dev']
 
+    api-staging:
+        image: nus-utils/peer-review-api:staging
+        environment:
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+            - JWT_SECRET=${JWT_SECRET}
+            - RUN_ENV=production
+            - INSERT_DUMMY=${INSERT_DUMMY}
+            - ADMIN_NAME=admin
+            - ADMIN_EMAIL=admin@local.com
+            - ADMIN_PASSWORD=admin
+        build:
+            context: ./core/.
+            target: builder
+        volumes:
+          - ./core:/app
+        command: CompileDaemon --build="go build -o server" --command="./server"
+        container_name: api-dev
+        depends_on:
+            - db
+        ports:
+            - '5000:5000'
+        profiles: ['api-staging', 'staging']
+
     api:
         image: nus-utils/peer-review-api:latest
         environment:

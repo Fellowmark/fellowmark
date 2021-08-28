@@ -37,7 +37,7 @@ type Module struct {
 type Enrollment struct {
 	gorm.Model
 	Module    Module  `gorm:"foreignKey:ModuleID;references:ID" json:"-"`
-	ModuleID  uint    `gorm:"uniqueIndex:enrollmentIdx;column:module_id;not null;unique:student_id"`
+	ModuleID  uint    `gorm:"uniqueIndex:enrollmentIdx;column:module_id;not null"`
 	Student   Student `gorm:"foreignKey:StudentID"`
 	StudentID uint    `gorm:"uniqueIndex:enrollmentIdx;column:student_id;not null"`
 }

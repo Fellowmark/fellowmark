@@ -31,7 +31,7 @@ func (ur StaffRoute) CreateAuthRouter(route *mux.Router) {
 
 func (ur StaffRoute) CreatePrivilegedRouter(route *mux.Router) {
 	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Staff", "claims"))
+		route.Use(utils.ValidateJWTMiddleware("Staff", "claims", &models.Staff{}))
 		route.Use(utils.SupervisionCheckMiddleware(ur.DB, "claims", "moduleId"))
 	}
 

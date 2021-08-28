@@ -2,7 +2,6 @@ package student
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
@@ -16,7 +15,6 @@ type StudentRoute struct {
 
 func (ur StudentRoute) CreateRouters(route *mux.Router) {
 	ur.CreateAuthRouter(route.PathPrefix("/auth").Subrouter())
-	ur.CreatePrivilegedRouter(route.PathPrefix("/module/{moduleId}").Subrouter())
 }
 
 func (ur StudentRoute) CreateAuthRouter(route *mux.Router) {
@@ -31,11 +29,4 @@ func (ur StudentRoute) CreateAuthRouter(route *mux.Router) {
 	loginRoute.Use(ur.EmailCheck)
 	loginRoute.Use(ur.PasswordCheck)
 	loginRoute.HandleFunc("/login", utils.LoginHandleFunc(ur.DB, "Student", "user")).Methods(http.MethodGet)
-}
-
-func (ur StudentRoute) CreatePrivilegedRouter(route *mux.Router) {
-	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Staff", "claims"))
-		route.Use(utils.EnrollmentCheckMiddleware(ur.DB, "claims", "moduleId"))
-	}
 }

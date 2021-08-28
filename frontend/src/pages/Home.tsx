@@ -1,13 +1,14 @@
 import { useContext, useEffect, useState } from "react";
-import axios from "axios";
 
 import { authenticate } from "../utils/auth";
-import { logoutUser } from "../actions/userActions";
+import { logoutUser, setAuthorizationHeader } from "../actions/userActions";
 import { AuthContext } from "../context/context";
 import { Redirect, useHistory } from "react-router-dom";
 import { Role } from "./Login";
 import { ProgressBar } from "../components/ProgressBar";
 import { AuthType } from "../reducers/reducer";
+import { ModuleList } from "./Modules";
+import { Grid } from "@material-ui/core";
 
 export const Home: React.FC = () => {
   const { state, dispatch } = useContext(AuthContext);
@@ -16,9 +17,9 @@ export const Home: React.FC = () => {
   const history = useHistory();
 
   useEffect(() => {
-      dispatch({ type: AuthType.AUTHENTICATED, payload: {user: "lol"}});
+    dispatch({ type: AuthType.AUTHENTICATED, payload: { user: "lol" } });
     if (authenticate(dispatch)) {
-      axios.defaults.headers.common["Authorization"] = localStorage.FBIdToken;
+      setAuthorizationHeader(localStorage.FBIdToken);
       setIsLoaded(true);
     } else {
       logoutUser(history, dispatch);
@@ -32,7 +33,11 @@ export const Home: React.FC = () => {
   }, [state]);
 
   const showComponent = <Redirect to={`/${role.toLowerCase()}`} />;
-  return <ProgressBar component={showComponent} isLoaded={isLoaded} />;
+  return (
+    <Grid container>
+      <ProgressBar component={showComponent} isLoaded={isLoaded} />
+    </Grid>
+  );
 };
 
 export const StudentHome: React.FC = () => {
@@ -48,9 +53,13 @@ export const StudentHome: React.FC = () => {
     }
   }, []);
 
-  const userComponent = <div></div>;
+  const userComponent = <ModuleList />;
 
-  return <ProgressBar component={userComponent} isLoaded={isLoaded} />;
+  return (
+    <Grid container>
+      <ProgressBar component={userComponent} isLoaded={isLoaded} />
+    </Grid>
+  );
 };
 
 export const StaffHome: React.FC = () => {
@@ -68,5 +77,9 @@ export const StaffHome: React.FC = () => {
 
   const userComponent = <div></div>;
 
-  return <ProgressBar component={userComponent} isLoaded={isLoaded} />;
+  return (
+    <Grid container>
+      <ProgressBar component={userComponent} isLoaded={isLoaded} />
+    </Grid>
+  );
 };

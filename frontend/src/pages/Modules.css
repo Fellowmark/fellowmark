@@ -1,0 +1,16 @@
+.grid-container
+{
+  justify-content: center;
+  min-height: 90vh;
+}
+
+.button-block{
+  width: 100%;
+}
+
+.page-background
+{
+  justify-content: center;
+  min-height: 30vh;
+  padding: 50px;
+}

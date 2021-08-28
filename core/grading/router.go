@@ -23,7 +23,7 @@ func (gr GradingRoute) CreateRouters(route *mux.Router) {
 
 func (gr GradingRoute) CreatePrivilegedRouter(route *mux.Router) {
 	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Student", "claims"))
+		route.Use(utils.ValidateJWTMiddleware("Student", "claims", &models.Student{}))
 		route.Use(utils.EnrollmentCheckMiddleware(gr.DB, "claims", "moduleId"))
 	}
 
@@ -42,7 +42,7 @@ func (gr GradingRoute) CreateGradeRouter(route *mux.Router) {
 func (gr GradingRoute) GetGradesForStudent(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}, "grade"))
 	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Student", "claims"))
+		route.Use(utils.ValidateJWTMiddleware("Student", "claims", &models.Student{}))
 		route.Use(utils.EnrollmentCheckMiddleware(gr.DB, "claims", "moduleId"))
 		route.Use(utils.MarkeeCheckMiddleware(gr.DB, "grade", "claims"))
 	}
@@ -53,7 +53,7 @@ func (gr GradingRoute) GetGradesForStudent(route *mux.Router) {
 func (gr GradingRoute) GetGradesForMarker(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}, "grade"))
 	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Student", "claims"))
+		route.Use(utils.ValidateJWTMiddleware("Student", "claims", &models.Student{}))
 		route.Use(utils.EnrollmentCheckMiddleware(gr.DB, "claims", "moduleId"))
 		route.Use(utils.MarkerCheckMiddleware(gr.DB, "grade", "claims"))
 	}
@@ -64,7 +64,7 @@ func (gr GradingRoute) GetGradesForMarker(route *mux.Router) {
 func (gr GradingRoute) GetGradesForStaff(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}, "grade"))
 	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Staff", "claims"))
+		route.Use(utils.ValidateJWTMiddleware("Staff", "claims", &models.Staff{}))
 		route.Use(utils.SupervisionCheckMiddleware(gr.DB, "claims", "moduleId"))
 	}
 

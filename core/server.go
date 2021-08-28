@@ -71,7 +71,6 @@ func InitServer(pool *gorm.DB) {
 		DB: pool,
 	}
 
-	utils.SetupCors(route)
 	studentRoute.CreateRouters(route.PathPrefix("/student").Subrouter())
 	staffRoute.CreateRouters(route.PathPrefix("/staff").Subrouter())
 	adminRoute.CreateRouters(route.PathPrefix("/admin").Subrouter())
@@ -79,10 +78,11 @@ func InitServer(pool *gorm.DB) {
 	assignmentRoute.CreateRouters(route.PathPrefix("/assignment").Subrouter())
 	gradingRoute.CreateRouters(route.PathPrefix("/grading").Subrouter())
 	route.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
+	mux.CORSMethodMiddleware(route)
 
 	srv := &http.Server{
 		Addr:         ":5000",
-		Handler:      route,
+		Handler:      utils.SetHeaders(route),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		ErrorLog:     loggers.ErrorLogger,

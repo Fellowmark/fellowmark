@@ -1,6 +1,5 @@
-import { CircularProgress } from "@material-ui/core";
+import { Grid, LinearProgress } from "@material-ui/core";
 import { FC, ReactElement } from "react";
-
 
 interface ProgressProps {
   component: ReactElement,
@@ -11,7 +10,7 @@ export const ProgressBar: FC<ProgressProps> = (props) => {
   const showComponent = props.isLoaded ? (
     props.component
   ) : (
-    <CircularProgress className="progressBar" />
+    <LinearProgress className="progressBar" />
   );
-  return <div>{showComponent}</div>;
+  return <Grid item>{showComponent}</Grid>;
 }

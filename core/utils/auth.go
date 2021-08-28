@@ -85,6 +85,17 @@ func ParseJWT(tokenString string) (*ClaimsData, error) {
 	}
 }
 
+func ParseJWTWithClaims(tokenString string, claims *ClaimsData) error {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+
+	if !token.Valid {
+		return err
+	}
+	return nil
+}
+
 // returns argon2 hash of strings such as email recovery tokens
 func HashString(token string) string {
 	hash, err := argon2id.CreateHash(token, argon2id.DefaultParams)
