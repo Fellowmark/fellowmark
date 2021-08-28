@@ -75,7 +75,7 @@ export const StaffHome: React.FC = () => {
     }
   }, []);
 
-  const userComponent = <div></div>;
+  const userComponent = <ModuleList />;
 
   return (
     <Grid container>

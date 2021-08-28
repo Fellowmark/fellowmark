@@ -179,7 +179,7 @@ func ValidateJWTMiddleware(role string, contextOutKey string, refType interface{
 			if err != nil || claims.Role != role {
 				HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
 			} else {
-				ctxWithUser := context.WithValue(r.Context(), contextOutKey, &claims)
+				ctxWithUser := context.WithValue(r.Context(), contextOutKey, claims.Data)
 				next.ServeHTTP(w, r.WithContext(ctxWithUser))
 			}
 		})
@@ -234,7 +234,7 @@ func EnrollmentCheckMiddleware(db *gorm.DB, contextInKey string, muxVarKey strin
 func GetStudentEnrollments(db *gorm.DB, claimsKey string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var modules []models.Module
-		user := r.Context().Value(claimsKey).(*ClaimsData).Data.(*models.Student)
+		user := r.Context().Value(claimsKey).(*models.Student)
 		db.Preload("modules").Joins("inner join enrollments e on modules.id = e.module_id").Where("e.student_id = ?", user.ID).Find(&modules)
 		HandleResponseWithObject(w, modules, http.StatusOK)
 	})
@@ -242,9 +242,9 @@ func GetStudentEnrollments(db *gorm.DB, claimsKey string) http.HandlerFunc {
 
 func GetStaffSupervisions(db *gorm.DB, claimsKey string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var modules *[]models.Module
+		var modules []models.Module
 		user := r.Context().Value(claimsKey).(*models.Staff)
-		db.Model(&models.Supervision{}).Where("staff_id = ?", user.ID).Association("modules").Find(&modules)
+		db.Preload("modules").Joins("inner join supervisions e on modules.id = e.module_id").Where("e.staff_id = ?", user.ID).Find(&modules)
 		HandleResponseWithObject(w, modules, http.StatusOK)
 	})
 }

@@ -22,6 +22,7 @@ func (mr ModuleRoute) CreateRouters(route *mux.Router) {
 	mr.GetEnrollmentsRoute(route.PathPrefix("/enrolls").Subrouter())
 	mr.GetSupervisionsRoute(route.PathPrefix("/supervises").Subrouter())
 	mr.GetStudentEnrolledModules(route.PathPrefix("/enroll").Subrouter())
+	mr.GetStaffSupervisions(route.PathPrefix("/supervise").Subrouter())
 
 	gr := grading.GradingRoute{DB: mr.DB}
 	gr.CreateRouters(route.PathPrefix("/{moduleId}/grade").Subrouter())
