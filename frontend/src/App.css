@@ -18,3 +18,7 @@ body {
 a {
   text-decoration: none;
 }
+.progressBar {
+  left: 50%;
+  right: 50%;
+}

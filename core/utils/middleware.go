@@ -15,17 +15,39 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/nus-utils/nus-peer-review/models"
 	"gopkg.in/validator.v2"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
+var SchemaDecoder = schema.NewDecoder()
+
+func SetupCors(route *mux.Router) {
+	route.Use(handlers.CORS(handlers.AllowedOrigins([]string{"http://localhost:3000"})))
+}
+
+func DecodeParamsMiddleware(refType interface{}, contextOutKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			parsedData := reflect.New(reflect.TypeOf(refType).Elem()).Interface()
+			if err := SchemaDecoder.Decode(parsedData, r.URL.Query()); err != nil {
+				HandleResponse(w, err.Error(), http.StatusBadRequest)
+			} else {
+				ctxWithUser := context.WithValue(r.Context(), contextOutKey, parsedData)
+				next.ServeHTTP(w, r.WithContext(ctxWithUser))
+			}
+		})
+	}
+}
+
 func DecodeBodyMiddleware(refType interface{}, contextOutKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			parsedData := reflect.New(reflect.TypeOf(refType)).Interface()
+			parsedData := reflect.New(reflect.TypeOf(refType).Elem()).Interface()
 			if err := DecodeBody(r.Body, parsedData); err != nil {
 				HandleResponse(w, err.Error(), http.StatusBadRequest)
 			} else {
@@ -95,7 +117,7 @@ func SuccessMiddleware(db *gorm.DB, contextInKey string) http.HandlerFunc {
 func DBGetFromData(db *gorm.DB, model interface{}, contextInKey string, arrayRefType interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pagination := GetPagination(r)
-		pagination.Rows = reflect.New(reflect.TypeOf(arrayRefType)).Interface()
+		pagination.Rows = reflect.New(reflect.TypeOf(arrayRefType).Elem()).Interface()
 		data := r.Context().Value(contextInKey)
 		scope := Paginate(db, func(tx *gorm.DB) *gorm.DB {
 			return tx.Model(model).Where(data)

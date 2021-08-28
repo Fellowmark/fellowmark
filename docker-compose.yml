@@ -60,9 +60,12 @@ services:
         build:
             context: ./frontend
             target: copy
+
+        environment:
+          - API_URL=http://api-dev:5000
         volumes:
-            - /app/node_modules
-            - ./frontend:/app
+          - /app/node_modules
+          - ./frontend/src:/app/src
         command: npm run start
         ports:
             - '3000:3000'
@@ -79,4 +82,3 @@ services:
 
 volumes:
     dbdata:
-

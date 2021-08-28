@@ -3,10 +3,12 @@ FROM node:alpine AS base
 WORKDIR /app
 COPY ./package.json ./
 RUN npm install
+RUN chown -R node node_modules
 
 FROM base AS copy 
 COPY ./src src
 COPY ./public public
+COPY ./tsconfig.json ./
 
 FROM base AS builder 
 RUN npm run build

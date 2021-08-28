@@ -267,15 +267,15 @@ export const getAssignmentGradesForStudent = (assignmentData) => {
   let assignment = getAssignments(assignmentData)[0];
   let questions = getQuestions({ AssignmentID: assignment.ID });
   let questionsGrades = {};
-  for (let question of questions) {
-    rubric = getRubrics({ QuestionID: question.ID })[0];
+  questions.forEach((question) => {
+    let rubric = getRubrics({ QuestionID: question.ID })[0];
     questionsGrades[question.ID] = getGradesForStudent({ RubricID: rubric.ID });
-  }
+  });
   return questionsGrades;
 };
 
 export const getQuestionGradesForStudent = (questionData) => {
   let question = getQuestions(questionData)[0];
-  rubric = getRubrics({ QuestionID: question.ID })[0];
+  let rubric = getRubrics({ QuestionID: question.ID })[0];
   return getGradesForStudent({ RubricID: rubric.ID });
 };

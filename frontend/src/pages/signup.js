@@ -13,7 +13,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import "./login.css";
 
-class SignUp extends Component {
+export default class SignUp extends Component {
     constructor(props) {
         super(props);
         this.updateModuleList = this.updateModuleList.bind(this);
@@ -157,5 +157,3 @@ class SignUp extends Component {
 }
 
 SignUp.contextType = Auth;
-
-export default signup;

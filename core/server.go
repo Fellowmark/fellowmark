@@ -43,6 +43,8 @@ func InitServer(pool *gorm.DB) {
 	flag.Parse()
 
 	loggers.InfoLogger.Println("Starting server")
+
+	utils.SchemaDecoder.IgnoreUnknownKeys(true)
 	route := mux.NewRouter()
 
 	studentRoute := student.StudentRoute{
@@ -69,6 +71,7 @@ func InitServer(pool *gorm.DB) {
 		DB: pool,
 	}
 
+	utils.SetupCors(route)
 	studentRoute.CreateRouters(route.PathPrefix("/student").Subrouter())
 	staffRoute.CreateRouters(route.PathPrefix("/staff").Subrouter())
 	adminRoute.CreateRouters(route.PathPrefix("/admin").Subrouter())

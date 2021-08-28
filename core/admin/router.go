@@ -20,7 +20,7 @@ func (ur AdminRoute) CreateRouters(route *mux.Router) {
 }
 
 func (ur AdminRoute) CreateAuthRouter(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Admin{}, "user"))
+	route.Use(utils.DecodeParamsMiddleware(&models.Admin{}, "user"))
 
 	loginRoute := route.NewRoute().Subrouter()
 	loginRoute.Use(ur.EmailCheck)

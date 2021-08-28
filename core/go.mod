@@ -5,7 +5,9 @@ go 1.16
 require (
 	github.com/alexedwards/argon2id v0.0.0-20210511081203-7d35d68092b8
 	github.com/golang-jwt/jwt v3.2.1+incompatible
+	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/schema v1.2.0
 	github.com/jackc/pgx/v4 v4.12.0 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	gopkg.in/validator.v2 v2.0.0-20210331031555-b37d688a7fb0

@@ -1,17 +1,17 @@
-import React from "react";
 import { Switch, Route } from "react-router-dom";
 
 //components
-import Login from "./pages/login";
-import SignUp from "./pages/signup";
-import Home from "./pages/home";
+import { Login } from "./pages/Login";
+// import SignUp from "./pages/signup";
+import { Home, StaffHome, StudentHome } from "./pages/Home";
 
 const Routes = () => (
-    <Switch>
-        <Route exact path="/" component={Home} />
-        <Route exact path="/login" component={Login} />
-        <Route exact path="/signup" component={SignUp} />
-    </Switch>
+  <Switch>
+    <Route exact path="/" component={Home} />
+    <Route exact path="/student" component={StudentHome} />
+    <Route exact path="/staff" component={StaffHome} />
+    <Route exact path="/login" component={Login} />
+  </Switch>
 );
 
 export default Routes;

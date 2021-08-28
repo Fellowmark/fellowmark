@@ -1,29 +1,33 @@
 import axios from "axios";
-import { addUserToModule } from "./moduleActions";
+import { authenticate } from "../utils/auth";
 
-export const signupUser = (userData, history) => (dispatch) => {
+// import { addUserToModule } from "./moduleActions";
+
+// export const signupUser = (userData, history) => (dispatch) => {
+//   axios
+//     .post("/signup", userData)
+//     .then((res) => {
+//       console.log(res.data.token);
+//       setAuthorizationHeader(res.data.token);
+//       getUserDetails()(dispatch);
+//       addUserToModule(userData.moduleCode, userData.handle);
+//       history.push("/");
+//     })
+//     .catch((err) => {
+//       console.error(err.response);
+//     });
+// };
+
+export const loginUser = (role, userData, history) => (dispatch) => {
   axios
-    .post("/signup", userData)
-    .then((res) => {
-      console.log(res.data.token);
-      setAuthorizationHeader(res.data.token);
-      getUserDetails()(dispatch);
-      addUserToModule(userData.moduleCode, userData.handle);
-      history.push("/");
+    .get(`${role.toLowerCase()}/auth/login`, {
+      params: userData
     })
-    .catch((err) => {
-      console.error(err.response);
-    });
-};
-
-export const loginUser = (userData, history) => (dispatch) => {
-  axios
-    .post("/login", userData)
     .then((res) => {
-      console.log(res.data.token);
-      setAuthorizationHeader(res.data.token);
-      getUserDetails()(dispatch);
-      history.push("/");
+      console.log(res)
+      setAuthorizationHeader(res.data.message);
+      console.log(authenticate(dispatch));
+      history.push(`/${role.toLowerCase()}`);
     })
     .catch((err) => {
       throw new Error(err);
@@ -45,18 +49,18 @@ export const getUserDetails = () => (dispatch) => {
     });
 };
 
-export const logoutUser = () => (dispatch) => {
-  console.log("Logged out user");
+export const logoutUser = (history, dispatch) => {
   localStorage.removeItem("FBIdToken");
   delete axios.defaults.headers.common["Authorization"];
   dispatch({
     type: "UNAUTHENTICATED",
     payload: {},
   });
+  history.push("/login");
 };
 
 const setAuthorizationHeader = (token) => {
   const FBIdToken = `Bearer ${token}`;
-  localStorage.setItem("FBIdToken", FBIdToken);
+  localStorage.setItem("FBIdToken", token);
   axios.defaults.headers.common["Authorization"] = FBIdToken;
 };

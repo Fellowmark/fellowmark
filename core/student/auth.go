@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
@@ -30,6 +31,7 @@ func (ur StudentRoute) EmailCheck(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var user *models.Student
 		input := r.Context().Value("user").(*models.Student)
+		loggers.InfoLogger.Println(input)
 		result := ur.DB.Take(&user, "email = ?", input.Email)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			utils.HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
