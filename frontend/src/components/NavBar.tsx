@@ -83,8 +83,7 @@ export const ButtonAppBar: FC<MenuProps> = (props) => {
                         <ListItem
                           button
                           key={title}
-                          component={Link}
-                          to={`/${path}`}
+                          onClick={() => {history.push(`${path}`)}}
                         >
                           <ListItemText primary={title} />
                         </ListItem>

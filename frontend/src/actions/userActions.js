@@ -18,14 +18,13 @@ export const loginUser = (role, userData, history) => (dispatch) => {
       params: userData
     })
     .then((res) => {
-      console.log(res)
       setAuthorizationHeader(res.data.message);
       authenticate(dispatch);
       history.push(`/${role.toLowerCase()}`);
     })
     .catch((err) => {
       alert("Email or password incorrect");
-      throw new Error(err);
+      console.error(err);
     });
 };
 

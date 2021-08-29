@@ -71,7 +71,7 @@ export const getModules = (moduleData, setModules) => {
     method: "GET",
     params: moduleData
   }).then((res) => {
-    return setModules(res.data);
+    return setModules(res);
   }).catch((err) => {
     console.log(err);
   });
@@ -82,12 +82,12 @@ export const getModules = (moduleData, setModules) => {
  * 
  * @param {Object} enrollmentData can consist of ID, ModuleID, and/or StudentID
  */
-export const getEnrollments = (enrollmentData) => {
+export const getEnrollments = (enrollmentData, setEnrollments) => {
   axios.get(`/module/enrolls`, {
     method: 'GET',
     params: enrollmentData
   }).then((res) => {
-    return res.data;
+    setEnrollments(res.data);
   }).catch((err) => {
     console.log(err);
   });
