@@ -32,3 +32,12 @@ export interface Pairing {
 	Marker?: User,
 	Active?: Boolean
 }
+
+export interface Rubric {
+  ID?: number,
+	QuestionID?: number, 
+	Criteria?: string
+	Description?: string
+	MinMark?: number
+	MaxMark?: number
+}

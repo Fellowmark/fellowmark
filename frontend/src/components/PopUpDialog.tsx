@@ -33,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false;
 
 interface MaxWidthDialogProps {
-  setOpen: (boolean) => void,
+  setOpen?: (boolean) => void,
   handleSubmit?: () => void,
   title: string,
   open: boolean,

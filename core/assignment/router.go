@@ -61,7 +61,7 @@ func (ar AssignmentRoute) GetQuestionsRoute(route *mux.Router) {
 }
 
 func (ar AssignmentRoute) GetRubricsRoute(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Rubric{}, "rubric"))
+	route.Use(utils.DecodeParamsMiddleware(&models.Rubric{}, "rubric"))
 	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Rubric{}, "rubric", &[]models.Rubric{})).Methods(http.MethodGet)
 }
 

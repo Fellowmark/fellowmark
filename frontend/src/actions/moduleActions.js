@@ -77,7 +77,7 @@ export const createPairings = async (moduleId, assignmentData) => {
     id: assignmentData.AssignmentID
   });
   await assignPairings(moduleId, {
-      id: assignmentData.AssignmentID
+    id: assignmentData.AssignmentID
   });
 };
 
@@ -183,7 +183,7 @@ export const getStaffModules = (setModules) => {
  * @param {int} [duration=86400] time in seconds assignment should be open for submissions [default: `86400` (1 day)]
  */
 export const createAssignment = async (assignment) => {
-  await axios.post(`/assignment`, {
+  return await axios.post(`/assignment`, {
     name: assignment.Name,
     moduleId: assignment.ModuleID,
     groupSize: assignment.GroupSize,
@@ -215,15 +215,13 @@ export const createQuestion = async (questionNumber, questionText, assignmentId)
  * @param {int} [maxMark=10] maximum amount of marks for the question (default: `10`)  
  * @param {int} [minMark=0] minimum amount of marks for the question (default: `0`) 
  */
-export const createRubrics = (questionId, criteria, description, maxMark = 10, minMark = 0) => {
-  axios.post(`/assignment/rubric`, {
-    QuestionID: questionId,
-    Criteria: criteria,
-    Description: description,
-    MinMark: minMark,
-    MaxMark: maxMark
-  }).catch((err) => {
-    console.error(err);
+export const createRubrics = async ({ QuestionID, Criteria, Description, MaxMark = 10, MinMark = 0 }) => {
+  await axios.post(`/assignment/rubric`, {
+    questionId: QuestionID,
+    criteria: Criteria,
+    description: Description,
+    minMark: MinMark,
+    maxMark: MaxMark
   });
 };
 
@@ -267,12 +265,14 @@ export const getQuestions = (questionData, setQuestions) => {
  * 
  * @param {Object} rubricData can consist of RubricID, QuestionID, Criteria, Description, MinMark and/or MaxMark
  */
-export const getRubrics = (rubricData) => {
+export const getRubrics = (rubricData, setRubrics) => {
   axios.get(`/assignment/rubric`, {
     method: 'GET',
-    body: JSON.stringify(rubricData)
+    params: {
+      questionId: rubricData.QuestionID
+    }
   }).then((res) => {
-    return res.data;
+    setRubrics(res.data);
   }).catch((err) => {
     console.log(err);
   });

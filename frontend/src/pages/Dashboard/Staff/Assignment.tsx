@@ -12,6 +12,7 @@ import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
+  assignPairings,
   createPairings,
   createQuestion,
   getPairings,
@@ -34,6 +35,7 @@ import { Pagination } from "../../../models/pagination";
 import moment from "moment";
 import { getPageList } from "./Dashboard";
 import { Role } from "../../Login";
+import { Rubrics } from "./Rubrics";
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
@@ -108,6 +110,7 @@ export const Questions: FC = () => {
   const [isValid, setIsValid] = useState(false);
   const [createNew, setCreateNew] = useState(false);
   const [questions, setQuestions] = useState<Pagination<Question>>({});
+  const [selectedQuestion, selectQuestion] = useState<Question>(null);
   const history = useHistory();
 
   const { assignmentId, moduleId } = useAssignmentValidCheck(history, state, match, setIsValid);
@@ -132,7 +135,20 @@ export const Questions: FC = () => {
   return (
     <div>
       <ButtonAppBar pageList={pageList} currentPage={state?.assignment?.Name} />
-      <ViewPairings moduleId={moduleId} assignmentId={assignmentId} />
+      {isValid && <ViewPairings moduleId={moduleId} assignmentId={assignmentId} />}
+      <MaxWidthDialog
+        title="Rubric"
+        setOpen={((open) => { !open && selectQuestion(null) })}
+        open={Boolean(selectedQuestion)}
+        width={"xl"}
+      >
+        <DialogContentText>
+          Rubric provides marking criteria to the markers
+        </DialogContentText>
+        <Rubrics question={{ ...selectedQuestion }} />
+        <MaxWidthDialogActions handleClose={() => selectQuestion(null)} />
+      </MaxWidthDialog>
+
       <MaxWidthDialog
         title="Create Question"
         setOpen={setCreateNew}
@@ -223,6 +239,9 @@ export const Questions: FC = () => {
           {
             questions.rows && questions.rows.map((question) => {
               return <StyledTableRow
+                onClick={() => {
+                  selectQuestion(question)
+                }}
                 hover={true}
                 key={question.ID}
               >
@@ -262,7 +281,7 @@ export const ViewPairings: FC<{ moduleId: number, assignmentId: number }> = (pro
   }, []);
 
   const generateNewPairings = async () => {
-    await createPairings(props.moduleId, { AssignmentID: props.assignmentId });
+    await assignPairings(props.moduleId, { id: props.assignmentId });
     getPairings(props.moduleId, { AssignmentID: props.assignmentId }, setPairings);
   }
 
@@ -279,6 +298,9 @@ export const ViewPairings: FC<{ moduleId: number, assignmentId: number }> = (pro
         open={view}
         width={"xl"}
       >
+        <DialogContentText>
+          The following marker student pairs were generated
+        </DialogContentText>
         <Button
           color="primary"
           aria-label="menu"
