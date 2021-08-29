@@ -1,5 +1,4 @@
 import axios from "axios";
-import { authenticate } from "../utils/auth";
 
 export const signupUser = (role, userData, history) => (dispatch) => {
   axios
@@ -12,15 +11,14 @@ export const signupUser = (role, userData, history) => (dispatch) => {
     });
 };
 
-export const loginUser = (role, userData, history) => (dispatch) => {
+export const loginUser = (role, userData, history) => {
   axios
     .get(`${role.toLowerCase()}/auth/login`, {
       params: userData
     })
     .then((res) => {
       setAuthorizationHeader(res.data.message);
-      authenticate(dispatch);
-      history.push(`/${role.toLowerCase()}`);
+      window.location.href = `/${role}`;
     })
     .catch((err) => {
       alert("Email or password incorrect");

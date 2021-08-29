@@ -29,7 +29,7 @@ export const Login: React.FC<RouteComponentProps> = (props) => {
     e.preventDefault();
     const userDetails = { email: email, password: password };
     try {
-      loginUser(role, userDetails, props.history)(dispatch);
+      loginUser(role, userDetails, props.history);
     } catch (err) {
       console.error(err);
     }

@@ -1,5 +1,6 @@
 import {
   Button,
+  DialogContentText,
   FormControl,
   Grid,
   IconButton,
@@ -14,7 +15,6 @@ import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   createAssignment,
   getAssignments,
-  getEnrollments,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar } from "../../../components/NavBar";
 import {
@@ -28,16 +28,17 @@ import {
   StyledTableRow,
 } from "../../../components/StyledTable";
 import { AuthContext } from "../../../context/context";
-import { Assignment, Enrollment } from "../../../models/models";
+import { Assignment } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import moment from "moment";
 import { getPageList, useFormStyles, useValidCheck } from "./Dashboard";
+import { AuthType } from "../../../reducers/reducer";
 
 export const Assignments: FC = () => {
   const classes = useFormStyles();
 
   const match = useRouteMatch();
-  const { state } = useContext(AuthContext);
+  const { state, dispatch } = useContext(AuthContext);
   const [isValid, setIsValid] = useState(false);
   const [createNew, setCreateNew] = useState(false);
   const [assignments, setAssignments] = useState<Pagination<Assignment>>({});
@@ -56,8 +57,8 @@ export const Assignments: FC = () => {
     }
   }, [isValid]);
 
-  const addAssignment = () => {
-    createAssignment(newAssignment);
+  const addAssignment = async () => {
+    await createAssignment(newAssignment);
     setCreateNew(false);
     setNewAssignment({ ModuleID: moduleId });
     getAssignments({ moduleId: moduleId }, setAssignments);
@@ -72,6 +73,9 @@ export const Assignments: FC = () => {
         open={createNew}
         width={"sm"}
       >
+        <DialogContentText>
+          Please fill in the details
+        </DialogContentText>
         <form className={classes.form} noValidate>
           <FormControl className={classes.formControl}>
             <Grid container direction="column" spacing={2}>
@@ -143,7 +147,10 @@ export const Assignments: FC = () => {
         <TableBody>
           {assignments.rows?.map((assignment) => {
             return (
-              <StyledTableRow key={assignment.ID}>
+              <StyledTableRow onClick={() => {
+                dispatch({ type: AuthType.ASSIGNMENT, payload: { assignment: assignment } });
+                history.push(`${match.url}/${assignment.ID}`);
+              }} hover={true} key={assignment.ID}>
                 <StyledTableCell component="th" scope="row">
                   {assignment.ID}
                 </StyledTableCell>

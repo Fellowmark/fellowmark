@@ -46,6 +46,6 @@ func (ur StaffRoute) CreatePairingsRoute(route *mux.Router) {
 }
 
 func (ur StaffRoute) GetPairingsRoute(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Pairing{}, "pairing"))
+	route.Use(utils.DecodeParamsMiddleware(&models.Pairing{}, "pairing"))
 	route.HandleFunc("", utils.DBGetFromData(ur.DB, &models.Pairing{}, "pairing", &[]models.Pairing{})).Methods(http.MethodGet)
 }

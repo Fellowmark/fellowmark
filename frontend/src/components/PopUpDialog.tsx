@@ -60,9 +60,6 @@ export const MaxWidthDialog: FC<MaxWidthDialogProps> = (props) => {
       >
         <DialogTitle id="max-width-dialog-title">{props.title}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Please fill in the details
-          </DialogContentText>
           {props.children}
         </DialogContent>
       </Dialog>

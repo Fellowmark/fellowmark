@@ -1,4 +1,5 @@
-import { createContext, Dispatch, FC, useReducer } from "react";
+import { createContext, Dispatch, FC, useReducer, useState } from "react";
+import { Assignment } from "../models/models";
 import { Role } from "../pages/Login";
 import { ModuleInfo } from "../pages/Modules";
 import { AuthType, updateContext } from "../reducers/reducer";
@@ -7,6 +8,7 @@ export interface ContextPayload {
   role?: Role;
   user?: any;
   module?: ModuleInfo;
+  assignment?: Assignment;
 }
 
 export interface ContextState {
@@ -32,5 +34,29 @@ export const AuthProvider: FC = (props) => {
 
   return (
     <AuthContext.Provider value={value}>{props.children}</AuthContext.Provider>
+  );
+};
+
+export interface TimeoutState {
+  timeout?: NodeJS.Timeout,
+  createTimeout?: (timeout: NodeJS.Timeout) => void,
+  cancelTimeout?: () => void,
+}
+
+export const TimeoutContext = createContext<TimeoutState>({});
+
+export const TimeoutProvider: FC = (props) => {
+  const [timeout, createTimeout] = useState<NodeJS.Timeout>(null);
+
+  const cancelTimeout = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      createTimeout(null);
+    }
+  }
+
+  const value = { timeout, createTimeout, cancelTimeout }
+  return (
+    <TimeoutContext.Provider value={value}>{props.children}</TimeoutContext.Provider>
   );
 };

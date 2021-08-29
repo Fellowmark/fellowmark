@@ -43,8 +43,21 @@ export const createSupervision = (moduleId, staffId) => {
  * @param {int} moduleId ID of module the assignment belongs to
  * @param {Object} assignmentData must be (Name, ModuleID) or (ID)
  */
-export const assignPairings = (moduleId, assignmentData) => {
-  axios.post(`/module/${moduleId}/pairing/assign`, assignmentData).catch((err) => {
+export const assignPairings = async (moduleId, assignmentData) => {
+  await axios.post(`/staff/module/${moduleId}/pairing/assign`, assignmentData);
+};
+
+export const getPairings = (moduleId, pairingData, setPairings) => {
+  axios.get(`/staff/module/${moduleId}/pairing`, {
+    params: {
+      assignmentId: pairingData.AssignmentID,
+      studentId: pairingData.StudentID,
+      markerId: pairingData.MarkerID,
+      active: true
+    }
+  }).then((res) => {
+    setPairings(res.data);
+  }).catch((err) => {
     console.error(err);
   });
 };
@@ -55,9 +68,16 @@ export const assignPairings = (moduleId, assignmentData) => {
  * @param {int} moduleId ID of module the assignment belongs to
  * @param {Object} assignmentData must be (Name + ModuleID) or (ID)
  */
-export const initializePairings = (moduleId, assignmentData) => {
-  axios.post(`/module/${moduleId}/pairing/initialize`, assignmentData).catch((err) => {
-    console.error(err);
+export const initializePairings = async (moduleId, assignmentData) => {
+  await axios.post(`staff/module/${moduleId}/pairing/initialize`, assignmentData);
+};
+
+export const createPairings = async (moduleId, assignmentData) => {
+  await initializePairings(moduleId, {
+    id: assignmentData.AssignmentID
+  });
+  await assignPairings(moduleId, {
+      id: assignmentData.AssignmentID
   });
 };
 
@@ -162,14 +182,12 @@ export const getStaffModules = (setModules) => {
  * @param {int} groupSize size of each group of student-marker pairings
  * @param {int} [duration=86400] time in seconds assignment should be open for submissions [default: `86400` (1 day)]
  */
-export const createAssignment = (assignment) => {
-  axios.post(`/assignment`, {
+export const createAssignment = async (assignment) => {
+  await axios.post(`/assignment`, {
     name: assignment.Name,
     moduleId: assignment.ModuleID,
     groupSize: assignment.GroupSize,
     deadline: assignment.Deadline
-  }).catch((err) => {
-    console.error(err);
   });
 };
 
@@ -180,13 +198,11 @@ export const createAssignment = (assignment) => {
  * @param {string} questionText question text
  * @param {int} assignmentId AssignmentID of corresponding assignment
  */
-export const createQuestion = (questionNumber, questionText, assignmentId) => {
-  axios.post(`/assignment/question`, {
-    QuestionNumber: questionNumber,
-    QuestionText: questionText,
-    AssignmentID: assignmentId
-  }).catch((err) => {
-    console.error(err);
+export const createQuestion = async (questionNumber, questionText, assignmentId) => {
+  await axios.post(`/assignment/question`, {
+    questionNumber: questionNumber,
+    questionText: questionText,
+    assignmentId: assignmentId
   });
 };
 
@@ -235,12 +251,12 @@ export const getAssignments = (assignmentData, setAssignments) => {
  * 
  * @param {Object} questionData can consist of QuestionID, QuestionNumber, QuestionText and/or AssignmentID
  */
-export const getQuestions = (questionData) => {
+export const getQuestions = (questionData, setQuestions) => {
   axios.get(`/assignment/question`, {
     method: 'GET',
-    body: JSON.stringify(questionData)
+    params: questionData
   }).then((res) => {
-    return res.data;
+    setQuestions(res.data);
   }).catch((err) => {
     console.log(err);
   });

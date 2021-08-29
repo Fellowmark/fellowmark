@@ -4,6 +4,7 @@ export enum AuthType {
   AUTHENTICATED = "AUTHENTICATED",
   UNAUTHENTICATED = "UNAUTHENTICATED",
   MODULE = "MODULE",
+  ASSIGNMENT = "ASSIGNMENT",
 }
 
 export const updateContext = (
@@ -22,6 +23,8 @@ export const updateContext = (
       return null;
     case AuthType.MODULE:
       return { ...state, module: action.payload.module };
+    case AuthType.ASSIGNMENT:
+      return { ...state, assignment: action.payload.assignment };
     default:
       return state;
   }

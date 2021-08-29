@@ -12,7 +12,7 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 
-import { AuthContext } from "../context/context";
+import { AuthContext, TimeoutContext } from "../context/context";
 import { logoutUser } from "../actions/userActions";
 import { makeStyles } from "@material-ui/core";
 
@@ -46,6 +46,7 @@ export const ButtonAppBar: FC<MenuProps> = (props) => {
   const [isDrawn, drawMenu] = useState(false);
   const history = useHistory();
   const { dispatch } = useContext(AuthContext);
+  const { cancelTimeout } = useContext(TimeoutContext);
   const classes = useStyles();
 
   const toggleDrawer = (open: boolean) => () => {
@@ -83,7 +84,7 @@ export const ButtonAppBar: FC<MenuProps> = (props) => {
                         <ListItem
                           button
                           key={title}
-                          onClick={() => {history.push(`${path}`)}}
+                          onClick={() => { history.push(`${path}`) }}
                         >
                           <ListItemText primary={title} />
                         </ListItem>
@@ -99,7 +100,10 @@ export const ButtonAppBar: FC<MenuProps> = (props) => {
           </Typography>
           <Button
             color="inherit"
-            onClick={() => logoutUser(history, dispatch)}
+            onClick={() => {
+              logoutUser(history, dispatch);
+              cancelTimeout();
+            }}
             component={Link}
             to="/login"
           >

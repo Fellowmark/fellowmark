@@ -22,10 +22,10 @@ func InitializePairings(db *gorm.DB, assignment models.Assignment) *gorm.DB {
 			CROSS JOIN students AS B
 			WHERE A.id != B.id
 			AND A.id in (
-				SELECT id FROM enrollments
+				SELECT student_id FROM enrollments
 				WHERE module_id = ? AND deleted_at IS NULL
 			) AND B.id in (
-				SELECT id FROM enrollments
+				SELECT student_id FROM enrollments
 				WHERE  module_id = ? AND deleted_at IS NULL
 			)
 		) RETURNING *`,

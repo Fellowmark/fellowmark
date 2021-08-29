@@ -56,7 +56,7 @@ func (ar AssignmentRoute) GetAssignmentsRoute(route *mux.Router) {
 }
 
 func (ar AssignmentRoute) GetQuestionsRoute(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Question{}, "question"))
+	route.Use(utils.DecodeParamsMiddleware(&models.Question{}, "question"))
 	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Question{}, "question", &[]models.Question{})).Methods(http.MethodGet)
 }
 

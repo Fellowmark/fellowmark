@@ -9,6 +9,7 @@ import { StudentModuleDashboard } from "./pages/Dashboard/Student/Dashboard";
 import { FC } from "react";
 import { Class } from "./pages/Dashboard/Staff/Class";
 import { Assignments } from "./pages/Dashboard/Staff/Assignments";
+import { Questions } from "./pages/Dashboard/Staff/Assignment";
 
 const Routes: FC = () => {
   return (
@@ -20,6 +21,7 @@ const Routes: FC = () => {
       <Route exact path="/staff/module/:moduleId" component={StaffModuleDashboard} />
       <Route exact path="/staff/module/:moduleId/class" component={Class} />
       <Route exact path="/staff/module/:moduleId/assignments" component={Assignments} />
+      <Route exact path="/staff/module/:moduleId/assignments/:assignmentId" component={Questions} />
 
       <Route exact path="/student" component={() => <RoleHome role={Role.STUDENT} />} />
       <Route exact path="/student/module/:moduleId" component={StudentModuleDashboard} />

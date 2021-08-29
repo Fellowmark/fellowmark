@@ -17,3 +17,18 @@ export interface Assignment {
   GroupSize?: number,
   Deadline?: number,
 }
+
+export interface Question {
+  ID?: number,
+  QuestionNumber?: number,
+  QuestionText?: string,
+  AssignmentID?: number
+}
+
+export interface Pairing {
+  ID?: number,
+	AssignmentID?: number,
+	Student?: User,
+	Marker?: User,
+	Active?: Boolean
+}

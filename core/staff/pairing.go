@@ -11,12 +11,12 @@ import (
 func (ur StaffRoute) AssignPairings(w http.ResponseWriter, r *http.Request) {
 	data := r.Context().Value("assignment")
 	assignment := &models.Assignment{}
-	result := ur.DB.Model(&models.Assignment{}).Where(data).Find(assignment)
+	result := ur.DB.Model(&models.Assignment{}).Where(data).First(assignment)
 	if result.Error != nil {
 		loggers.ErrorLogger.Println(result.Error.Error())
 		utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
 	} else {
-		result = utils.SetNewPairings(ur.DB, (*assignment))
+		result = utils.SetNewPairings(ur.DB, *assignment)
 		if result.Error != nil {
 			loggers.ErrorLogger.Println(result.Error.Error())
 			utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
