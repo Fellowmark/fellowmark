@@ -7,6 +7,7 @@ import {
   makeStyles,
   TableBody,
   TextField,
+  Typography,
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
@@ -74,7 +75,7 @@ export const useAssignmentValidCheck = (
   authContext: ContextPayload,
   match,
   setIsValid?: (boolean) => void
-): { moduleId: number, assignmentId: number } => {
+): { moduleId: number; assignmentId: number } => {
   const moduleId: number = Number(
     (match.params as { moduleId: number }).moduleId
   );
@@ -113,9 +114,15 @@ export const Questions: FC = () => {
   const [selectedQuestion, selectQuestion] = useState<Question>(null);
   const history = useHistory();
 
-  const { assignmentId, moduleId } = useAssignmentValidCheck(history, state, match, setIsValid);
-  const [newQuestion, setNewQuestion] = useState<Question>({ AssignmentID: assignmentId });
-
+  const { assignmentId, moduleId } = useAssignmentValidCheck(
+    history,
+    state,
+    match,
+    setIsValid
+  );
+  const [newQuestion, setNewQuestion] = useState<Question>({
+    AssignmentID: assignmentId,
+  });
 
   const pageList = getPageList(match);
 
@@ -126,7 +133,11 @@ export const Questions: FC = () => {
   }, [isValid]);
 
   const addQuestion = async () => {
-    await createQuestion(newQuestion.QuestionNumber, newQuestion.QuestionText, assignmentId);
+    await createQuestion(
+      newQuestion.QuestionNumber,
+      newQuestion.QuestionText,
+      assignmentId
+    );
     setCreateNew(false);
     setNewQuestion({ AssignmentID: assignmentId });
     getQuestions({ moduleId: moduleId }, setQuestions);
@@ -135,10 +146,14 @@ export const Questions: FC = () => {
   return (
     <div>
       <ButtonAppBar pageList={pageList} currentPage={state?.assignment?.Name} />
-      {isValid && <ViewPairings moduleId={moduleId} assignmentId={assignmentId} />}
+      {isValid && (
+        <ViewPairings moduleId={moduleId} assignmentId={assignmentId} />
+      )}
       <MaxWidthDialog
         title="Rubric"
-        setOpen={((open) => { !open && selectQuestion(null) })}
+        setOpen={(open) => {
+          !open && selectQuestion(null);
+        }}
         open={Boolean(selectedQuestion)}
         width={"xl"}
       >
@@ -155,9 +170,7 @@ export const Questions: FC = () => {
         open={createNew}
         width={"xl"}
       >
-        <DialogContentText>
-          Please fill in the details
-        </DialogContentText>
+        <DialogContentText>Please fill in the details</DialogContentText>
         <form className={classes.form} noValidate>
           <FormControl className={classes.formControl}>
             <Grid container direction="column" spacing={2}>
@@ -168,7 +181,10 @@ export const Questions: FC = () => {
                   name="QuestionNumber"
                   variant="outlined"
                   onChange={(e) =>
-                    setNewQuestion({ ...newQuestion, QuestionNumber: Number(e.target.value) })
+                    setNewQuestion({
+                      ...newQuestion,
+                      QuestionNumber: Number(e.target.value),
+                    })
                   }
                   required
                   autoFocus
@@ -179,7 +195,7 @@ export const Questions: FC = () => {
                   type="QuestionText"
                   placeholder="Question Text"
                   style={{
-                    width: '70vw',
+                    width: "70vw",
                   }}
                   fullWidth
                   multiline={true}
@@ -210,10 +226,7 @@ export const Questions: FC = () => {
           <StyledTableCell align="right">Deadline</StyledTableCell>
         </StyledTableHead>
         <TableBody>
-          <StyledTableRow
-            hover={true}
-            key={state?.assignment?.ID}
-          >
+          <StyledTableRow hover={true} key={state?.assignment?.ID}>
             <StyledTableCell component="th" scope="row">
               {state?.assignment?.ID}
             </StyledTableCell>
@@ -229,6 +242,10 @@ export const Questions: FC = () => {
         </TableBody>
       </StyledTableContainer>
 
+      <Typography gutterBottom style={{ marginTop: "10px" }} color="primary">
+        Assignment Questions
+      </Typography>
+
       <StyledTableContainer>
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
@@ -236,27 +253,33 @@ export const Questions: FC = () => {
           <StyledTableCell align="right">Question Text</StyledTableCell>
         </StyledTableHead>
         <TableBody>
-          {
-            questions.rows && questions.rows.map((question) => {
-              return <StyledTableRow
-                onClick={() => {
-                  selectQuestion(question)
-                }}
-                hover={true}
-                key={question.ID}
-              >
-                <StyledTableCell component="th" scope="row">
-                  {question.ID}
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  {question.QuestionNumber}
-                </StyledTableCell>
-                <StyledTableCell aria-multiline={true} component="th" scope="row">
-                  {question.QuestionText}
-                </StyledTableCell>
-              </StyledTableRow>
-            })
-          }
+          {questions.rows &&
+            questions.rows.map((question) => {
+              return (
+                <StyledTableRow
+                  onClick={() => {
+                    selectQuestion(question);
+                  }}
+                  hover={true}
+                  key={question.ID}
+                >
+                  <StyledTableCell component="th" scope="row">
+                    {question.ID}
+                  </StyledTableCell>
+                  <StyledTableCell component="th" scope="row">
+                    {question.QuestionNumber}
+                  </StyledTableCell>
+                  <StyledTableCell
+                    aria-multiline={true}
+                    align="right"
+                    component="th"
+                    scope="row"
+                  >
+                    {question.QuestionText}
+                  </StyledTableCell>
+                </StyledTableRow>
+              );
+            })}
         </TableBody>
       </StyledTableContainer>
 
@@ -272,26 +295,34 @@ export const Questions: FC = () => {
   );
 };
 
-export const ViewPairings: FC<{ moduleId: number, assignmentId: number }> = (props) => {
+export const ViewPairings: FC<{ moduleId: number; assignmentId: number }> = (
+  props
+) => {
   const [view, setView] = useState(false);
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
 
   useEffect(() => {
-    getPairings(props.moduleId, { AssignmentID: props.assignmentId }, setPairings);
+    getPairings(
+      props.moduleId,
+      { AssignmentID: props.assignmentId },
+      setPairings
+    );
   }, []);
 
   const generateNewPairings = async () => {
     await assignPairings(props.moduleId, { id: props.assignmentId });
-    getPairings(props.moduleId, { AssignmentID: props.assignmentId }, setPairings);
-  }
+    getPairings(
+      props.moduleId,
+      { AssignmentID: props.assignmentId },
+      setPairings
+    );
+  };
 
   return (
     <div>
-      <Button
-        color="primary"
-        aria-label="menu"
-        onClick={() => setView(true)}
-      >View Pairings</Button>
+      <Button color="primary" aria-label="menu" onClick={() => setView(true)}>
+        View Pairings
+      </Button>
       <MaxWidthDialog
         title="Pairings"
         setOpen={setView}
@@ -305,7 +336,9 @@ export const ViewPairings: FC<{ moduleId: number, assignmentId: number }> = (pro
           color="primary"
           aria-label="menu"
           onClick={() => generateNewPairings()}
-        >Generate</Button>
+        >
+          Generate
+        </Button>
         <StyledTableContainer>
           <StyledTableHead>
             <StyledTableCell>ID</StyledTableCell>
@@ -313,28 +346,27 @@ export const ViewPairings: FC<{ moduleId: number, assignmentId: number }> = (pro
             <StyledTableCell align="right">Marker</StyledTableCell>
           </StyledTableHead>
           <TableBody>
-            {
-              pairings.rows && pairings.rows.map((pairing) => {
-                return <StyledTableRow
-                  hover={true}
-                  key={pairing.ID}
-                >
-                  <StyledTableCell component="th" scope="row">
-                    {pairing.ID}
-                  </StyledTableCell>
-                  <StyledTableCell component="th" scope="row">
-                    {`${pairing.Student.ID}, ${pairing.Student.Name}, ${pairing.Student.Email}`}
-                  </StyledTableCell>
-                  <StyledTableCell component="th" scope="row">
-                    {`${pairing.Marker.ID}, ${pairing.Marker.Name}, ${pairing.Marker.Email}`}
-                  </StyledTableCell>
-                </StyledTableRow>
-              })
-            }
+            {pairings.rows &&
+              pairings.rows.map((pairing) => {
+                return (
+                  <StyledTableRow hover={true} key={pairing.ID}>
+                    <StyledTableCell component="th" scope="row">
+                      {pairing.ID}
+                    </StyledTableCell>
+                    <StyledTableCell component="th" scope="row">
+                      {`${pairing.Student.ID}, ${pairing.Student.Name}, ${pairing.Student.Email}`}
+                    </StyledTableCell>
+                    <StyledTableCell component="th" scope="row">
+                      {`${pairing.Marker.ID}, ${pairing.Marker.Name}, ${pairing.Marker.Email}`}
+                    </StyledTableCell>
+                  </StyledTableRow>
+                );
+              })}
           </TableBody>
         </StyledTableContainer>
-        <MaxWidthDialogActions handleClose={() => setView(false)}>
-        </MaxWidthDialogActions>
+        <MaxWidthDialogActions
+          handleClose={() => setView(false)}
+        ></MaxWidthDialogActions>
       </MaxWidthDialog>
     </div>
   );
