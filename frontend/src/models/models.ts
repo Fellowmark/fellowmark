@@ -9,3 +9,11 @@ export interface Enrollment {
   ModuleId?: number,
   Student?: User
 }
+
+export interface Assignment {
+  ID?: number,
+  Name?: string,
+  ModuleID?: number,
+  GroupSize?: number,
+  Deadline?: number,
+}

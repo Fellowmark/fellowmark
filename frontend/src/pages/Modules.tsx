@@ -50,7 +50,7 @@ export const ModuleList: FC = () => {
 
   return (
     <div className={classes.root}>
-      <ButtonAppBar pageList={pageList} currentPage="Module" />
+      <ButtonAppBar pageList={pageList} currentPage="Modules" />
       <Grid container className="page-background" spacing={3}>
         {modules?.map((module) => {
           return <Module key={module.ID} {...module} />;

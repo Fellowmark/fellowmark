@@ -162,13 +162,12 @@ export const getStaffModules = (setModules) => {
  * @param {int} groupSize size of each group of student-marker pairings
  * @param {int} [duration=86400] time in seconds assignment should be open for submissions [default: `86400` (1 day)]
  */
-export const createAssignment = (name, moduleId, groupSize, duration = 86400) => {
-  const deadline = Math.floor(Date.now() / 1000) + duration;
+export const createAssignment = (assignment) => {
   axios.post(`/assignment`, {
-    Name: name,
-    ModuleID: moduleId,
-    GroupSize: groupSize,
-    Deadline: deadline
+    name: assignment.Name,
+    moduleId: assignment.ModuleID,
+    groupSize: assignment.GroupSize,
+    deadline: assignment.Deadline
   }).catch((err) => {
     console.error(err);
   });
@@ -217,12 +216,15 @@ export const createRubrics = (questionId, criteria, description, maxMark = 10, m
  * 
  * @param {Object} assignmentData can consist of AssignmentID, Name, ModuleID, GroupSize and/or Deadline
  */
-export const getAssignments = (assignmentData) => {
+export const getAssignments = (assignmentData, setAssignments) => {
   axios.get(`/assignment`, {
     method: 'GET',
-    body: JSON.stringify(assignmentData)
+    params: {
+      ...assignmentData,
+      sort: "deadline asc"
+    }
   }).then((res) => {
-    return res.data;
+    return setAssignments(res.data);
   }).catch((err) => {
     console.log(err);
   });

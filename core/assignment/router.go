@@ -51,7 +51,7 @@ func (ar AssignmentRoute) CreateRubricsRoute(route *mux.Router) {
 }
 
 func (ar AssignmentRoute) GetAssignmentsRoute(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Assignment{}, "assignment"))
+	route.Use(utils.DecodeParamsMiddleware(&models.Assignment{}, "assignment"))
 	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Assignment{}, "assignment", &[]models.Assignment{})).Methods(http.MethodGet)
 }
 
