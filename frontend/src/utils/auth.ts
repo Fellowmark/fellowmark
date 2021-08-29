@@ -16,7 +16,6 @@ export function authenticate(dispatch: Dispatch<ContextState>) {
     const claims: Claims = jwtDecode(token);
     if (claims.exp * 1000 > Date.now()) {
       const secondsLeft = claims.exp * 1000 - Date.now();
-      console.log(secondsLeft);
       setTimeout(() => { alert("Session expired"); }, secondsLeft - 30);
       setUserContext(claims, dispatch);
       return true;

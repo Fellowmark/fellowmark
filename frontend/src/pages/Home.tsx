@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { FC, useContext, useEffect, useState } from "react";
 
 import { AuthContext } from "../context/context";
 import { Redirect, useHistory } from "react-router-dom";
@@ -25,35 +25,13 @@ export const Home: React.FC = () => {
   );
 };
 
-export const StudentHome: React.FC = () => {
+export const RoleHome: FC<{role: Role}> = (props) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const { state } = useContext(AuthContext);
   const history = useHistory();
 
   useEffect(() => {
-    if (state?.role !== Role.STUDENT) {
-      history.replace("/");
-    } else {
-      setIsLoaded(true);
-    }
-  }, []);
-
-  const userComponent = <ModuleList />;
-
-  return (
-    <Grid container>
-      <ProgressBar component={userComponent} isLoaded={isLoaded} />
-    </Grid>
-  );
-};
-
-export const StaffHome: React.FC = () => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const { state } = useContext(AuthContext);
-  const history = useHistory();
-
-  useEffect(() => {
-    if (state?.role !== Role.STAFF) {
+    if (state?.role !== props.role) {
       history.replace("/");
     } else {
       setIsLoaded(true);
