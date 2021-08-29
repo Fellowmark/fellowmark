@@ -10,12 +10,14 @@ import { FC } from "react";
 import { Class } from "./pages/Dashboard/Staff/Class";
 import { Assignments } from "./pages/Dashboard/Staff/Assignments";
 import { Questions } from "./pages/Dashboard/Staff/Assignment";
+import { SignUp } from "./pages/Signup";
 
 const Routes: FC = () => {
   return (
     <Switch>
       <Route exact path="/" component={Home} />
       <Route exact path="/login" component={Login} />
+      <Route exact path="/signup" component={SignUp} />
 
       <Route exact path="/staff" component={() => <RoleHome role={Role.STAFF} />} />
       <Route exact path="/staff/module/:moduleId" component={StaffModuleDashboard} />

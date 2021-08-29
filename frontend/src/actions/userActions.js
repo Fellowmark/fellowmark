@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const signupUser = (role, userData, history) => (dispatch) => {
   axios
-    .post(`${role.toLowerCase()}/auth/login`, userData)
+    .post(`${role.toLowerCase()}/auth/signup`, userData)
     .then(() => {
       history.push("/login");
     })
