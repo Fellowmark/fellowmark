@@ -44,7 +44,6 @@ func (fr FileserverRoute) CreateUploadRoute(route *mux.Router) {
 	route.Use(fr.FileAuthMiddleware("claims", "submission", true))
 	route.Use(fr.GetSubmissionMiddleware("submission"))
 	route.Use(utils.UploadMiddleware(fr.UploadPath, "file", fr.MaxUploadSize))
-	route.Use(utils.UploadMiddleware(fr.UploadPath, "file", fr.MaxUploadSize))
 	route.Use(UpdateSubmissionContentFile("submission", "file"))
 	route.HandleFunc("", utils.DBCreateHandleFunc(fr.DB, &models.Submission{}, "submission", true)).Methods(http.MethodPost)
 }

@@ -15,6 +15,7 @@ import { ButtonAppBar, Page } from "../../../components/NavBar";
 import { MaxWidthDialog, MaxWidthDialogActions } from "../../../components/PopUpDialog";
 import { AuthContext } from "../../../context/context";
 import { Role } from "../../Login";
+import { Gradebook } from "./Gradebook";
 import { PeerReview } from "./PeerReview";
 
 export const useFormStyles = makeStyles((theme) => ({
@@ -79,6 +80,7 @@ export const QuestionBoard: FC = () => {
   const [isValid, setIsValid] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [peerReview, setPeerReview] = useState(false);
+  const [gradeBook, setGradeBook] = useState(false);
 
   const hiddenFileInput = useRef(null);
 
@@ -88,7 +90,11 @@ export const QuestionBoard: FC = () => {
   const handleUpload = async (file: File) => {
     const data = new FormData();
     data.append('uploadFile', file);
-    await uploadSubmission(data, moduleId, questionId, state.user.ID);
+    try {
+      await uploadSubmission(data, moduleId, questionId, state.user.ID);
+    } catch (e) {
+      alert("File too big");
+    }
     getSubmissionMetadata(state.user.ID, questionId, setSubmitted);
   }
 
@@ -117,6 +123,20 @@ export const QuestionBoard: FC = () => {
         <PeerReview moduleId={moduleId} assignmentId={assignmentId} questionId={questionId} />
 
         <MaxWidthDialogActions handleClose={() => setPeerReview(false)} />
+      </MaxWidthDialog>
+      <MaxWidthDialog
+        title="Gradebook"
+        open={gradeBook}
+        setOpen={setGradeBook}
+        width={"xl"}
+      >
+        <DialogContentText>
+          This is the review you have received for your work
+        </DialogContentText>
+
+        <Gradebook moduleId={moduleId} assignmentId={assignmentId} questionId={questionId} />
+
+        <MaxWidthDialogActions handleClose={() => setGradeBook(false)} />
       </MaxWidthDialog>
       <Card>
         <CardContent>
@@ -171,7 +191,7 @@ export const QuestionBoard: FC = () => {
             style={{ marginTop: "10px" }}
             variant="contained"
             onClick={() => {
-              setPeerReview(true);
+              setGradeBook(true);
             }}
           >
             Gradebook

@@ -40,7 +40,7 @@ func (gr GradingRoute) CreateGradeRouter(route *mux.Router) {
 }
 
 func (gr GradingRoute) GetGradesForStudent(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}, "grade"))
+	route.Use(utils.DecodeParamsMiddleware(&models.Grade{}, "grade"))
 	if os.Getenv("RUN_ENV") == "production" {
 		route.Use(utils.ValidateJWTMiddleware("Student", "claims", &models.Student{}))
 		route.Use(utils.EnrollmentCheckMiddleware(gr.DB, "claims", "moduleId"))

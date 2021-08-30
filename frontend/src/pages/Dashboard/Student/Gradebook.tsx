@@ -14,8 +14,8 @@ import {
 import { FC, useContext, useEffect, useRef, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
-  downloadSubmission,
   getGradesForMarker,
+  getGradesForStudent,
   getPairings,
   getRubrics,
   getSubmissionMetadata,
@@ -51,28 +51,32 @@ export const useFormStyles = makeStyles((theme) => ({
   },
 }));
 
-export const PeerReview: FC<{
+export const Gradebook: FC<{
   moduleId: number;
   assignmentId: number;
   questionId: number;
 }> = (props) => {
+  const match = useRouteMatch();
   const { state } = useContext(AuthContext);
+  const history = useHistory();
+  const [submitted, setSubmitted] = useState(false);
   const [student, setStudent] = useState<number>(null);
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
   const [rubrics, setRubrics] = useState<Pagination<Rubric>>({});
   const [grades, setGrades] = useState<Map<number, Grade>>(null);
-  const ref = useRef(null);
+
+  const hiddenFileInput = useRef(null);
 
   const { moduleId, questionId } = props;
 
   useEffect(() => {
-    getPairings(moduleId, { MarkerID: state.user.ID }, setPairings);
+    getPairings(moduleId, { StudentID: state.user.ID }, setPairings);
     getRubrics({ QuestionID: questionId }, setRubrics);
   }, []);
 
   useEffect(() => {
     if (student) {
-      getGradesForMarker(moduleId, { PairingID: student }, setGrades);
+      getGradesForStudent(moduleId, { PairingID: student }, setGrades);
     }
   }, [student]);
 
@@ -82,61 +86,22 @@ export const PeerReview: FC<{
     });
   };
 
-  const handleDownload = async () => {
-    let studentId: number = 0;
-    console.log(student);
-    pairings.rows.forEach((value) => {
-      if (value.ID == student) {
-        studentId = value.Student.ID;
-      }
-    });
-    try {
-      await downloadSubmission(ref, moduleId, questionId, studentId);
-    } catch (e) {
-      alert("No submission found");
-    }
-  };
-
   return (
     <div>
-      <a style={{ display: 'none' }} href='empty' ref={ref}>ref</a>
-      <Grid
-        container
-        direction="column"
-        alignItems="center"
-        spacing={1}
-        style={{
-          marginBottom: '10px'
+      <Select
+        name="status"
+        onChange={(e) => {
+          setStudent(e.target.value as number);
+          setGrades(null);
         }}
       >
-        <Grid item>
-          <Select
-            name="status"
-            onChange={(e) => {
-              setStudent(e.target.value as number);
-              setGrades(null);
-            }}
-          >
-            {pairings?.rows?.map((pair, key) => {
-              return (
-                <MenuItem key={key} value={pair.ID}>{`Student ${key + 1
-                  }`}</MenuItem>
-              );
-            })}
-          </Select>
-        </Grid>
-        <Grid item>
-          <Button
-            color="primary"
-            variant="contained"
-            aria-label="menu"
-            disabled={!student}
-            onClick={() => handleDownload()}
-          >
-            Download
-          </Button>
-        </Grid>
-      </Grid>
+        {pairings?.rows?.map((pair, key) => {
+          return (
+            <MenuItem key={key} value={pair.ID}>{`Student ${key + 1
+              }`}</MenuItem>
+          );
+        })}
+      </Select>
       <StyledTableContainer>
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
@@ -173,43 +138,10 @@ export const PeerReview: FC<{
                 {grades && (
                   <>
                     <StyledTableCell component="th" scope="row">
-                      <TextField
-                        type="Grade"
-                        placeholder="Grade"
-                        name="Grade"
-                        variant="outlined"
-                        defaultValue={grades?.get(rubric.ID)?.Grade}
-                        onChange={(e) => {
-                          const copyGrades = new Map(grades);
-                          copyGrades.set(rubric.ID, {
-                            ...copyGrades.get(rubric.ID),
-                            RubricID: rubric.ID,
-                            Grade: Number(e.target.value),
-                          });
-                          console.log(copyGrades);
-                          setGrades(copyGrades);
-                        }}
-                        required
-                      />
+                      {grades?.get(rubric.ID)?.Grade}
                     </StyledTableCell>
                     <StyledTableCell component="th" scope="row">
-                      <TextField
-                        type="Comment"
-                        placeholder="Comment"
-                        name="Comment"
-                        variant="outlined"
-                        defaultValue={grades?.get(rubric.ID)?.Comment}
-                        onChange={(e) => {
-                          const copyGrades = new Map(grades);
-                          copyGrades.set(rubric.ID, {
-                            ...copyGrades.get(rubric.ID),
-                            RubricID: rubric.ID,
-                            Comment: e.target.value,
-                          });
-                          setGrades(copyGrades);
-                        }}
-                        required
-                      />
+                      {grades?.get(rubric.ID)?.Comment}
                     </StyledTableCell>
                   </>
                 )}
@@ -218,18 +150,6 @@ export const PeerReview: FC<{
           })}
         </TableBody>
       </StyledTableContainer>
-      <Button
-        color="primary"
-        variant="contained"
-        aria-label="menu"
-        disabled={!student}
-        onClick={() => handleGrade()}
-        style={{
-          marginTop: '10px'
-        }}
-      >
-        Post
-      </Button>
     </div>
   );
 };

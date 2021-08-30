@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -97,10 +96,8 @@ func DBCreateHandleFunc(db *gorm.DB, model interface{}, contextInKey string, upd
 		data := r.Context().Value(contextInKey)
 		result := db.Model(model).Omit("ID").Create(data)
 		if result.Error != nil {
-			if errors.Is(result.Error, gorm.ErrRegistered) {
-				if update {
-					DBUpdateHandleFunc(db, model, contextInKey).ServeHTTP(w, r)
-				}
+			if update {
+				DBUpdateHandleFunc(db, model, contextInKey).ServeHTTP(w, r)
 			} else {
 				HandleResponse(w, "Already Exists", http.StatusBadRequest)
 			}

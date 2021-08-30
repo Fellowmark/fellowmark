@@ -282,6 +282,25 @@ export const uploadSubmission = async (fileFormData, moduleId, questionId, stude
   await axios.post(`/module/${moduleId}/submit?questionId=${questionId}&studentId=${studentId}`, fileFormData)
 };
 
+export const downloadSubmission = async (ref, moduleId, questionId, studentId) => {
+  try {
+    const res = await axios.get(`/module/${moduleId}/submit`, {
+      params: {
+        questionId: questionId,
+        studentId: studentId
+      },
+      responseType: 'blob', // important
+    })
+    let blob = new Blob([res.data], { type: 'application/octet-stream' })
+    ref.current.href = URL.createObjectURL(blob);
+    ref.current.download = 'download.pdf';
+    ref.current.click();
+    ref.current.remove();
+  } catch (e) {
+    alert("No submission found");
+  }
+};
+
 export const getSubmissionMetadata = (studentId, questionId, setSubmission) => {
   axios.get(`/assignment/submission`, {
     params: {
@@ -312,12 +331,18 @@ export const createGrade = (pairingId, rubricId, grade) => {
   });
 };
 
-export const getGradesForStudent = (gradeData) => {
-  axios.get('/grading/student', {
+export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
+  axios.get(`/module/${moduleId}/grade/student`, {
     method: 'GET',
-    body: JSON.stringify(gradeData)
+    params: {
+      pairingId: gradeData.PairingID,
+    }
   }).then((res) => {
-    return res.data;
+    let grades = new Map();
+    res.data.rows.forEach((grade) => {
+      grades.set(grade.RubricID, grade);
+    });
+    setGrades(grades);
   }).catch((err) => {
     console.log(err);
   });
@@ -342,10 +367,10 @@ export const getGradesForMarker = (moduleId, gradeData, setGrades) => {
 
 export const postGrade = async (moduleId, gradeData) => {
   await axios.post(`/module/${moduleId}/grade`, {
-      pairingId: gradeData.PairingID,
-      rubricId: gradeData.RubricID,
-      comment: gradeData.Comment,
-      grade: gradeData.Grade
+    pairingId: gradeData.PairingID,
+    rubricId: gradeData.RubricID,
+    comment: gradeData.Comment,
+    grade: gradeData.Grade
   })
 };
 
