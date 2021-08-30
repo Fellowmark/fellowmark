@@ -149,15 +149,35 @@ export const QuestionBoard: FC = () => {
           {submitted ? "Re-submit" : "Upload"}
         </Button>
       </form>
-      <Button
-        style={{ marginTop: "10px" }}
-        variant="contained"
-        onClick={() => {
-          setPeerReview(true);
-        }}
+      <Grid
+        container
+        direction="row"
+        justifyContent="center"
+        spacing={3}
       >
-        Peer Review
-      </Button>
+        <Grid item>
+          <Button
+            style={{ marginTop: "10px" }}
+            variant="contained"
+            onClick={() => {
+              setPeerReview(true);
+            }}
+          >
+            Peer Review
+          </Button>
+        </Grid>
+        <Grid item>
+          <Button
+            style={{ marginTop: "10px" }}
+            variant="contained"
+            onClick={() => {
+              setPeerReview(true);
+            }}
+          >
+            Gradebook
+          </Button>
+        </Grid>
+      </Grid>
     </div>
   );
 };
