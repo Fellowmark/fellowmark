@@ -27,17 +27,25 @@ export interface Question {
 
 export interface Pairing {
   ID?: number,
-	AssignmentID?: number,
-	Student?: User,
-	Marker?: User,
-	Active?: Boolean
+  AssignmentID?: number,
+  Student?: User,
+  Marker?: User,
+  Active?: Boolean
 }
 
 export interface Rubric {
   ID?: number,
-	QuestionID?: number, 
-	Criteria?: string
-	Description?: string
-	MinMark?: number
-	MaxMark?: number
+  QuestionID?: number,
+  Criteria?: string
+  Description?: string
+  MinMark?: number
+  MaxMark?: number
+}
+
+export interface Submission {
+  ID?: number
+  StudentID?: number
+  QuestionID?: number
+  ContentFile?: string
+  Content?: string
 }

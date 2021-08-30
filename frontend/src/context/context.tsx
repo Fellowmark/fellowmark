@@ -1,5 +1,5 @@
 import { createContext, Dispatch, FC, useReducer, useState } from "react";
-import { Assignment } from "../models/models";
+import { Assignment, Question } from "../models/models";
 import { Role } from "../pages/Login";
 import { ModuleInfo } from "../pages/Modules";
 import { AuthType, updateContext } from "../reducers/reducer";
@@ -9,6 +9,7 @@ export interface ContextPayload {
   user?: any;
   module?: ModuleInfo;
   assignment?: Assignment;
+  question?: Question;
 }
 
 export interface ContextState {

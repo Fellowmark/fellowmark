@@ -20,6 +20,7 @@ func (ar AssignmentRoute) CreateRouters(route *mux.Router) {
 	ar.GetRubricsRoute(route.PathPrefix("/rubric").Subrouter())
 	ar.CreatePrivilegedRouters(route.NewRoute().Subrouter())
 	ar.GetStudentPairingsRoute(route.PathPrefix("/{assignmentId}/pairs").Subrouter())
+	ar.GetSubmissionRoute(route.PathPrefix("/submission").Subrouter())
 }
 
 func (ar AssignmentRoute) CreatePrivilegedRouters(route *mux.Router) {
@@ -73,6 +74,11 @@ func (ar AssignmentRoute) GetStudentPairingsRoute(route *mux.Router) {
 	}
 
 	route.HandleFunc("", utils.GetAssignedPairingsHandlerFunc(ar.DB, "claims", "assignmentId")).Methods(http.MethodGet)
+}
+
+func (ar AssignmentRoute) GetSubmissionRoute(route *mux.Router) {
+	route.Use(utils.DecodeParamsMiddleware(&models.Submission{}, "submission"))
+	route.HandleFunc("", utils.DBGetFromData(ar.DB, &models.Submission{}, "submission", &[]models.Submission{})).Methods(http.MethodGet)
 }
 
 func (ar AssignmentRoute) GetAllAssignmentPairings(route *mux.Router) {

@@ -30,7 +30,7 @@ type Staff struct {
 type Module struct {
 	gorm.Model
 	Code     string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null"`
-	Semester string `gorm:"type:varchar(6);column:semester;not null"`
+	Semester string `gorm:"type:varchar(40);column:semester;not null"`
 	Name     string `gorm:"uniqueIndex:moduleIdx;column:name;not null"`
 }
 
@@ -93,9 +93,9 @@ type Pairing struct {
 type Submission struct {
 	gorm.Model
 	SubmittedBy Student  `gorm:"foreignKey:StudentID"`
-	StudentID   uint     `gorm:"column:submitted_by;not null"`
+	StudentID   uint     `gorm:"uniqueIndex:submissionIdx;column:submitted_by;not null"`
 	Question    Question `gorm:"foreignKey:QuestionID" json:"-"`
-	QuestionID  uint     `gorm:"column:question_id;not null"`
+	QuestionID  uint     `gorm:"uniqueIndex:submissionIdx;column:question_id;not null"`
 	ContentFile string   `gorm:"column:content_file_location" json:"-"`
 	Content     string   `gorm:"column:content"`
 }

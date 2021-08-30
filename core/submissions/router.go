@@ -3,7 +3,6 @@ package submissions
 import (
 	"context"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
@@ -22,24 +21,26 @@ func (fr FileserverRoute) CreateRouters(route *mux.Router) {
 }
 
 func (fr FileserverRoute) CreatePrivilegedRoute(route *mux.Router) {
-	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddlewareMultipleRoles([]string{"Student", "Staff"}, "claims"))
-		route.Use(utils.ModulePermCheckMiddleware(fr.DB, "claims", "moduleId"))
-	}
+	// if os.Getenv("RUN_ENV") == "production" {
+	// route.Use(utils.ValidateJWTMiddleware("Student", "claims", &models.Student{}))
+	// route.Use(utils.ModulePermCheckMiddleware(fr.DB, "claims", "moduleId"))
+	// }
 
 	fr.CreateDownloadRoute(route.NewRoute().Subrouter())
 	fr.CreateUploadRoute(route.NewRoute().Subrouter())
 }
 
 func (fr FileserverRoute) CreateDownloadRoute(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Submission{}, "submission"))
+	route.Use(utils.DecodeParamsMiddleware(&models.Submission{}, "submission"))
 	route.Use(fr.FileAuthMiddleware("claims", "submission", false))
-	route.Use(UpdateFilePathMiddleware("submission", "file"))
+	route.Use(UpdateFilePathMiddleware(fr.DB, "submission", "file"))
 	route.HandleFunc("", utils.DownloadHandlerFunc("submission", "file")).Methods(http.MethodGet)
 }
 
 func (fr FileserverRoute) CreateUploadRoute(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Submission{}, "submission"))
+	route.Use(utils.ValidateJWTMiddleware("Student", "claims", &models.Student{}))
+	route.Use(utils.EnrollmentCheckMiddleware(fr.DB, "claims", "moduleId"))
+	route.Use(utils.DecodeParamsMiddleware(&models.Submission{}, "submission"))
 	route.Use(fr.FileAuthMiddleware("claims", "submission", true))
 	route.Use(fr.GetSubmissionMiddleware("submission"))
 	route.Use(utils.UploadMiddleware(fr.UploadPath, "file", fr.MaxUploadSize))
@@ -48,10 +49,11 @@ func (fr FileserverRoute) CreateUploadRoute(route *mux.Router) {
 	route.HandleFunc("", utils.DBCreateHandleFunc(fr.DB, &models.Submission{}, "submission", true)).Methods(http.MethodPost)
 }
 
-func UpdateFilePathMiddleware(dbDataContextInKey string, filePathContextOutKey string) mux.MiddlewareFunc {
+func UpdateFilePathMiddleware(db *gorm.DB, dbDataContextInKey string, filePathContextOutKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(dbDataContextInKey).(*models.Submission)
+			db.Where(data).First(&data)
 			ctxWithPath := context.WithValue(r.Context(), filePathContextOutKey, data.ContentFile)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))
 		})

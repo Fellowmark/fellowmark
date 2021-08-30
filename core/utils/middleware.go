@@ -411,6 +411,7 @@ func DownloadHandlerFunc(dbDataContextInKey string, pathContextInKey string) htt
 		file, err := os.Open(filePath)
 		if err != nil {
 			HandleResponse(w, "FILE_NOT_FOUND", http.StatusNotFound)
+			return
 		}
 		defer file.Close()
 		io.Copy(w, file)

@@ -278,6 +278,21 @@ export const getRubrics = (rubricData, setRubrics) => {
   });
 };
 
+export const uploadSubmission = async (fileFormData, moduleId, questionId, studentId) => {
+  await axios.post(`/module/${moduleId}/submit?questionId=${questionId}&studentId=${studentId}`, fileFormData)
+};
+
+export const getSubmissionMetadata = (studentId, questionId, setSubmission) => {
+  axios.get(`/assignment/submission`, {
+    params: {
+      studentId: studentId,
+      questionId: questionId
+    }
+  }).then(() => {
+    setSubmission(true);
+  });
+};
+
 export const createGrade = (pairingId, rubricId, grade) => {
   // const rubric = getRubrics({ RubricID: rubricId })[0];
   // if (grade < rubric.MinMark || grade > rubric.MaxMark) {
