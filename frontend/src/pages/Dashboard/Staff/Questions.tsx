@@ -38,6 +38,7 @@ import { getPageList } from "./Dashboard";
 import { Role } from "../../Login";
 import { Rubrics } from "./Rubrics";
 import { PeerReview } from "../Student/PeerReview";
+import { AuthType } from "../../../reducers/reducer";
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
@@ -108,7 +109,7 @@ export const Questions: FC = () => {
   const classes = useFormStyles();
 
   const match = useRouteMatch();
-  const { state } = useContext(AuthContext);
+  const { state, dispatch } = useContext(AuthContext);
   const [isValid, setIsValid] = useState(false);
   const [createNew, setCreateNew] = useState(false);
   const [questions, setQuestions] = useState<Pagination<Question>>({});
@@ -259,6 +260,13 @@ export const Questions: FC = () => {
               return (
                 <StyledTableRow
                   onClick={() => {
+                    dispatch({
+                      type: AuthType.QUESTION,
+                      payload: {
+                        question: question
+                      }
+                    });
+                    history.push(`${match.url}/question/${question.ID}`);
                     selectQuestion(question);
                   }}
                   hover={true}
@@ -296,7 +304,7 @@ export const Questions: FC = () => {
   );
 };
 
-export const ViewPairings: FC<{ moduleId: number; assignmentId: number }> = (
+export const ViewPairings: FC<{ moduleId: number; assignmentId: number, setPairing?: (pairing: Pairing) => void }> = (
   props
 ) => {
   const [view, setView] = useState(false);
@@ -340,31 +348,7 @@ export const ViewPairings: FC<{ moduleId: number; assignmentId: number }> = (
         >
           Generate
         </Button>
-        <StyledTableContainer>
-          <StyledTableHead>
-            <StyledTableCell>ID</StyledTableCell>
-            <StyledTableCell>Student</StyledTableCell>
-            <StyledTableCell align="right">Marker</StyledTableCell>
-          </StyledTableHead>
-          <TableBody>
-            {pairings.rows &&
-              pairings.rows.map((pairing) => {
-                return (
-                  <StyledTableRow hover={true} key={pairing.ID}>
-                    <StyledTableCell component="th" scope="row">
-                      {pairing.ID}
-                    </StyledTableCell>
-                    <StyledTableCell component="th" scope="row">
-                      {`${pairing.Student.ID}, ${pairing.Student.Name}, ${pairing.Student.Email}`}
-                    </StyledTableCell>
-                    <StyledTableCell component="th" scope="row">
-                      {`${pairing.Marker.ID}, ${pairing.Marker.Name}, ${pairing.Marker.Email}`}
-                    </StyledTableCell>
-                  </StyledTableRow>
-                );
-              })}
-          </TableBody>
-        </StyledTableContainer>
+        <PairingsList pairings={pairings} setPairing={props.setPairing} />
         <MaxWidthDialogActions
           handleClose={() => setView(false)}
         ></MaxWidthDialogActions>
@@ -372,3 +356,37 @@ export const ViewPairings: FC<{ moduleId: number; assignmentId: number }> = (
     </div>
   );
 };
+
+export const PairingsList: FC<{ pairings: Pagination<Pairing>, setPairing?: (pairing: Pairing) => void }> = (
+  props
+) => {
+  return (
+    <>
+      <StyledTableContainer>
+        <StyledTableHead>
+          <StyledTableCell>ID</StyledTableCell>
+          <StyledTableCell>Student</StyledTableCell>
+          <StyledTableCell>Marker</StyledTableCell>
+        </StyledTableHead>
+        <TableBody>
+          {props.pairings?.rows &&
+            props.pairings?.rows.map((pairing) => {
+              return (
+                <StyledTableRow hover={true} key={pairing?.ID} onClick={() => { props.setPairing && props.setPairing(pairing) }}>
+                  <StyledTableCell component="th" scope="row">
+                    {pairing?.ID}
+                  </StyledTableCell>
+                  <StyledTableCell component="th" scope="row">
+                    {`${pairing?.Student?.ID}, ${pairing?.Student?.Name}, ${pairing?.Student?.Email}`}
+                  </StyledTableCell>
+                  <StyledTableCell component="th" scope="row">
+                    {`${pairing?.Marker?.ID}, ${pairing?.Marker?.Name}, ${pairing?.Marker?.Email}`}
+                  </StyledTableCell>
+                </StyledTableRow>
+              );
+            })}
+        </TableBody>
+      </StyledTableContainer>
+    </>
+  );
+}

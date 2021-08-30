@@ -12,7 +12,8 @@ import { Assignments as StudentAssignments} from "./pages/Dashboard/Student/Assi
 import { Questions as StaffQuestions } from "./pages/Dashboard/Staff/Questions";
 import { Questions as StudentQuestions } from "./pages/Dashboard/Student/Questions";
 import { SignUp } from "./pages/Signup";
-import { QuestionBoard } from "./pages/Dashboard/Student/QuestionBoard";
+import { QuestionBoard as StudentQuestionBoard } from "./pages/Dashboard/Student/QuestionBoard";
+import { QuestionBoard as StaffQuestionBoard } from "./pages/Dashboard/Staff/QuestionBoard";
 
 const Routes: FC = () => {
   return (
@@ -26,12 +27,13 @@ const Routes: FC = () => {
       <Route exact path="/staff/module/:moduleId/class" component={Class} />
       <Route exact path="/staff/module/:moduleId/assignments" component={StaffAssignments} />
       <Route exact path="/staff/module/:moduleId/assignments/:assignmentId" component={StaffQuestions} />
+      <Route exact path="/staff/module/:moduleId/assignments/:assignmentId/question/:questionId" component={StaffQuestionBoard} />
 
       <Route exact path="/student" component={() => <RoleHome role={Role.STUDENT} />} />
       <Route exact path="/student/module/:moduleId" component={StudentModuleDashboard} />
       <Route exact path="/student/module/:moduleId/assignments" component={StudentAssignments} />
       <Route exact path="/student/module/:moduleId/assignments/:assignmentId" component={StudentQuestions} />
-      <Route exact path="/student/module/:moduleId/assignments/:assignmentId/question/:questionId" component={QuestionBoard} />
+      <Route exact path="/student/module/:moduleId/assignments/:assignmentId/question/:questionId" component={StudentQuestionBoard} />
     </Switch>
   );
 };
