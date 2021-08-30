@@ -37,6 +37,7 @@ import moment from "moment";
 import { getPageList } from "./Dashboard";
 import { Role } from "../../Login";
 import { Rubrics } from "./Rubrics";
+import { PeerReview } from "../Student/PeerReview";
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {

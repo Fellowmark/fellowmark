@@ -2,6 +2,7 @@ import {
   Button,
   Card,
   CardContent,
+  DialogContentText,
   Grid,
   Input,
   makeStyles,
@@ -11,8 +12,10 @@ import { FC, useContext, useEffect, useRef, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import { getSubmissionMetadata, uploadSubmission } from "../../../actions/moduleActions";
 import { ButtonAppBar, Page } from "../../../components/NavBar";
+import { MaxWidthDialog, MaxWidthDialogActions } from "../../../components/PopUpDialog";
 import { AuthContext } from "../../../context/context";
 import { Role } from "../../Login";
+import { PeerReview } from "./PeerReview";
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
@@ -75,10 +78,11 @@ export const QuestionBoard: FC = () => {
   const history = useHistory();
   const [isValid, setIsValid] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [peerReview, setPeerReview] = useState(false);
 
   const hiddenFileInput = useRef(null);
 
-  const { moduleId, questionId } = useValidCheck(history, state, match, setIsValid);
+  const { moduleId, assignmentId, questionId } = useValidCheck(history, state, match, setIsValid);
   const pageList = getPageList(match);
 
   const handleUpload = async (file: File) => {
@@ -100,6 +104,20 @@ export const QuestionBoard: FC = () => {
         pageList={pageList}
         currentPage={`${state?.assignment?.Name}`}
       />
+      <MaxWidthDialog
+        title="Peer Review"
+        open={peerReview}
+        setOpen={setPeerReview}
+        width={"xl"}
+      >
+        <DialogContentText>
+          Review peers assigned to you
+        </DialogContentText>
+
+        <PeerReview moduleId={moduleId} assignmentId={assignmentId} questionId={questionId} />
+
+        <MaxWidthDialogActions handleClose={() => setPeerReview(false)} />
+      </MaxWidthDialog>
       <Card>
         <CardContent>
           <Typography gutterBottom variant="h3">
@@ -131,6 +149,15 @@ export const QuestionBoard: FC = () => {
           {submitted ? "Re-submit" : "Upload"}
         </Button>
       </form>
+      <Button
+        style={{ marginTop: "10px" }}
+        variant="contained"
+        onClick={() => {
+          setPeerReview(true);
+        }}
+      >
+        Peer Review
+      </Button>
     </div>
   );
 };

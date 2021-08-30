@@ -107,4 +107,5 @@ type Grade struct {
 	Rubric    Rubric  `gorm:"foreignKey:RubricID"`
 	RubricID  uint    `gorm:"column:rubric_id;not null"`
 	Grade     int     `gorm:"column:grade;not null"`
+	Comment   string  `gorm:"column:comment"`
 }

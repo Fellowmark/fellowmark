@@ -42,6 +42,14 @@ export interface Rubric {
   MaxMark?: number
 }
 
+export interface Grade {
+  ID?: number,
+  RubricID?: number,
+  PairingID?: number,
+  Grade?: number
+  Comment?: string
+}
+
 export interface Submission {
   ID?: number
   StudentID?: number

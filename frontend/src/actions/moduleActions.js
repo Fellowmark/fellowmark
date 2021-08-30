@@ -288,8 +288,12 @@ export const getSubmissionMetadata = (studentId, questionId, setSubmission) => {
       studentId: studentId,
       questionId: questionId
     }
-  }).then(() => {
-    setSubmission(true);
+  }).then((res) => {
+    if (res.data.totalRows) {
+      setSubmission(true);
+    } else {
+      setSubmission(false);
+    }
   });
 };
 
@@ -319,15 +323,30 @@ export const getGradesForStudent = (gradeData) => {
   });
 };
 
-export const getGradesForMarker = (gradeData) => {
-  axios.get('/grading/marker', {
+export const getGradesForMarker = (moduleId, gradeData, setGrades) => {
+  axios.get(`/module/${moduleId}/grade/marker`, {
     method: 'GET',
-    body: JSON.stringify(gradeData)
+    params: {
+      pairingId: gradeData.PairingID,
+    }
   }).then((res) => {
-    return res.data;
+    let grades = new Map();
+    res.data.rows.forEach((grade) => {
+      grades.set(grade.RubricID, grade);
+    });
+    setGrades(grades);
   }).catch((err) => {
     console.log(err);
   });
+};
+
+export const postGrade = async (moduleId, gradeData) => {
+  await axios.post(`/module/${moduleId}/grade`, {
+      pairingId: gradeData.PairingID,
+      rubricId: gradeData.RubricID,
+      comment: gradeData.Comment,
+      grade: gradeData.Grade
+  })
 };
 
 export const getGradesForStaff = (gradeData) => {
