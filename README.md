@@ -30,3 +30,22 @@ Ping server for health
 ```sh
 curl localhost:5000/health
 ```
+
+## Local complete dev setup
+```sh
+docker-compose --profile dev up
+```
+
+Ping server for health
+```sh
+curl localhost:5000/health
+```
+## Production complete setup
+```sh
+docker-compose --profile production up
+```
+
+Ping server for health
+```sh
+curl localhost:5000/health
+```
