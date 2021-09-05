@@ -78,8 +78,8 @@ func getNewPairings(db *gorm.DB, assignment models.Assignment) ([]models.Pairing
 	shuffleStudents(enrolledStudents)
 	index := 0
 
-	newPairings = append(newPairings, generateGroupPairings(db, noOfLargerGroups, assignment.GroupSize, &index, enrolledStudents)...)
-	newPairings = append(newPairings, generateGroupPairings(db, noOfSmallerGroups, assignment.GroupSize-1, &index, enrolledStudents)...)
+	newPairings = append(newPairings, generateGroupPairings(db, noOfLargerGroups, assignment.GroupSize, assignment, &index, enrolledStudents)...)
+	newPairings = append(newPairings, generateGroupPairings(db, noOfSmallerGroups, assignment.GroupSize-1, assignment, &index, enrolledStudents)...)
 
 	return newPairings, result
 }
@@ -100,7 +100,7 @@ func activateNewPairings(db *gorm.DB, pairings []models.Pairing) *gorm.DB {
 	return result
 }
 
-func generateGroupPairings(db *gorm.DB, noOfGroups, groupSize int, index *int, students []models.Student) []models.Pairing {
+func generateGroupPairings(db *gorm.DB, noOfGroups, groupSize int, assignment models.Assignment, index *int, students []models.Student) []models.Pairing {
 	var pairings []models.Pairing
 	for i := 0; i < noOfGroups; i++ {
 		var group []models.Student
@@ -112,7 +112,7 @@ func generateGroupPairings(db *gorm.DB, noOfGroups, groupSize int, index *int, s
 			for _, marker := range group {
 				if student.ID != marker.ID {
 					var newPairingForStudent models.Pairing
-					db.Where("student_id = ? AND marker_id = ?", student.ID, marker.ID).Find(&newPairingForStudent)
+					db.Where("student_id = ? AND marker_id = ? AND assignment_id = ?", student.ID, marker.ID, assignment.ID).Find(&newPairingForStudent)
 					pairings = append(pairings, newPairingForStudent)
 				}
 			}
