@@ -342,7 +342,7 @@ func UploadMiddleware(uploadPath string, filePathContextOutKey string, maxUpload
 			}
 
 			// parse and validate file and post parameters
-			file, fileHeader, err := r.FormFile("uploadFile")
+			file, _, err := r.FormFile("uploadFile")
 			if err != nil {
 				HandleResponse(w, "INVALID_FILE", http.StatusBadRequest)
 				return
@@ -350,12 +350,12 @@ func UploadMiddleware(uploadPath string, filePathContextOutKey string, maxUpload
 
 			defer file.Close()
 			// Get and print out file size
-			fileSize := fileHeader.Size
+			// fileSize := fileHeader.Size
 			// validate file size
-			if fileSize > maxUploadSize {
-				HandleResponse(w, "FILE_TOO_BIG", http.StatusBadRequest)
-				return
-			}
+			// if fileSize > maxUploadSize {
+			// 	HandleResponse(w, "FILE_TOO_BIG", http.StatusBadRequest)
+			// 	return
+			// }
 			fileBytes, err := ioutil.ReadAll(file)
 			if err != nil {
 				HandleResponse(w, "INVALID_FILE", http.StatusBadRequest)

@@ -27,7 +27,7 @@ func (mr ModuleRoute) CreateRouters(route *mux.Router) {
 	gr := grading.GradingRoute{DB: mr.DB}
 	gr.CreateRouters(route.PathPrefix("/{moduleId}/grade").Subrouter())
 
-	sr := submissions.FileserverRoute{DB: mr.DB, UploadPath: "/tmp", MaxUploadSize: 10 * 1024 * 1024}
+	sr := submissions.FileserverRoute{DB: mr.DB, UploadPath: "/tmp", MaxUploadSize: 30 * 1024 * 1024}
 	sr.CreateRouters(route.PathPrefix("/{moduleId}/submit").Subrouter())
 }
 func (mr ModuleRoute) CreatePrivilegedRouter(route *mux.Router) {

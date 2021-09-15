@@ -12,12 +12,14 @@ import {
   Typography,
 } from "@material-ui/core";
 import { FC, useEffect, useRef, useState } from "react";
+import { IHighlight } from "react-pdf-highlighter";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   downloadSubmission,
   getGradesForMarker,
   getRubrics,
 } from "../../../actions/moduleActions";
+import { Annotator } from "../../../components/PdfViewer";
 import {
   StyledTableCell,
   StyledTableContainer,
@@ -32,10 +34,14 @@ export const Review: FC<{
   moduleId: number;
   assignmentId: number;
   questionId: number;
-  pair: Pairing
+  pair: Pairing;
 }> = (props) => {
   const [rubrics, setRubrics] = useState<Pagination<Rubric>>({});
   const [grades, setGrades] = useState<Map<number, Grade>>(null);
+  const [highlights, setHighlights] = useState<Array<IHighlight>>(
+    new Array<IHighlight>()
+  );
+  const [downloadURL, setDownloadURL] = useState<string>(null);
   const ref = useRef(null);
 
   const { moduleId, questionId } = props;
@@ -50,7 +56,9 @@ export const Review: FC<{
 
   const handleDownload = async () => {
     try {
-      await downloadSubmission(ref, moduleId, questionId, props.pair.Student.ID);
+      setDownloadURL(
+        await downloadSubmission(moduleId, questionId, props.pair.Student.ID)
+      );
     } catch (e) {
       alert("No submission found");
     }
@@ -59,14 +67,16 @@ export const Review: FC<{
   return (
     <div>
       <PairingsList pairings={{ rows: [props.pair] }} />
-      <a style={{ display: 'none' }} href='empty' ref={ref}>ref</a>
+      <a style={{ display: "none" }} href="empty" ref={ref}>
+        ref
+      </a>
       <Grid
         container
         direction="column"
         alignItems="center"
         spacing={1}
         style={{
-          marginBottom: '10px'
+          marginBottom: "10px",
         }}
       >
         <Grid item>
@@ -76,8 +86,15 @@ export const Review: FC<{
             aria-label="menu"
             onClick={() => handleDownload()}
           >
-            Download
+            Open
           </Button>
+          {downloadURL && (
+            <Annotator
+              url={downloadURL}
+              setHighlights={setHighlights}
+              highlights={highlights}
+            />
+          )}
         </Grid>
       </Grid>
       <StyledTableContainer>
