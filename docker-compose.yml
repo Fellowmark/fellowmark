@@ -90,7 +90,7 @@ services:
             context: ./frontend
             target: copy
         environment:
-          - API_URL=http://localhost:5050/api
+          - REACT_APP_API_URL=${API_URL}
         volumes:
           - /app/node_modules
           - ./frontend/src:/app/src
