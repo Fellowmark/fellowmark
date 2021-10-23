@@ -15,7 +15,13 @@ import (
 )
 
 func InitDB(databaseUrl string) *gorm.DB {
-	connection := GetDatabase(databaseUrl)
+	dbUser := os.Getenv("POSTGRES_USER")
+	dbHost := os.Getenv("POSTGRES_HOST")
+	dbPort := os.Getenv("POSTGRES_PORT")
+	dbPassword := os.Getenv("POSTGRES_PASSWORD")
+	dbName := os.Getenv("POSTGRES_DATABASE")
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", dbHost, dbUser, dbPassword, dbName, dbPort)
+	connection := GetDatabase(dsn)
 	db, _ := connection.DB()
 	db.SetMaxIdleConns(10)
 	db.SetMaxOpenConns(100)

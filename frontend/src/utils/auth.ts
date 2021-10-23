@@ -34,6 +34,5 @@ export function setUserContext(
       role: claims.role
     },
   };
-  console.log(context);
   dispatch(context);
 }
