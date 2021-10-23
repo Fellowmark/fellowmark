@@ -45,7 +45,7 @@ func (fr FileserverRoute) CreateUploadRoute(route *mux.Router) {
 	route.Use(fr.GetSubmissionMiddleware("submission"))
 	route.Use(utils.UploadMiddleware(fr.UploadPath, "file", fr.MaxUploadSize))
 	route.Use(UpdateSubmissionContentFile("submission", "file"))
-	route.HandleFunc("", utils.DBCreateHandleFunc(fr.DB, &models.Submission{}, "submission", true)).Methods(http.MethodPost)
+	route.HandleFunc("", StoreUploadLocationInDB(fr.DB, "submission")).Methods(http.MethodPost)
 }
 
 func UpdateFilePathMiddleware(db *gorm.DB, dbDataContextInKey string, filePathContextOutKey string) mux.MiddlewareFunc {
@@ -68,6 +68,21 @@ func UpdateSubmissionContentFile(dbDataContextInKey string, filePathContextInKey
 			ctxWithPath := context.WithValue(r.Context(), dbDataContextInKey, data)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))
 		})
+	}
+}
+
+func StoreUploadLocationInDB(db *gorm.DB, contextInKey string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := r.Context().Value(contextInKey).(*models.Submission)
+		result := db.Model(&models.Submission{}).Omit("ID").Create(data)
+		if result.Error != nil {
+			result = db.Model(&models.Submission{}).Omit("ID").Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).Updates(data)
+			if result.Error != nil {
+				utils.HandleResponse(w, "Failed", http.StatusInternalServerError)
+			}
+		} else {
+			utils.HandleResponseWithObject(w, data, http.StatusOK)
+		}
 	}
 }
 
@@ -104,7 +119,7 @@ func (fr FileserverRoute) GetSubmissionMiddleware(dbDataContextOutKey string) mu
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(dbDataContextOutKey).(*models.Submission)
-			fr.DB.Model(&models.Submission{}).Where("student_id = ? AND question_id = ?", data.StudentID, data.QuestionID).Find(data)
+			fr.DB.Model(&models.Submission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).Find(data)
 			ctxWithPath := context.WithValue(r.Context(), dbDataContextOutKey, data)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))
 		})

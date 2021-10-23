@@ -112,7 +112,7 @@ func DBUpdateHandleFunc(db *gorm.DB, model interface{}, contextInKey string) htt
 		data := r.Context().Value(contextInKey)
 		result := db.Model(model).Updates(data)
 		if result.Error != nil {
-			HandleResponse(w, "Already Exists", http.StatusBadRequest)
+			HandleResponse(w, "Failed", http.StatusInternalServerError)
 		} else {
 			HandleResponseWithObject(w, data, http.StatusOK)
 		}
