@@ -108,8 +108,9 @@ export const Gradebook: FC<{
     <div>
       <Grid
         container
-        direction="row"
+        direction={downloadURL ? "row": "column"}
         alignItems="center"
+        justifyContent="center"
         spacing={1}
         style={{
           marginBottom: "10px",

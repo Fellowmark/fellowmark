@@ -72,23 +72,25 @@ export const Review: FC<{
       </a>
       <Grid
         container
-        direction="column"
+        direction={downloadURL ? "row" : "column"}
         alignItems="center"
+        justifyContent="center"
         spacing={1}
         style={{
-          marginBottom: "10px",
+          marginBottom: "20px",
         }}
       >
         <Grid item>
-          <Button
-            color="primary"
-            variant="contained"
-            aria-label="menu"
-            onClick={() => handleDownload()}
-          >
-            Open
-          </Button>
-          {downloadURL && (
+          {!downloadURL ? (
+            <Button
+              color="primary"
+              variant="contained"
+              aria-label="menu"
+              onClick={() => handleDownload()}
+            >
+              Open
+            </Button>
+          ) : (
             <Annotator
               url={downloadURL}
               setHighlights={setHighlights}
@@ -96,55 +98,57 @@ export const Review: FC<{
             />
           )}
         </Grid>
+        <Grid item>
+          <StyledTableContainer>
+            <StyledTableHead>
+              <StyledTableCell>ID</StyledTableCell>
+              <StyledTableCell>Criteria</StyledTableCell>
+              <StyledTableCell>Description</StyledTableCell>
+              <StyledTableCell>Min</StyledTableCell>
+              <StyledTableCell>Max</StyledTableCell>
+              {grades && (
+                <>
+                  <StyledTableCell>Grade</StyledTableCell>
+                  <StyledTableCell>Comment</StyledTableCell>
+                </>
+              )}
+            </StyledTableHead>
+            <TableBody>
+              {rubrics.rows?.map((rubric) => {
+                return (
+                  <StyledTableRow hover={true} key={rubric.ID}>
+                    <StyledTableCell component="th" scope="row">
+                      {rubric.ID}
+                    </StyledTableCell>
+                    <StyledTableCell component="th" scope="row">
+                      {rubric.Criteria}
+                    </StyledTableCell>
+                    <StyledTableCell component="th" scope="row">
+                      {rubric.Description}
+                    </StyledTableCell>
+                    <StyledTableCell component="th" scope="row">
+                      {rubric.MinMark}
+                    </StyledTableCell>
+                    <StyledTableCell component="th" scope="row">
+                      {rubric.MaxMark}
+                    </StyledTableCell>
+                    {grades && (
+                      <>
+                        <StyledTableCell component="th" scope="row">
+                          {grades?.get(rubric.ID)?.Grade}
+                        </StyledTableCell>
+                        <StyledTableCell component="th" scope="row">
+                          {grades?.get(rubric.ID)?.Comment}
+                        </StyledTableCell>
+                      </>
+                    )}
+                  </StyledTableRow>
+                );
+              })}
+            </TableBody>
+          </StyledTableContainer>
+        </Grid>
       </Grid>
-      <StyledTableContainer>
-        <StyledTableHead>
-          <StyledTableCell>ID</StyledTableCell>
-          <StyledTableCell>Criteria</StyledTableCell>
-          <StyledTableCell>Description</StyledTableCell>
-          <StyledTableCell>Min</StyledTableCell>
-          <StyledTableCell>Max</StyledTableCell>
-          {grades && (
-            <>
-              <StyledTableCell>Grade</StyledTableCell>
-              <StyledTableCell>Comment</StyledTableCell>
-            </>
-          )}
-        </StyledTableHead>
-        <TableBody>
-          {rubrics.rows?.map((rubric) => {
-            return (
-              <StyledTableRow hover={true} key={rubric.ID}>
-                <StyledTableCell component="th" scope="row">
-                  {rubric.ID}
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  {rubric.Criteria}
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  {rubric.Description}
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  {rubric.MinMark}
-                </StyledTableCell>
-                <StyledTableCell component="th" scope="row">
-                  {rubric.MaxMark}
-                </StyledTableCell>
-                {grades && (
-                  <>
-                    <StyledTableCell component="th" scope="row">
-                      {grades?.get(rubric.ID)?.Grade}
-                    </StyledTableCell>
-                    <StyledTableCell component="th" scope="row">
-                      {grades?.get(rubric.ID)?.Comment}
-                    </StyledTableCell>
-                  </>
-                )}
-              </StyledTableRow>
-            );
-          })}
-        </TableBody>
-      </StyledTableContainer>
     </div>
   );
 };
