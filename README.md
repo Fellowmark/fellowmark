@@ -1,4 +1,4 @@
-# PeerMark
+# FellowMark
 Education application for student to student cross reviewing of assignments.
 
 # Requirements

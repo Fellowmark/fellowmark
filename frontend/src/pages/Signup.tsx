@@ -47,7 +47,7 @@ export const SignUp: FC = (props) => {
             >
               <Grid item>
                 <Typography component="h1" variant="h5">
-                  Welcome to NUS Peermark!
+                  Welcome to NUS FellowMark!
                 </Typography>
               </Grid>
               <Grid item>
