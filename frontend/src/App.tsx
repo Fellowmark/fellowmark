@@ -7,7 +7,7 @@ import { AuthContext, TimeoutContext } from "./context/context";
 import { authenticate } from "./utils/auth";
 import { logoutUser, setAuthorizationHeader } from "./actions/userActions";
 
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = "http://localhost:5050/api";
 
 const useAuthHook = () => {
   const { dispatch } = useContext(AuthContext);

@@ -1,5 +1,13 @@
 version: "3.9"
 services:
+    nginx: 
+        image: nginx:alpine
+        container_name: reverse_proxy
+        restart: always
+        volumes:
+            - ./nginx.conf:/etc/nginx/conf.d/default.conf
+        ports:
+            - 5050:80
     db:
         image: postgres:13-alpine
         env_file: ./.env
@@ -21,7 +29,6 @@ services:
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
             - JWT_SECRET=${JWT_SECRET}
             - RUN_ENV=local
-            - INSERT_DUMMY=${INSERT_DUMMY}
             - ADMIN_NAME=admin
             - ADMIN_EMAIL=admin@local.com
             - ADMIN_PASSWORD=admin
@@ -44,7 +51,6 @@ services:
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
             - JWT_SECRET=${JWT_SECRET}
             - RUN_ENV=production
-            - INSERT_DUMMY=${INSERT_DUMMY}
             - ADMIN_NAME=admin
             - ADMIN_EMAIL=admin@local.com
             - ADMIN_PASSWORD=admin
@@ -83,9 +89,8 @@ services:
         build:
             context: ./frontend
             target: copy
-
         environment:
-          - API_URL=http://api-dev:5000
+          - API_URL=http://localhost:5050/api
         volumes:
           - /app/node_modules
           - ./frontend/src:/app/src
