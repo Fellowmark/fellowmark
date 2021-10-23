@@ -118,6 +118,8 @@ services:
     frontend:
         build:
             context: ./frontend
+            args:
+              - REACT_APP_API_URL=${API_URL}
         ports:
             - '3000:3000'
         stdin_open: true
