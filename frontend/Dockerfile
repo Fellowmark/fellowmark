@@ -11,6 +11,8 @@ COPY ./public public
 COPY ./tsconfig.json ./
 
 FROM copy AS builder 
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL $REACT_APP_API_URL
 RUN npm run build
 
 FROM node:alpine AS prod
