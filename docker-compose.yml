@@ -7,7 +7,7 @@ services:
         volumes:
             - ./nginx.conf:/etc/nginx/conf.d/default.conf
         ports:
-            - 5050:80
+            - 80:80
         profiles: ['prod', 'lb']
     db:
         image: postgres:13-alpine
