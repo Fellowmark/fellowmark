@@ -2,7 +2,6 @@ package staff
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
@@ -30,10 +29,10 @@ func (ur StaffRoute) CreateAuthRouter(route *mux.Router) {
 }
 
 func (ur StaffRoute) CreatePrivilegedRouter(route *mux.Router) {
-	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Staff", "claims", &models.Staff{}))
-		route.Use(utils.SupervisionCheckMiddleware(ur.DB, "claims", "moduleId"))
-	}
+	// if os.Getenv("RUN_ENV") == "production" {
+	// 	route.Use(utils.ValidateJWTMiddleware("Staff", "claims", &models.Staff{}))
+	// 	route.Use(utils.SupervisionCheckMiddleware(ur.DB, "claims", "moduleId"))
+	// }
 
 	ur.CreatePairingsRoute(route.PathPrefix("/pairing").Subrouter())
 	ur.GetPairingsRoute(route.PathPrefix("/pairing").Subrouter())
