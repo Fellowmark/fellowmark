@@ -119,7 +119,7 @@ func (fr FileserverRoute) GetSubmissionMiddleware(dbDataContextOutKey string) mu
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(dbDataContextOutKey).(*models.Submission)
-			fr.DB.Model(&models.Submission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).Find(data)
+			fr.DB.Model(&models.Submission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).FirstOrCreate(data)
 			ctxWithPath := context.WithValue(r.Context(), dbDataContextOutKey, data)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))
 		})
