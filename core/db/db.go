@@ -151,8 +151,8 @@ func InsertDummyData(db *gorm.DB) {
 	enrollments := []models.Enrollment{}
 	for _, student := range students {
 		enrollments = append(enrollments, models.Enrollment{
-			Module:  module,
-			Student: student,
+			ModuleID:  module.ID,
+			StudentID: student.ID,
 		})
 	}
 	result = db.Create(&enrollments)
@@ -191,14 +191,14 @@ func InsertDummyData(db *gorm.DB) {
 
 	rubrics := []models.Rubric{
 		{
-			Question:    question,
+			QuestionID:    question.ID,
 			Criteria:    "Type",
 			Description: "1/1: Answer is an integer. 0/1 otherwise",
 			MinMark:     0,
 			MaxMark:     1,
 		},
 		{
-			Question:    question,
+			QuestionID:    question.ID,
 			Criteria:    "Correctness",
 			Description: "1/1: Answer is 4. 0/1 otherwise",
 			MinMark:     0,
