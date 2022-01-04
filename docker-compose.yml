@@ -86,7 +86,7 @@ services:
 
         environment:
           - API_URL=http://api-dev:5000
-          - NODE_OPTIONS --openssl-legacy-provider
+          - NODE_OPTIONS=--openssl-legacy-provider
         volumes:
           - /app/node_modules
           - ./frontend/src:/app/src
