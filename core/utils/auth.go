@@ -1,16 +1,18 @@
 package utils
 
 import (
-	"encoding/json"
-	"errors"
-	"io"
+	"context"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt"
+	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/loggers"
+	"github.com/nus-utils/nus-peer-review/models"
+	"gorm.io/gorm"
 )
 
 type ClaimsData struct {
@@ -19,37 +21,7 @@ type ClaimsData struct {
 	jwt.StandardClaims
 }
 
-func DecodeBody(body io.ReadCloser, out interface{}) error {
-	var unmarshalErr *json.UnmarshalFieldError
-	decoder := json.NewDecoder(body)
-	decoder.DisallowUnknownFields()
-	err := decoder.Decode(&out)
-
-	if err != nil {
-		if errors.As(err, &unmarshalErr) {
-			return errors.New("Bad Request. Wrong Type provided " + unmarshalErr.Field.Name)
-		} else {
-			return errors.New("Bad Request. " + err.Error())
-		}
-	}
-	return nil
-}
-
-func HandleResponse(w http.ResponseWriter, message string, httpStatusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(httpStatusCode)
-	resp := make(map[string]string)
-	resp["message"] = message
-	jsonResp, _ := json.Marshal(resp)
-	w.Write(jsonResp)
-}
-
-func HandleResponseWithObject(w http.ResponseWriter, object interface{}, httpStatusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(httpStatusCode)
-	encoder := json.NewEncoder(w)
-	encoder.Encode(object)
-}
+const JWTClaimContextKey = "claims"
 
 func GenerateJWT(role string, object interface{}) (string, error) {
 	var mySigningKey = []byte(os.Getenv("JWT_SECRET"))
@@ -104,4 +76,104 @@ func HashString(token string) string {
 	}
 
 	return hash
+}
+
+func SupervisionCheckMiddleware(db *gorm.DB, moduleIdResolver func(r *http.Request) string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(JWTClaimContextKey).(*models.Staff)
+			moduleId := moduleIdResolver(r)
+			var count int64
+			db.Model(&models.Supervision{}).Where("staff_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Not enrolled in module", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
+
+func MarkerCheckMiddleware(db *gorm.DB) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var count int64
+			data := r.Context().Value(DecodeBodyContextKey).(*models.Grade)
+			claims := r.Context().Value(JWTClaimContextKey).(*models.Student)
+			db.Model(&models.Pairing{}).Where("id = ? AND marker_id = ?", data.PairingID, claims.ID).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Please don't cheat", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
+
+func MarkeeCheckMiddleware(db *gorm.DB) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var count int64
+			data := r.Context().Value(DecodeBodyContextKey).(*models.Grade)
+			student := r.Context().Value(JWTClaimContextKey).(*models.Student)
+			db.Model(&models.Pairing{}).Where("id = ? AND student_id = ?", data.PairingID, student.ID).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Please don't cheat", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
+
+func EnrollmentCheckMiddleware(db *gorm.DB, moduleIdResolver func(r *http.Request) string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(JWTClaimContextKey).(*models.Student)
+			moduleId := moduleIdResolver(r)
+			var count int64
+			db.Model(&models.Enrollment{}).Where("student_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
+			if count == 0 {
+				HandleResponse(w, "Not enrolled in module", http.StatusUnauthorized)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
+
+func LoginHandleFunc(db *gorm.DB, role string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(JWTClaimContextKey)
+		token, err := GenerateJWT(role, user)
+		if err != nil {
+			HandleResponse(w, "Internal Error", http.StatusInternalServerError)
+		} else {
+			HandleResponse(w, token, http.StatusOK)
+		}
+	}
+}
+
+func ValidateJWTMiddleware(role string, refType interface{}) mux.MiddlewareFunc {
+	return ValidateJWTMiddlewareMultipleRoles([]string{role})
+}
+
+func ValidateJWTMiddlewareMultipleRoles(roles []string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if !strings.Contains(authHeader, "Bearer") {
+				HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			tokenString := strings.Split(authHeader, "Bearer ")[1]
+			claims, err := ParseJWT(tokenString)
+			if err != nil || Contains(roles, claims.Role) {
+				HandleResponse(w, err.Error(), http.StatusUnauthorized)
+			} else {
+				ctxWithUser := context.WithValue(r.Context(), JWTClaimContextKey, &claims.Data)
+				next.ServeHTTP(w, r.WithContext(ctxWithUser))
+			}
+		})
+	}
 }

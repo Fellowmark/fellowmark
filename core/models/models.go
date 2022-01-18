@@ -29,9 +29,10 @@ type Staff struct {
 
 type Module struct {
 	gorm.Model
-	Code     string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null"`
-	Semester string `gorm:"type:varchar(40);column:semester;not null"`
-	Name     string `gorm:"uniqueIndex:moduleIdx;column:name;not null"`
+	Code        string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null"`
+	Semester    string `gorm:"type:varchar(40);column:semester;not null"`
+	Name        string `gorm:"uniqueIndex:moduleIdx;column:name;not null"`
+	Supervision Supervision
 }
 
 type Enrollment struct {
@@ -44,10 +45,9 @@ type Enrollment struct {
 
 type Supervision struct {
 	gorm.Model
-	Module   Module `gorm:"foreignKey:ModuleID" json:"-"`
-	ModuleID uint   `gorm:"uniqueIndex:supervisionIdx;column:module_id;not null"`
-	Staff    Staff  `gorm:"foreignKey:StaffID"`
-	StaffID  uint   `gorm:"uniqueIndex:supervisionIdx;column:staff_id;not null"`
+	ModuleID uint  `gorm:"uniqueIndex:supervisionIdx;column:module_id;not null"`
+	Staff    Staff `gorm:"foreignKey:StaffID"`
+	StaffID  uint  `gorm:"uniqueIndex:supervisionIdx;column:staff_id;not null"`
 }
 
 type Assignment struct {

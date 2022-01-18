@@ -11,7 +11,6 @@ import (
 	"github.com/alexedwards/argon2id"
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
-	"github.com/nus-utils/nus-peer-review/utils"
 )
 
 func InitDB(databaseUrl string) *gorm.DB {
@@ -27,10 +26,6 @@ func InitDB(databaseUrl string) *gorm.DB {
 	db.SetMaxOpenConns(100)
 	db.SetConnMaxLifetime(time.Hour)
 	InitialMigration(connection)
-	if os.Getenv("RUN_ENV") != "production" && os.Getenv("INSERT_DUMMY") == "true" {
-		ResetDatabase(connection)
-		InsertDummyData(connection)
-	}
 	SetupAdmin(connection, &models.Admin{
 		Name:     os.Getenv("ADMIN_NAME"),
 		Email:    os.Getenv("ADMIN_EMAIL"),
@@ -83,153 +78,11 @@ func CloseDB(connection *gorm.DB) {
 	db.Close()
 }
 
-func SetupAdmin(pool *gorm.DB, admin *models.Admin) {
+func SetupAdmin(db *gorm.DB, admin *models.Admin) {
 	hash, _ := argon2id.CreateHash(admin.Password, argon2id.DefaultParams)
 	admin.Password = hash
-	pool.Omit("ID").Where(&models.Admin{Email: admin.Email}).Updates(&admin)
-}
-
-func InsertDummyData(db *gorm.DB) {
-	var result *gorm.DB
-	passwordHash := utils.HashString("password")
-	students := []models.Student{
-		{
-			Email:    "e0000000@u.nus.edu",
-			Name:     "Student A",
-			Password: passwordHash,
-		},
-		{
-			Email:    "e0000001@u.nus.edu",
-			Name:     "Student B",
-			Password: passwordHash,
-		},
-		{
-			Email:    "e0000002@u.nus.edu",
-			Name:     "Student C",
-			Password: passwordHash,
-		},
-		{
-			Email:    "e0000003@u.nus.edu",
-			Name:     "Student D",
-			Password: passwordHash,
-		},
-		{
-			Email:    "e0000004@u.nus.edu",
-			Name:     "Student E",
-			Password: passwordHash,
-		},
-		{
-			Email:    "e0000005@u.nus.edu",
-			Name:     "Student F",
-			Password: passwordHash,
-		},
-		{
-			Email:    "e0000006@u.nus.edu",
-			Name:     "Student G",
-			Password: passwordHash,
-		},
-	}
-	result = db.Create(&students)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("student entry failed")
-	}
-
-	staff := models.Staff{
-		Email:    "e1000000@u.nus.edu",
-		Name:     "Staff A",
-		Password: "password",
-	}
-	result = db.Create(&staff)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("staff entry failed")
-	}
-
-	module := models.Module{
-		Code:     "CS2113T",
-		Semester: "2122-1",
-		Name:     "Software Engineering & OOP",
-	}
-	result = db.Create(&module)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("module entry failed")
-	}
-
-	enrollments := []models.Enrollment{}
-	for _, student := range students {
-		enrollments = append(enrollments, models.Enrollment{
-			Module:  module,
-			Student: student,
-		})
-	}
-	result = db.Create(&enrollments)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("enrollments entry failed")
-	}
-
-	supervision := models.Supervision{
-		Module: module,
-		Staff:  staff,
-	}
-	result = db.Create(&supervision)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("supervision entry failed")
-	}
-
-	assignment := models.Assignment{
-		Name:      "Lecture 1 Quiz",
-		Module:    module,
-		GroupSize: 3,
-	}
-	result = db.Create(&assignment)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("assignment entry failed")
-	}
-
-	question := models.Question{
-		QuestionNumber: 1,
-		QuestionText:   "What is 2+2?",
-		Assignment:     assignment,
-	}
-	result = db.Create(&question)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("question entry failed")
-	}
-
-	rubrics := []models.Rubric{
-		{
-			Question:    question,
-			Criteria:    "Type",
-			Description: "1/1: Answer is an integer. 0/1 otherwise",
-			MinMark:     0,
-			MaxMark:     1,
-		},
-		{
-			Question:    question,
-			Criteria:    "Correctness",
-			Description: "1/1: Answer is 4. 0/1 otherwise",
-			MinMark:     0,
-			MaxMark:     1,
-		},
-	}
-	result = db.Create(&rubrics)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("rubric entry failed")
-	}
-
-	utils.InitializePairings(db, assignment)
-	utils.SetNewPairings(db, assignment)
-
-	submission := []models.Submission{
-		{
-			SubmittedBy: students[0],
-			Question:    question,
-			Content:     "4",
-		},
-	}
-	result = db.Create(&submission)
-	if result.Error != nil {
-		loggers.ErrorLogger.Fatal("submission entry failed")
-	}
+	db.FirstOrCreate(admin)
+	db.Where(models.Admin{Email: admin.Email}).Updates(admin)
 }
 
 func LogPairings(db *gorm.DB) {
@@ -250,21 +103,4 @@ func LogStudents(db *gorm.DB) {
 			fmt.Sprintf("email: %v, name: %v", student.Email, student.Name),
 		)
 	}
-}
-
-// (for testing only) resets DB data
-func ResetDatabase(db *gorm.DB) {
-	db.Exec("DROP TABLE IF EXISTS grades")
-	db.Exec("DROP TABLE IF EXISTS submissions")
-	db.Exec("DROP TABLE IF EXISTS pairings")
-	db.Exec("DROP TABLE IF EXISTS rubrics")
-	db.Exec("DROP TABLE IF EXISTS questions")
-	db.Exec("DROP TABLE IF EXISTS assignments")
-	db.Exec("DROP TABLE IF EXISTS supervisions")
-	db.Exec("DROP TABLE IF EXISTS enrollments")
-	db.Exec("DROP TABLE IF EXISTS modules")
-	db.Exec("DROP TABLE IF EXISTS students")
-	db.Exec("DROP TABLE IF EXISTS staffs")
-	db.Exec("DROP TABLE IF EXISTS admins")
-	InitialMigration(db)
 }

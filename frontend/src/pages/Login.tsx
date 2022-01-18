@@ -57,7 +57,7 @@ export const Login: React.FC<RouteComponentProps> = (props) => {
                 </Typography>
               </Grid>
               <Grid item>
-                <form onSubmit={(e) => submitLogin(e)}>
+                <form onSubmit={submitLogin}>
                   <Grid container direction="column" spacing={2}>
                     <Grid item>
                       <TextField

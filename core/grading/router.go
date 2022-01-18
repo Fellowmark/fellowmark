@@ -2,7 +2,6 @@ package grading
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
@@ -22,51 +21,42 @@ func (gr GradingRoute) CreateRouters(route *mux.Router) {
 }
 
 func (gr GradingRoute) CreatePrivilegedRouter(route *mux.Router) {
-	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Student", "claims", &models.Student{}))
-		route.Use(utils.EnrollmentCheckMiddleware(gr.DB, "claims", "moduleId"))
-	}
+	route.Use(utils.ValidateJWTMiddleware("Student", &models.Student{}))
+	route.Use(utils.EnrollmentCheckMiddleware(gr.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
 
 	gr.CreateGradeRouter(route.NewRoute().Subrouter())
 }
 
 func (gr GradingRoute) CreateGradeRouter(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}, "grade"))
-	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.MarkerCheckMiddleware(gr.DB, "grade", "claims"))
-	}
+	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}))
+	route.Use(utils.MarkerCheckMiddleware(gr.DB))
 	// TODO check if grade is valid (i.e., between min and max mark)
-	route.HandleFunc("", utils.DBCreateHandleFunc(gr.DB, &models.Grade{}, "grade", true)).Methods(http.MethodPost)
+
+	route.HandleFunc("", utils.DBCreateHandleFunc(gr.DB, &models.Grade{}, true)).Methods(http.MethodPost)
 }
 
 func (gr GradingRoute) GetGradesForStudent(route *mux.Router) {
-	route.Use(utils.DecodeParamsMiddleware(&models.Grade{}, "grade"))
-	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Student", "claims", &models.Student{}))
-		route.Use(utils.EnrollmentCheckMiddleware(gr.DB, "claims", "moduleId"))
-		route.Use(utils.MarkeeCheckMiddleware(gr.DB, "grade", "claims"))
-	}
+	route.Use(utils.DecodeParamsMiddleware(&models.Grade{}))
+	route.Use(utils.ValidateJWTMiddleware("Student", &models.Student{}))
+	route.Use(utils.EnrollmentCheckMiddleware(gr.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
+	route.Use(utils.MarkeeCheckMiddleware(gr.DB))
 
-	route.HandleFunc("", utils.DBGetFromData(gr.DB, &models.Grade{}, "grade", &[]models.Grade{})).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBGetFromDataParams(gr.DB, &models.Grade{}, &[]models.Grade{})).Methods(http.MethodGet)
 }
 
 func (gr GradingRoute) GetGradesForMarker(route *mux.Router) {
-	route.Use(utils.DecodeParamsMiddleware(&models.Grade{}, "grade"))
-	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Student", "claims", &models.Student{}))
-		route.Use(utils.EnrollmentCheckMiddleware(gr.DB, "claims", "moduleId"))
-		route.Use(utils.MarkerCheckMiddleware(gr.DB, "grade", "claims"))
-	}
+	route.Use(utils.DecodeParamsMiddleware(&models.Grade{}))
+	route.Use(utils.ValidateJWTMiddleware("Student", &models.Student{}))
+	route.Use(utils.EnrollmentCheckMiddleware(gr.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
+	route.Use(utils.MarkerCheckMiddleware(gr.DB))
 
-	route.HandleFunc("", utils.DBGetFromData(gr.DB, &models.Grade{}, "grade", &[]models.Grade{})).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBGetFromDataParams(gr.DB, &models.Grade{}, &[]models.Grade{})).Methods(http.MethodGet)
 }
 
 func (gr GradingRoute) GetGradesForStaff(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}, "grade"))
-	if os.Getenv("RUN_ENV") == "production" {
-		route.Use(utils.ValidateJWTMiddleware("Staff", "claims", &models.Staff{}))
-		route.Use(utils.SupervisionCheckMiddleware(gr.DB, "claims", "moduleId"))
-	}
+	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}))
+	route.Use(utils.ValidateJWTMiddleware("Staff", &models.Staff{}))
+	route.Use(utils.SupervisionCheckMiddleware(gr.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
 
-	route.HandleFunc("", utils.DBGetFromData(gr.DB, &models.Grade{}, "grade", &[]models.Grade{})).Methods(http.MethodGet)
+	route.HandleFunc("", utils.DBGetFromDataBody(gr.DB, &models.Grade{}, &[]models.Grade{})).Methods(http.MethodGet)
 }
