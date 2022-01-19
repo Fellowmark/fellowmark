@@ -82,11 +82,19 @@ func HandleResponseWithObject(w http.ResponseWriter, object interface{}, httpSta
 	encoder.Encode(object)
 }
 
+func DecodeParams(r *http.Request, params interface{}) error {
+	return SchemaDecoder.Decode(params, r.URL.Query())
+}
+
+func generatePointerWithSameType(ptr interface{}) interface{} {
+	return reflect.New(reflect.TypeOf(ptr).Elem()).Interface()
+}
+
 func DecodeParamsMiddleware(refType interface{}) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			parsedData := reflect.New(reflect.TypeOf(refType).Elem()).Interface()
-			if err := SchemaDecoder.Decode(parsedData, r.URL.Query()); err != nil {
+			parsedData := generatePointerWithSameType(refType)
+			if err := DecodeParams(r, parsedData); err != nil {
 				HandleResponse(w, err.Error(), http.StatusBadRequest)
 			} else {
 				ctxWithUser := context.WithValue(r.Context(), DecodeParamsContextKey, parsedData)

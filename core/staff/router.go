@@ -20,9 +20,7 @@ func (ur StaffRoute) CreateRouters(route *mux.Router) {
 
 func (ur StaffRoute) CreateAuthRouter(route *mux.Router) {
 	loginRoute := route.NewRoute().Subrouter()
-	loginRoute.Use(utils.DecodeParamsMiddleware(&models.Staff{}))
-	loginRoute.Use(ur.StaffLoginMiddleware)
-	loginRoute.HandleFunc("/login", utils.LoginHandleFunc(ur.DB, "Staff")).Methods(http.MethodGet)
+	loginRoute.HandleFunc("/login", ur.StaffLoginHandleFunc).Methods(http.MethodGet)
 
 	signUpRoute := route.NewRoute().Subrouter()
 	signUpRoute.Use(utils.DecodeBodyMiddleware(&models.Staff{}))

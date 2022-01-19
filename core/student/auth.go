@@ -26,23 +26,33 @@ func (ur StudentRoute) PasswordHash(next http.Handler) http.Handler {
 	})
 }
 
-func (ur StudentRoute) StudentLoginMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var user *models.Student
-		input := r.Context().Value("user").(*models.Student)
-		loggers.InfoLogger.Println(input)
-		result := ur.DB.Take(&user, "email = ?", input.Email)
+func (ur StudentRoute) StudentLoginHandleFunc(w http.ResponseWriter, r *http.Request) {
+	var input models.Student
+	if err := utils.DecodeParams(r, &input); err != nil {
+		utils.HandleResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			utils.HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
-			return
-		}
+	loggers.InfoLogger.Println(input)
 
-		isEqual, _ := argon2id.ComparePasswordAndHash(input.Password, user.Password)
-		if !isEqual {
-			utils.HandleResponse(w, "Incorrect Password", http.StatusUnauthorized)
-		} else {
-			next.ServeHTTP(w, r)
-		}
-	})
+	var user models.Student
+	result := ur.DB.Take(&user, "email = ?", input.Email)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		utils.HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
+		return
+	}
+
+	isEqual, _ := argon2id.ComparePasswordAndHash(input.Password, user.Password)
+	if !isEqual {
+		utils.HandleResponse(w, "Incorrect Password", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := utils.GenerateJWT(utils.STUDENT, user)
+	if err != nil {
+		utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
+	} else {
+		utils.HandleResponse(w, token, http.StatusOK)
+	}
 }

@@ -15,6 +15,12 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	STUDENT = "Student"
+	ADMIN   = "Admin"
+	STAFF   = "Staff"
+)
+
 type ClaimsData struct {
 	Role string      `json:"role"`
 	Data interface{} `json:"data"`
@@ -139,18 +145,6 @@ func EnrollmentCheckMiddleware(db *gorm.DB, moduleIdResolver func(r *http.Reques
 				next.ServeHTTP(w, r)
 			}
 		})
-	}
-}
-
-func LoginHandleFunc(db *gorm.DB, role string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user := r.Context().Value(JWTClaimContextKey)
-		token, err := GenerateJWT(role, user)
-		if err != nil {
-			HandleResponse(w, "Internal Error", http.StatusInternalServerError)
-		} else {
-			HandleResponse(w, token, http.StatusOK)
-		}
 	}
 }
 
