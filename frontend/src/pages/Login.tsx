@@ -86,14 +86,14 @@ export const Login: React.FC<RouteComponentProps> = (props) => {
                       <Select
                         native
                         fullWidth
-                        defaultValue="student"
+                        defaultValue={Role.STUDENT}
                         name="role"
                         onChange={(e) => setRole(e.target.value as Role)}
                         required
                       >
-                        <option value={"student"}>Student</option>
-                        <option value={"staff"}>Staff</option>
-                        <option value={"admin"}>Admin</option>
+                        <option value={Role.STUDENT}>Student</option>
+                        <option value={Role.STAFF}>Staff</option>
+                        <option value={Role.ADMIN}>Admin</option>
                       </Select>
                     </Grid>
                     <Grid item>

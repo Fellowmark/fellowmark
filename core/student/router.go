@@ -19,11 +19,11 @@ func (ur StudentRoute) CreateRouters(route *mux.Router) {
 
 func (ur StudentRoute) CreateAuthRouter(route *mux.Router) {
 	signUpRoute := route.NewRoute().Subrouter()
-	signUpRoute.Use(utils.DecodeBodyMiddleware(&models.Student{}))
+	signUpRoute.Use(utils.DecodeBodyMiddleware(&models.User{}))
 	signUpRoute.Use(utils.SanitizeDataMiddleware())
-	signUpRoute.Use(ur.PasswordHash)
-	signUpRoute.HandleFunc("/signup", utils.DBCreateHandleFunc(ur.DB, &models.Student{}, false)).Methods(http.MethodPost)
+	signUpRoute.Use(utils.UserPasswordHashMiddleware)
+	signUpRoute.HandleFunc("/signup", utils.UserCreateHandleFunc(ur.DB, &models.Student{})).Methods(http.MethodPost)
 
 	loginRoute := route.NewRoute().Subrouter()
-	loginRoute.HandleFunc("/login", ur.StudentLoginHandleFunc).Methods(http.MethodGet)
+	loginRoute.HandleFunc("/login", utils.LoginHandleFunc(ur.DB, utils.ModelDBScope(&models.Student{}))).Methods(http.MethodGet)
 }

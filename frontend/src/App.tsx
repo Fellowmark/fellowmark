@@ -22,7 +22,7 @@ const useAuthHook = () => {
         logoutUser(history, dispatch);;
         alert("Session expired");
       }, secondsLeft - 30));
-      setAuthorizationHeader(localStorage.FBIdToken);
+      setAuthorizationHeader(localStorage.jwt);
     } else {
       logoutUser(history, dispatch);
       cancelTimeout();

@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
@@ -144,37 +145,46 @@ func SanitizeParamsMiddleware() mux.MiddlewareFunc {
 	}
 }
 
-func DBCreateHandleFunc(db *gorm.DB, model interface{}, update bool) http.HandlerFunc {
+func UserCreateHandleFunc(db *gorm.DB, userModel interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := r.Context().Value(DecodeBodyContextKey)
-		result := db.Model(model).Omit("ID").Create(data)
+		data := r.Context().Value(DecodeBodyContextKey).(*models.User)
+		result := db.Model(userModel).Create(data)
 		if result.Error != nil {
-			if update {
-				DBUpdateHandleFunc(db, model).ServeHTTP(w, r)
-			} else {
-				HandleResponse(w, "Already Exists", http.StatusBadRequest)
-			}
-		} else {
-			HandleResponseWithObject(w, data, http.StatusOK)
+			HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
+			return
 		}
+		HandleResponseWithObject(w, data, http.StatusOK)
 	}
 }
 
-func DBUpdateHandleFunc(db *gorm.DB, model interface{}) http.HandlerFunc {
+func UserPasswordHashMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(DecodeBodyContextKey).(*models.User)
+		hash, err := argon2id.CreateHash(user.Password, argon2id.DefaultParams)
+		if err != nil {
+			HandleResponse(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			user.Password = hash
+			ctxWithUser := context.WithValue(r.Context(), DecodeBodyContextKey, user)
+			next.ServeHTTP(w, r.WithContext(ctxWithUser))
+		}
+	})
+}
+
+func DBCreateHandleFunc(db *gorm.DB, update bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := r.Context().Value(DecodeBodyContextKey)
-		result := db.Model(model).Updates(data)
-		if result.Error != nil {
-			HandleResponse(w, "Failed", http.StatusInternalServerError)
-		} else {
-			HandleResponseWithObject(w, data, http.StatusOK)
-		}
+		db.Model(generatePointerWithSameType(data)).Clauses(
+			clause.OnConflict{UpdateAll: true}).Create(data)
+		output := generatePointerWithSameType(data)
+		db.Model(data).Where(data).First(output)
+		HandleResponseWithObject(w, output, http.StatusOK)
 	}
 }
 
 func DBCreateMiddleware(db *gorm.DB, model interface{}, update bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(DBCreateHandleFunc(db, model, update))
+		return http.HandlerFunc(DBCreateHandleFunc(db, update))
 	}
 }
 
@@ -221,24 +231,6 @@ func Contains(s []string, str string) bool {
 	return false
 }
 
-func GetStudentEnrollments(db *gorm.DB) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var modules []models.Module
-		user := r.Context().Value(JWTClaimContextKey).(*models.Student)
-		db.Preload("modules").Joins("inner join enrollments e on modules.id = e.module_id").Where("e.student_id = ?", user.ID).Find(&modules)
-		HandleResponseWithObject(w, modules, http.StatusOK)
-	})
-}
-
-func GetStaffSupervisions(db *gorm.DB) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var modules []models.Module
-		user := r.Context().Value(JWTClaimContextKey).(*models.Staff)
-		db.Preload("modules").Joins("inner join supervisions e on modules.id = e.module_id").Where("e.staff_id = ?", user.ID).Find(&modules)
-		HandleResponseWithObject(w, modules, http.StatusOK)
-	})
-}
-
 func ValidateAssignmentIdMiddlware(db *gorm.DB, muxVarKey string, moduleIdMuxVarKey string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -278,23 +270,8 @@ func RandToken(len int) string {
 	return fmt.Sprintf("%x", b)
 }
 
-func ModulePermCheckMiddleware(db *gorm.DB, muxVarKey string) mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			moduleId := mux.Vars(r)[muxVarKey]
-			var count int64
-
-			switch data := r.Context().Value(JWTClaimContextKey).(type) {
-			case *models.Student:
-				db.Model(&models.Enrollment{}).Where("student_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
-			case *models.Staff:
-				db.Model(&models.Supervision{}).Where("staff_id = ? and module_id = ?", data.ID, moduleId).Count(&count)
-			}
-			if count == 0 {
-				HandleResponse(w, "Not enrolled in module", http.StatusUnauthorized)
-			} else {
-				next.ServeHTTP(w, r)
-			}
-		})
+func ModelDBScope(model interface{}) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Model(model)
 	}
 }

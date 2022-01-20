@@ -21,7 +21,7 @@ func (gr GradingRoute) CreateRouters(route *mux.Router) {
 }
 
 func (gr GradingRoute) CreatePrivilegedRouter(route *mux.Router) {
-	route.Use(utils.ValidateJWTMiddleware("Student", &models.Student{}))
+	route.Use(utils.AuthenticationMiddleware())
 	route.Use(utils.EnrollmentCheckMiddleware(gr.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
 
 	gr.CreateGradeRouter(route.NewRoute().Subrouter())
@@ -30,14 +30,14 @@ func (gr GradingRoute) CreatePrivilegedRouter(route *mux.Router) {
 func (gr GradingRoute) CreateGradeRouter(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}))
 	route.Use(utils.MarkerCheckMiddleware(gr.DB))
-	// TODO check if grade is valid (i.e., between min and max mark)
+	// TODO: check if grade is valid (i.e., between min and max mark)
 
-	route.HandleFunc("", utils.DBCreateHandleFunc(gr.DB, &models.Grade{}, true)).Methods(http.MethodPost)
+	route.HandleFunc("", utils.DBCreateHandleFunc(gr.DB, true)).Methods(http.MethodPost)
 }
 
 func (gr GradingRoute) GetGradesForStudent(route *mux.Router) {
 	route.Use(utils.DecodeParamsMiddleware(&models.Grade{}))
-	route.Use(utils.ValidateJWTMiddleware("Student", &models.Student{}))
+	route.Use(utils.AuthenticationMiddleware())
 	route.Use(utils.EnrollmentCheckMiddleware(gr.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
 	route.Use(utils.MarkeeCheckMiddleware(gr.DB))
 
@@ -46,7 +46,7 @@ func (gr GradingRoute) GetGradesForStudent(route *mux.Router) {
 
 func (gr GradingRoute) GetGradesForMarker(route *mux.Router) {
 	route.Use(utils.DecodeParamsMiddleware(&models.Grade{}))
-	route.Use(utils.ValidateJWTMiddleware("Student", &models.Student{}))
+	route.Use(utils.AuthenticationMiddleware())
 	route.Use(utils.EnrollmentCheckMiddleware(gr.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
 	route.Use(utils.MarkerCheckMiddleware(gr.DB))
 
@@ -55,7 +55,7 @@ func (gr GradingRoute) GetGradesForMarker(route *mux.Router) {
 
 func (gr GradingRoute) GetGradesForStaff(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}))
-	route.Use(utils.ValidateJWTMiddleware("Staff", &models.Staff{}))
+	route.Use(utils.AuthenticationMiddleware())
 	route.Use(utils.SupervisionCheckMiddleware(gr.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
 
 	route.HandleFunc("", utils.DBGetFromDataBody(gr.DB, &models.Grade{}, &[]models.Grade{})).Methods(http.MethodGet)

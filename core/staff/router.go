@@ -20,17 +20,17 @@ func (ur StaffRoute) CreateRouters(route *mux.Router) {
 
 func (ur StaffRoute) CreateAuthRouter(route *mux.Router) {
 	loginRoute := route.NewRoute().Subrouter()
-	loginRoute.HandleFunc("/login", ur.StaffLoginHandleFunc).Methods(http.MethodGet)
+	loginRoute.HandleFunc("/login", utils.LoginHandleFunc(ur.DB, utils.ModelDBScope(&models.Staff{}))).Methods(http.MethodGet)
 
 	signUpRoute := route.NewRoute().Subrouter()
-	signUpRoute.Use(utils.DecodeBodyMiddleware(&models.Staff{}))
+	signUpRoute.Use(utils.DecodeBodyMiddleware(&models.User{}))
 	signUpRoute.Use(utils.SanitizeDataMiddleware())
-	signUpRoute.Use(ur.PasswordHash)
-	signUpRoute.HandleFunc("/signup", utils.DBCreateHandleFunc(ur.DB, &models.Staff{}, false)).Methods(http.MethodPost)
+	signUpRoute.Use(utils.UserPasswordHashMiddleware)
+	signUpRoute.HandleFunc("/signup", utils.UserCreateHandleFunc(ur.DB, &models.Staff{})).Methods(http.MethodPost)
 }
 
 func (ur StaffRoute) CreatePrivilegedRouter(route *mux.Router) {
-	route.Use(utils.ValidateJWTMiddleware("Staff", &models.Staff{}))
+	route.Use(utils.AuthenticationMiddleware())
 	route.Use(utils.SupervisionCheckMiddleware(ur.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
 
 	ur.CreatePairingsRoute(route.PathPrefix("/pairing").Subrouter())

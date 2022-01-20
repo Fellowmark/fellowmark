@@ -25,7 +25,7 @@ export const Home: React.FC = () => {
   );
 };
 
-export const RoleHome: FC<{role: Role}> = (props) => {
+export const RoleHome: FC<{ role: Role }> = (props) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const { state } = useContext(AuthContext);
   const history = useHistory();

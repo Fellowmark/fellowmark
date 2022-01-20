@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
@@ -15,26 +16,18 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	STUDENT = "Student"
-	ADMIN   = "Admin"
-	STAFF   = "Staff"
-)
-
 type ClaimsData struct {
-	Role string      `json:"role"`
-	Data interface{} `json:"data"`
+	Data models.User `json:"data"`
 	jwt.StandardClaims
 }
 
 const JWTClaimContextKey = "claims"
 
-func GenerateJWT(role string, object interface{}) (string, error) {
+func GenerateJWT(user models.User) (string, error) {
 	var mySigningKey = []byte(os.Getenv("JWT_SECRET"))
 
 	claims := ClaimsData{
-		role,
-		object,
+		user,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour).Unix(),
 			Issuer:    "npr-api",
@@ -148,26 +141,105 @@ func EnrollmentCheckMiddleware(db *gorm.DB, moduleIdResolver func(r *http.Reques
 	}
 }
 
-func ValidateJWTMiddleware(role string, refType interface{}) mux.MiddlewareFunc {
-	return ValidateJWTMiddlewareMultipleRoles([]string{role})
+func ValidateJWT(r *http.Request) (*ClaimsData, error) {
+	authHeader := r.Header.Get("Authorization")
+	if !strings.Contains(authHeader, "Bearer") {
+		return nil, errors.New("Unauthorized")
+	}
+	tokenString := strings.Split(authHeader, "Bearer ")[1]
+	claims, err := ParseJWT(tokenString)
+	if err != nil {
+		return nil, errors.New("Unauthenticated")
+	}
+	return claims, nil
 }
 
-func ValidateJWTMiddlewareMultipleRoles(roles []string) mux.MiddlewareFunc {
+func AuthenticationMiddleware() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authHeader := r.Header.Get("Authorization")
-			if !strings.Contains(authHeader, "Bearer") {
-				HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-			tokenString := strings.Split(authHeader, "Bearer ")[1]
-			claims, err := ParseJWT(tokenString)
-			if err != nil || Contains(roles, claims.Role) {
+			if claims, err := ValidateJWT(r); err != nil {
 				HandleResponse(w, err.Error(), http.StatusUnauthorized)
 			} else {
 				ctxWithUser := context.WithValue(r.Context(), JWTClaimContextKey, &claims.Data)
 				next.ServeHTTP(w, r.WithContext(ctxWithUser))
 			}
 		})
+	}
+}
+
+func IsAdmin(claims models.User, db *gorm.DB) bool {
+	result := db.Take(&models.Admin{}, "id = ?", claims.ID)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	return true
+}
+
+func IsSupervisor(claims models.User, moduleId uint, db *gorm.DB) bool {
+	resultStaff := db.Take(&models.Staff{}, "id = ?", claims.ID)
+	if errors.Is(resultStaff.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	resultSupervision := db.Take(&models.Supervision{}, "staff_id = ? AND module_id", claims.ID, moduleId)
+	if errors.Is(resultSupervision.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	return true
+}
+
+func IsEnrolled(claims models.User, moduleId uint, db *gorm.DB) bool {
+	resultStaff := db.Take(&models.Student{}, "id = ?", claims.ID)
+	if errors.Is(resultStaff.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	resultSupervision := db.Take(&models.Enrollment{}, "student_id = ? AND module_id", claims.ID, moduleId)
+	if errors.Is(resultSupervision.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	return true
+
+}
+
+func IsAdminMiddleware(db *gorm.DB) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(JWTClaimContextKey).(*models.User)
+			if IsAdmin(*data, db) {
+				next.ServeHTTP(w, r)
+			} else {
+				HandleResponse(w, "Insufficient Permissions", http.StatusUnauthorized)
+			}
+		})
+	}
+}
+
+func LoginHandleFunc(db *gorm.DB, scope func(db *gorm.DB) *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var input models.User
+		if err := DecodeParams(r, &input); err != nil {
+			HandleResponse(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		var user models.User
+		result := db.Scopes(scope).Take(&user, "email = ?", input.Email)
+
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
+			return
+		}
+
+		isEqual, _ := argon2id.ComparePasswordAndHash(input.Password, user.Password)
+		if !isEqual {
+			HandleResponse(w, "Incorrect Password", http.StatusUnauthorized)
+			return
+		}
+
+		token, err := GenerateJWT(user)
+		if err != nil {
+			HandleResponse(w, "Internal Error", http.StatusInternalServerError)
+		} else {
+			HandleResponse(w, token, http.StatusOK)
+		}
 	}
 }

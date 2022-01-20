@@ -20,8 +20,6 @@ func (mr ModuleRoute) CreateRouters(route *mux.Router) {
 	mr.GetModulesRoute(route.NewRoute().Subrouter())
 	mr.GetEnrollmentsRoute(route.PathPrefix("/enrolls").Subrouter())
 	mr.GetSupervisionsRoute(route.PathPrefix("/supervises").Subrouter())
-	mr.GetStudentEnrolledModules(route.PathPrefix("/enroll").Subrouter())
-	mr.GetStaffSupervisions(route.PathPrefix("/supervise").Subrouter())
 
 	gr := grading.GradingRoute{DB: mr.DB}
 	gr.CreateRouters(route.PathPrefix("/{moduleId}/grade").Subrouter())
@@ -30,27 +28,32 @@ func (mr ModuleRoute) CreateRouters(route *mux.Router) {
 	sr.CreateRouters(route.PathPrefix("/{moduleId}/submit").Subrouter())
 }
 func (mr ModuleRoute) CreatePrivilegedRouter(route *mux.Router) {
-	route.Use(utils.ValidateJWTMiddleware("Admin", &models.Admin{}))
+	route.Use(utils.AuthenticationMiddleware())
 
 	mr.CreateModuleRouter(route.NewRoute().Subrouter())
 	mr.CreateEnrollmentRoute(route.PathPrefix("/enroll").Subrouter())
 	mr.CreateSupervisionRoute(route.PathPrefix("/supervise").Subrouter())
+	mr.GetStudentEnrolledModules(route.PathPrefix("/enroll").Subrouter())
+	mr.GetStaffSupervisions(route.PathPrefix("/supervise").Subrouter())
 }
 
 func (mr ModuleRoute) CreateModuleRouter(route *mux.Router) {
+	route.Use(utils.IsAdminMiddleware(mr.DB))
 	route.Use(utils.DecodeBodyMiddleware(&models.Module{}))
 	route.Use(utils.SanitizeDataMiddleware())
-	route.HandleFunc("", utils.DBCreateHandleFunc(mr.DB, &models.Module{}, true)).Methods(http.MethodPost)
+	route.HandleFunc("", mr.ModuleCreateHandleFunc()).Methods(http.MethodPost)
 }
 
 func (mr ModuleRoute) CreateEnrollmentRoute(route *mux.Router) {
+	route.Use(utils.IsAdminMiddleware(mr.DB))
 	route.Use(utils.DecodeBodyMiddleware(&models.Enrollment{}))
-	route.HandleFunc("", utils.DBCreateHandleFunc(mr.DB, &models.Enrollment{}, true)).Methods(http.MethodPost)
+	route.HandleFunc("", mr.EnrollmentCreateHandleFunc()).Methods(http.MethodPost)
 }
 
 func (mr ModuleRoute) CreateSupervisionRoute(route *mux.Router) {
+	route.Use(utils.IsAdminMiddleware(mr.DB))
 	route.Use(utils.DecodeBodyMiddleware(&models.Supervision{}))
-	route.HandleFunc("", utils.DBCreateHandleFunc(mr.DB, &models.Supervision{}, true)).Methods(http.MethodPost)
+	route.HandleFunc("", mr.SupervisionCreateHandleFunc()).Methods(http.MethodPost)
 }
 
 func (mr ModuleRoute) GetModulesRoute(route *mux.Router) {
@@ -69,11 +72,9 @@ func (mr ModuleRoute) GetSupervisionsRoute(route *mux.Router) {
 }
 
 func (mr ModuleRoute) GetStudentEnrolledModules(route *mux.Router) {
-	route.Use(utils.ValidateJWTMiddleware("Student", &models.Student{}))
-	route.HandleFunc("", utils.GetStudentEnrollments(mr.DB)).Methods(http.MethodGet)
+	route.HandleFunc("", mr.GetStudentEnrollmentsHandleFunc()).Methods(http.MethodGet)
 }
 
 func (mr ModuleRoute) GetStaffSupervisions(route *mux.Router) {
-	route.Use(utils.ValidateJWTMiddleware("Staff", &models.Staff{}))
-	route.HandleFunc("", utils.GetStaffSupervisions(mr.DB)).Methods(http.MethodGet)
+	route.HandleFunc("", mr.GetStaffSupervisionsHandleFunc()).Methods(http.MethodGet)
 }

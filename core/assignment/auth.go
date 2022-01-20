@@ -15,7 +15,7 @@ func (ar AssignmentRoute) AuthorizedToMutateAssignment(asignmentIdResolver func(
 			assignemtId := asignmentIdResolver(r)
 			var assignment models.Assignment
 			ar.DB.Model(&models.Assignment{}).Where("id = ?", assignemtId).First(&assignment)
-			ctxWithModuleID := context.WithValue(r.Context(), "moduleId", assignment.Module.Supervision.ID)
+			ctxWithModuleID := context.WithValue(r.Context(), "moduleId", assignment.Module.ID)
 			next.ServeHTTP(w, r.WithContext(ctxWithModuleID))
 		})
 	}

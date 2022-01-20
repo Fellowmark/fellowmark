@@ -20,8 +20,7 @@ func (fr FileserverRoute) CreateRouters(route *mux.Router) {
 }
 
 func (fr FileserverRoute) CreatePrivilegedRoute(route *mux.Router) {
-	route.Use(utils.ValidateJWTMiddleware("Student", &models.Student{}))
-	route.Use(utils.ModulePermCheckMiddleware(fr.DB, "moduleId"))
+	route.Use(utils.AuthenticationMiddleware())
 
 	fr.CreateDownloadRoute(route.NewRoute().Subrouter())
 	fr.CreateUploadRoute(route.NewRoute().Subrouter())
@@ -35,7 +34,6 @@ func (fr FileserverRoute) CreateDownloadRoute(route *mux.Router) {
 }
 
 func (fr FileserverRoute) CreateUploadRoute(route *mux.Router) {
-	route.Use(utils.ValidateJWTMiddleware("Student", &models.Student{}))
 	route.Use(utils.EnrollmentCheckMiddleware(fr.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
 	route.Use(utils.DecodeParamsMiddleware(&models.Submission{}))
 	route.Use(fr.FileAuthMiddleware(true))
