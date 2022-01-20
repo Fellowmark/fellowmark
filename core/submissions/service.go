@@ -18,7 +18,7 @@ import (
 
 const FilePathContextKey = "file"
 
-func (fr FileserverRoute) UpdateFilePathMiddleware() mux.MiddlewareFunc {
+func (fr FileserverController) UpdateFilePathMiddleware() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Submission)
@@ -29,7 +29,7 @@ func (fr FileserverRoute) UpdateFilePathMiddleware() mux.MiddlewareFunc {
 	}
 }
 
-func (fr FileserverRoute) UpdateSubmissionContentFile() mux.MiddlewareFunc {
+func (fr FileserverController) UpdateSubmissionContentFile() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Submission)
@@ -41,7 +41,7 @@ func (fr FileserverRoute) UpdateSubmissionContentFile() mux.MiddlewareFunc {
 	}
 }
 
-func (fr FileserverRoute) StoreUploadLocationInDB(db *gorm.DB) http.HandlerFunc {
+func (fr FileserverController) StoreUploadLocationInDB(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Submission)
 		result := db.Model(&models.Submission{}).Omit("ID").Create(data)
@@ -56,7 +56,7 @@ func (fr FileserverRoute) StoreUploadLocationInDB(db *gorm.DB) http.HandlerFunc 
 	}
 }
 
-func (fr FileserverRoute) FileAuthMiddleware(isMarkee bool) mux.MiddlewareFunc {
+func (fr FileserverController) FileAuthMiddleware(isMarkee bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Submission)
@@ -85,7 +85,7 @@ func (fr FileserverRoute) FileAuthMiddleware(isMarkee bool) mux.MiddlewareFunc {
 	}
 }
 
-func (fr FileserverRoute) GetSubmissionMiddleware() mux.MiddlewareFunc {
+func (fr FileserverController) GetSubmissionMiddleware() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Submission)
@@ -96,7 +96,7 @@ func (fr FileserverRoute) GetSubmissionMiddleware() mux.MiddlewareFunc {
 	}
 }
 
-func (fr FileserverRoute) UploadMiddleware(uploadPath string, maxUploadSize int64) mux.MiddlewareFunc {
+func (fr FileserverController) UploadMiddleware(uploadPath string, maxUploadSize int64) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if err := r.ParseMultipartForm(maxUploadSize); err != nil {
@@ -161,7 +161,7 @@ func (fr FileserverRoute) UploadMiddleware(uploadPath string, maxUploadSize int6
 	}
 }
 
-func (fr FileserverRoute) DownloadHandlerFunc() http.HandlerFunc {
+func (fr FileserverController) DownloadHandlerFunc() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		filePath := r.Context().Value(FilePathContextKey).(string)
 		data := r.Context().Value(utils.DecodeBodyContextKey)

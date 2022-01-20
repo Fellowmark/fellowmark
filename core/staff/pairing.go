@@ -8,7 +8,7 @@ import (
 	"github.com/nus-utils/nus-peer-review/utils"
 )
 
-func (ur StaffRoute) AssignPairings(w http.ResponseWriter, r *http.Request) {
+func (ur StaffController) AssignPairings(w http.ResponseWriter, r *http.Request) {
 	data := r.Context().Value("assignment")
 	assignment := &models.Assignment{}
 	result := ur.DB.Model(&models.Assignment{}).Where(data).First(assignment)
@@ -26,7 +26,7 @@ func (ur StaffRoute) AssignPairings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ur StaffRoute) InitializePairings(w http.ResponseWriter, r *http.Request) {
+func (ur StaffController) InitializePairings(w http.ResponseWriter, r *http.Request) {
 	data := r.Context().Value("assignment")
 	assignment := &models.Assignment{}
 	result := ur.DB.Model(&models.Assignment{}).Where(data).Find(assignment)

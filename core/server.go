@@ -45,44 +45,44 @@ func InitServer(pool *gorm.DB) {
 	loggers.InfoLogger.Println("Starting server")
 
 	utils.SchemaDecoder.IgnoreUnknownKeys(true)
-	route := mux.NewRouter()
+	router := mux.NewRouter()
 
-	studentRoute := student.StudentRoute{
+	studentController := student.StudentController{
 		DB: pool,
 	}
 
-	staffRoute := staff.StaffRoute{
+	staffController := staff.StaffController{
 		DB: pool,
 	}
 
-	adminRoute := admin.AdminRoute{
+	adminController := admin.AdminController{
 		DB: pool,
 	}
 
-	moduleRoute := module.ModuleRoute{
+	moduleController := module.ModuleController{
 		DB: pool,
 	}
 
-	assignmentRoute := assignment.AssignmentRoute{
+	assignmentController := assignment.AssignmentController{
 		DB: pool,
 	}
 
-	// gradingRoute := grading.GradingRoute{
+	// gradingController := grading.GradingRoute{
 	// 	DB: pool,
 	// }
 
-	studentRoute.CreateRouters(route.PathPrefix("/student").Subrouter())
-	staffRoute.CreateRouters(route.PathPrefix("/staff").Subrouter())
-	adminRoute.CreateRouters(route.PathPrefix("/admin").Subrouter())
-	moduleRoute.CreateRouters(route.PathPrefix("/module").Subrouter())
-	assignmentRoute.CreateRouters(route.PathPrefix("/assignment").Subrouter())
-	// gradingRoute.CreateRouters(route.PathPrefix("/grading").Subrouter())
-	route.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
-	mux.CORSMethodMiddleware(route)
+	studentController.CreateRouters(router.PathPrefix("/student").Subrouter())
+	staffController.CreateRouters(router.PathPrefix("/staff").Subrouter())
+	adminController.CreateRouters(router.PathPrefix("/admin").Subrouter())
+	moduleController.CreateRouters(router.PathPrefix("/module").Subrouter())
+	assignmentController.CreateRouters(router.PathPrefix("/assignment").Subrouter())
+	// gradingController.CreateRouters(route.PathPrefix("/grading").Subrouter())
+	router.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
+	mux.CORSMethodMiddleware(router)
 
 	srv := &http.Server{
 		Addr:         ":5000",
-		Handler:      utils.SetHeaders(route),
+		Handler:      utils.SetHeaders(router),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		ErrorLog:     loggers.ErrorLogger,

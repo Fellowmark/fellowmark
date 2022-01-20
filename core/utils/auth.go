@@ -167,37 +167,46 @@ func AuthenticationMiddleware() mux.MiddlewareFunc {
 	}
 }
 
-func IsAdmin(claims models.User, db *gorm.DB) bool {
-	result := db.Take(&models.Admin{}, "id = ?", claims.ID)
+func IsAdmin(user models.User, db *gorm.DB) bool {
+	result := db.Take(&models.Admin{}, "id = ?", user.ID)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return false
 	}
 	return true
 }
 
-func IsSupervisor(claims models.User, moduleId uint, db *gorm.DB) bool {
-	resultStaff := db.Take(&models.Staff{}, "id = ?", claims.ID)
+func IsSupervisor(user models.User, moduleId uint, db *gorm.DB) bool {
+	if bypass := IsAdmin(user, db); bypass {
+		return true
+	}
+	resultStaff := db.Take(&models.Staff{}, "id = ?", user.ID)
 	if errors.Is(resultStaff.Error, gorm.ErrRecordNotFound) {
 		return false
 	}
-	resultSupervision := db.Take(&models.Supervision{}, "staff_id = ? AND module_id", claims.ID, moduleId)
+	resultSupervision := db.Take(&models.Supervision{}, "staff_id = ? AND module_id", user.ID, moduleId)
 	if errors.Is(resultSupervision.Error, gorm.ErrRecordNotFound) {
 		return false
 	}
 	return true
 }
 
-func IsEnrolled(claims models.User, moduleId uint, db *gorm.DB) bool {
-	resultStaff := db.Take(&models.Student{}, "id = ?", claims.ID)
+func IsEnrolled(user models.User, moduleId uint, db *gorm.DB) bool {
+	if bypass := IsAdmin(user, db); bypass {
+		return true
+	}
+	resultStaff := db.Take(&models.Student{}, "id = ?", user.ID)
 	if errors.Is(resultStaff.Error, gorm.ErrRecordNotFound) {
 		return false
 	}
-	resultSupervision := db.Take(&models.Enrollment{}, "student_id = ? AND module_id", claims.ID, moduleId)
+	resultSupervision := db.Take(&models.Enrollment{}, "student_id = ? AND module_id", user.ID, moduleId)
 	if errors.Is(resultSupervision.Error, gorm.ErrRecordNotFound) {
 		return false
 	}
 	return true
+}
 
+func IsMemberOf(claims models.User, moduleId uint, db *gorm.DB) bool {
+	return IsEnrolled(claims, moduleId, db) || IsSupervisor(claims, moduleId, db)
 }
 
 func IsAdminMiddleware(db *gorm.DB) mux.MiddlewareFunc {
