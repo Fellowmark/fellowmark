@@ -60,7 +60,6 @@ export const Assignments: FC = () => {
 
   const addAssignment = async () => {
     const { data } = await createAssignment(newAssignment);
-    console.log(data);
     await initializePairings(moduleId, {id: data.ID});
     setCreateNew(false);
     setNewAssignment({ ModuleID: moduleId });

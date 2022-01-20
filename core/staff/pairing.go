@@ -3,20 +3,21 @@ package staff
 import (
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/utils"
 )
 
-func (ur StaffController) AssignPairings(w http.ResponseWriter, r *http.Request) {
-	data := r.Context().Value("assignment")
+func (controller StaffController) AssignPairings(w http.ResponseWriter, r *http.Request) {
+	data := r.Context().Value(utils.DecodeBodyContextKey)
 	assignment := &models.Assignment{}
-	result := ur.DB.Model(&models.Assignment{}).Where(data).First(assignment)
+	result := controller.DB.Model(&models.Assignment{}).Where(data).First(assignment)
 	if result.Error != nil {
 		loggers.ErrorLogger.Println(result.Error.Error())
 		utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
 	} else {
-		result = utils.SetNewPairings(ur.DB, *assignment)
+		result = utils.SetNewPairings(controller.DB, *assignment)
 		if result.Error != nil {
 			loggers.ErrorLogger.Println(result.Error.Error())
 			utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
@@ -26,20 +27,37 @@ func (ur StaffController) AssignPairings(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (ur StaffController) InitializePairings(w http.ResponseWriter, r *http.Request) {
-	data := r.Context().Value("assignment")
+func (controller StaffController) InitializePairings(w http.ResponseWriter, r *http.Request) {
+	data := r.Context().Value(utils.DecodeBodyContextKey)
 	assignment := &models.Assignment{}
-	result := ur.DB.Model(&models.Assignment{}).Where(data).Find(assignment)
+	result := controller.DB.Model(&models.Assignment{}).Where(data).Find(assignment)
+
 	if result.Error != nil {
 		loggers.ErrorLogger.Println(result.Error.Error())
 		utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
 	} else {
-		result = utils.InitializePairings(ur.DB, (*assignment))
+		result = utils.InitializePairings(controller.DB, (*assignment))
 		if result.Error != nil {
 			loggers.ErrorLogger.Println(result.Error.Error())
 			utils.HandleResponse(w, "Internal Error", http.StatusInternalServerError)
 		} else {
 			utils.HandleResponse(w, "Success", http.StatusCreated)
 		}
+	}
+}
+
+func (controller StaffController) CreatePairingsPermissionCheck() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
+			data := r.Context().Value(utils.DecodeBodyContextKey)
+			assignment := &models.Assignment{}
+			controller.DB.Model(&models.Assignment{}).Where(data).Find(assignment)
+			if pass := utils.IsSupervisor(*claims, assignment.ModuleID, controller.DB); pass {
+				next.ServeHTTP(w, r)
+			} else {
+				utils.HandleResponse(w, "Not a supervisor", http.StatusUnauthorized)
+			}
+		})
 	}
 }

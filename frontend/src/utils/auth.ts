@@ -30,7 +30,6 @@ export function setUserContext(
   role: Role,
   dispatch: Dispatch<ContextState>
 ) {
-  console.log(role)
   const context: ContextState = {
     type: AuthType.AUTHENTICATED,
     payload: {
