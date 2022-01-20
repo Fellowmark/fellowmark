@@ -1,4 +1,7 @@
-import axios from "axios";
+import { Assignment, Grade, Rubric, Question } from '../models/models';
+import { Pagination } from '../models/pagination';
+import { Dispatch, SetStateAction } from 'react';
+import axios from 'axios';
 
 /**
  * Creates module using given data
@@ -7,12 +10,10 @@ import axios from "axios";
  * @param {string} semester e.g. "2122-1" for AY2021/2022 Semester 1
  * @param {string} name  e.g. "Software Engineering & Object-Oriented Programming"
  */
-export const createModule = (moduleCode, semester, name) => {
-  axios
-    .post(`/module`, { Code: moduleCode, Semester: semester, Name: name })
-    .catch((err) => {
-      console.error(err);
-    });
+export const createModule = (moduleCode: string, semester: string, name: string) => {
+  axios.post(`/module`, { Code: moduleCode, Semester: semester, Name: name }).catch((err) => {
+    console.error(err);
+  });
 };
 
 /**
@@ -21,12 +22,10 @@ export const createModule = (moduleCode, semester, name) => {
  * @param {int} moduleId ID of module
  * @param {int} studentId ID of student
  */
-export const createEnrollment = (moduleId, studentId) => {
-  axios
-    .post(`/module/enroll`, { ModuleID: moduleId, StudentID: studentId })
-    .catch((err) => {
-      console.error(err);
-    });
+export const createEnrollment = (moduleId: number, studentId: number) => {
+  axios.post(`/module/enroll`, { ModuleID: moduleId, StudentID: studentId }).catch((err) => {
+    console.error(err);
+  });
 };
 
 /**
@@ -35,12 +34,10 @@ export const createEnrollment = (moduleId, studentId) => {
  * @param {int} moduleId
  * @param {int} staffId
  */
-export const createSupervision = (moduleId, staffId) => {
-  axios
-    .post(`/module/supervise`, { ModuleID: moduleId, StaffID: staffId })
-    .catch((err) => {
-      console.error(err);
-    });
+export const createSupervision = (moduleId: number, staffId: number) => {
+  axios.post(`/module/supervise`, { ModuleID: moduleId, StaffID: staffId }).catch((err) => {
+    console.error(err);
+  });
 };
 
 /**
@@ -49,11 +46,11 @@ export const createSupervision = (moduleId, staffId) => {
  * @param {int} moduleId ID of module the assignment belongs to
  * @param {Object} assignmentData must be (Name, ModuleID) or (ID)
  */
-export const assignPairings = async (moduleId, assignmentData) => {
+export const assignPairings = async (moduleId: number, assignmentData: any) => {
   await axios.post(`/staff/module/${moduleId}/pairing/assign`, assignmentData);
 };
 
-export const getPairings = (moduleId, pairingData, setPairings) => {
+export const getPairings = (moduleId: number, pairingData: any, setPairings: Dispatch<SetStateAction<any>>) => {
   axios
     .get(`/staff/module/${moduleId}/pairing`, {
       params: {
@@ -77,14 +74,11 @@ export const getPairings = (moduleId, pairingData, setPairings) => {
  * @param {int} moduleId ID of module the assignment belongs to
  * @param {Object} assignmentData must be (Name + ModuleID) or (ID)
  */
-export const initializePairings = async (moduleId, assignmentData) => {
-  await axios.post(
-    `staff/module/${moduleId}/pairing/initialize`,
-    assignmentData
-  );
+export const initializePairings = async (moduleId: number, assignmentData: any) => {
+  await axios.post(`staff/module/${moduleId}/pairing/initialize`, assignmentData);
 };
 
-export const createPairings = async (moduleId, assignmentData) => {
+export const createPairings = async (moduleId: number, assignmentData: any) => {
   await initializePairings(moduleId, {
     id: assignmentData.AssignmentID,
   });
@@ -98,10 +92,10 @@ export const createPairings = async (moduleId, assignmentData) => {
  *
  * @param {Object} moduleData can consist of attributes ID, Code, Name, and/or Semester
  */
-export const getModules = (moduleData, setModules) => {
+export const getModules = (moduleData: any, setModules: any) => {
   axios
     .get(`/module`, {
-      method: "GET",
+      method: 'GET',
       params: moduleData,
     })
     .then((res) => {
@@ -117,10 +111,10 @@ export const getModules = (moduleData, setModules) => {
  *
  * @param {Object} enrollmentData can consist of ID, ModuleID, and/or StudentID
  */
-export const getEnrollments = (enrollmentData, setEnrollments) => {
+export const getEnrollments = (enrollmentData: any, setEnrollments: Dispatch<SetStateAction<any>>) => {
   axios
     .get(`/module/enrolls`, {
-      method: "GET",
+      method: 'GET',
       params: enrollmentData,
     })
     .then((res) => {
@@ -136,7 +130,7 @@ export const getEnrollments = (enrollmentData, setEnrollments) => {
 //  *
 //  * @param {Object} enrollmentData can consist of ID, ModuleID, and/or StudentID
 //  */
-// export const getModu = (enrollmentData) => {
+// export const getModu = (enrollmentData: any) => {
 //   axios.get(`/module/enroll`, {
 //     method: 'GET',
 //     params: enrollmentData
@@ -152,7 +146,7 @@ export const getEnrollments = (enrollmentData, setEnrollments) => {
  *
  * @param {Object} enrollmentData can consist of ID, ModuleID, and/or StudentID
  */
-export const getStudentModules = (setModules) => {
+export const getStudentModules = (setModules: Dispatch<SetStateAction<any>>) => {
   axios
     .get(`/module/enroll`)
     .then((res) => {
@@ -171,7 +165,7 @@ export const getStudentModules = (setModules) => {
  *
  * @param {Object} supervisionData can consist of ID, ModuleID, and/or StaffID
  */
-export const getSupervisions = (setModules) => {
+export const getSupervisions = (setModules: Dispatch<SetStateAction<any>>) => {
   axios
     .get(`/module/supervises`)
     .then((res) => {
@@ -190,7 +184,7 @@ export const getSupervisions = (setModules) => {
  *
  * @param {Object} supervisionData can consist of ID, ModuleID, and/or StaffID
  */
-export const getStaffModules = (setModules) => {
+export const getStaffModules = (setModules: Dispatch<SetStateAction<any>>) => {
   axios
     .get(`/module/supervise`)
     .then((res) => {
@@ -212,7 +206,7 @@ export const getStaffModules = (setModules) => {
  * @param {int} groupSize size of each group of student-marker pairings
  * @param {int} [duration=86400] time in seconds assignment should be open for submissions [default: `86400` (1 day)]
  */
-export const createAssignment = async (assignment) => {
+export const createAssignment = async (assignment: Assignment) => {
   return await axios.post(`/assignment`, {
     name: assignment.Name,
     moduleId: assignment.ModuleID,
@@ -228,11 +222,7 @@ export const createAssignment = async (assignment) => {
  * @param {string} questionText question text
  * @param {int} assignmentId AssignmentID of corresponding assignment
  */
-export const createQuestion = async (
-  questionNumber,
-  questionText,
-  assignmentId
-) => {
+export const createQuestion = async (questionNumber: number, questionText: string, assignmentId: number) => {
   await axios.post(`/assignment/question`, {
     questionNumber: questionNumber,
     questionText: questionText,
@@ -249,13 +239,7 @@ export const createQuestion = async (
  * @param {int} [maxMark=10] maximum amount of marks for the question (default: `10`)
  * @param {int} [minMark=0] minimum amount of marks for the question (default: `0`)
  */
-export const createRubrics = async ({
-  QuestionID,
-  Criteria,
-  Description,
-  MaxMark = 10,
-  MinMark = 0,
-}) => {
+export const createRubrics = async ({ QuestionID, Criteria, Description, MaxMark = 10, MinMark = 0 }: Rubric) => {
   await axios.post(`/assignment/rubric`, {
     questionId: QuestionID,
     criteria: Criteria,
@@ -270,13 +254,13 @@ export const createRubrics = async ({
  *
  * @param {Object} assignmentData can consist of AssignmentID, Name, ModuleID, GroupSize and/or Deadline
  */
-export const getAssignments = (assignmentData, setAssignments) => {
+export const getAssignments = (assignmentData: any, setAssignments?: Dispatch<SetStateAction<Pagination<Assignment>>>) => {
   axios
     .get(`/assignment`, {
-      method: "GET",
+      method: 'GET',
       params: {
         ...assignmentData,
-        sort: "deadline asc",
+        sort: 'deadline asc',
       },
     })
     .then((res) => {
@@ -292,18 +276,13 @@ export const getAssignments = (assignmentData, setAssignments) => {
  *
  * @param {Object} questionData can consist of QuestionID, QuestionNumber, QuestionText and/or AssignmentID
  */
-export const getQuestions = (questionData, setQuestions) => {
-  axios
-    .get(`/assignment/question`, {
-      method: "GET",
-      params: questionData,
-    })
-    .then((res) => {
-      setQuestions(res.data);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+export const getQuestions = async (questionData: any, setQuestions?: Dispatch<SetStateAction<Pagination<Question>>>) => {
+  const { data } = await axios.get(`/assignment/question`, {
+    method: 'GET',
+    params: questionData,
+  });
+  if (setQuestions) setQuestions(data);
+  return data;
 };
 
 /**
@@ -311,10 +290,10 @@ export const getQuestions = (questionData, setQuestions) => {
  *
  * @param {Object} rubricData can consist of RubricID, QuestionID, Criteria, Description, MinMark and/or MaxMark
  */
-export const getRubrics = (rubricData, setRubrics) => {
+export const getRubrics = (rubricData: any, setRubrics?: Dispatch<SetStateAction<Pagination<Rubric>>>) => {
   axios
     .get(`/assignment/rubric`, {
-      method: "GET",
+      method: 'GET',
       params: {
         questionId: rubricData.QuestionID,
       },
@@ -327,35 +306,27 @@ export const getRubrics = (rubricData, setRubrics) => {
     });
 };
 
-export const uploadSubmission = async (
-  fileFormData,
-  moduleId,
-  questionId,
-  studentId
-) => {
-  await axios.post(
-    `/module/${moduleId}/submit?questionId=${questionId}&studentId=${studentId}`,
-    fileFormData
-  );
+export const uploadSubmission = async (fileFormData: any, moduleId: number, questionId: number, studentId: any) => {
+  await axios.post(`/module/${moduleId}/submit?questionId=${questionId}&studentId=${studentId}`, fileFormData);
 };
 
-export const downloadSubmission = async (moduleId, questionId, studentId) => {
+export const downloadSubmission = async (moduleId: number, questionId: number, studentId: number) => {
   try {
     const res = await axios.get(`/module/${moduleId}/submit`, {
       params: {
         questionId: questionId,
         studentId: studentId,
       },
-      responseType: "blob", // important
+      responseType: 'blob', // important
     });
-    let blob = new Blob([res.data], { type: "application/octet-stream" });
+    let blob = new Blob([res.data], { type: 'application/octet-stream' });
     return URL.createObjectURL(blob);
   } catch (e) {
-    alert("No submission found");
+    alert('No submission found');
   }
 };
 
-export const getSubmissionMetadata = (studentId, questionId, setSubmission) => {
+export const getSubmissionMetadata = (studentId: number, questionId: number, setSubmission: Dispatch<SetStateAction<boolean>>) => {
   axios
     .get(`/assignment/submission`, {
       params: {
@@ -372,7 +343,7 @@ export const getSubmissionMetadata = (studentId, questionId, setSubmission) => {
     });
 };
 
-export const createGrade = (pairingId, rubricId, grade) => {
+export const createGrade = (pairingId: number, rubricId: number, grade: Grade) => {
   // const rubric = getRubrics({ RubricID: rubricId })[0];
   // if (grade < rubric.MinMark || grade > rubric.MaxMark) {
   //   console.error('Please provide a valid grade');
@@ -389,10 +360,10 @@ export const createGrade = (pairingId, rubricId, grade) => {
     });
 };
 
-export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
+export const getGradesForStudent = (moduleId: number, gradeData?: any, setGrades?: Dispatch<SetStateAction<Map<number, Grade>>>) => {
   axios
     .get(`/module/${moduleId}/grade/student`, {
-      method: "GET",
+      method: 'GET',
       params: {
         pairingId: gradeData.PairingID,
       },
@@ -409,10 +380,10 @@ export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
     });
 };
 
-export const getGradesForMarker = (moduleId, gradeData, setGrades) => {
+export const getGradesForMarker = (moduleId: number, gradeData: Grade, setGrades: Dispatch<SetStateAction<Map<number, Grade>>>) => {
   axios
     .get(`/module/${moduleId}/grade/marker`, {
-      method: "GET",
+      method: 'GET',
       params: {
         pairingId: gradeData.PairingID,
       },
@@ -429,7 +400,7 @@ export const getGradesForMarker = (moduleId, gradeData, setGrades) => {
     });
 };
 
-export const postGrade = async (moduleId, gradeData) => {
+export const postGrade = async (moduleId: number, gradeData: Grade) => {
   await axios.post(`/module/${moduleId}/grade`, {
     pairingId: gradeData.PairingID,
     rubricId: gradeData.RubricID,
@@ -438,33 +409,28 @@ export const postGrade = async (moduleId, gradeData) => {
   });
 };
 
-export const getGradesForStaff = (gradeData) => {
-  axios
-    .get("/grading", {
-      method: "GET",
-      body: JSON.stringify(gradeData),
-    })
-    .then((res) => {
-      return res.data;
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+export const getGradesForStaff = async (gradeData: Grade) => {
+  const { data } = await axios.get('/grading', {
+    method: 'GET',
+  });
+  return data;
 };
 
-export const getAssignmentGradesForStudent = (assignmentData) => {
+export const getAssignmentGradesForStudent = async (assignmentData: Assignment) => {
   let assignment = getAssignments(assignmentData)[0];
-  let questions = getQuestions({ AssignmentID: assignment.ID });
+  let questions = await getQuestions({ AssignmentID: assignment.ID });
   let questionsGrades = {};
   questions.forEach((question) => {
     let rubric = getRubrics({ QuestionID: question.ID })[0];
-    questionsGrades[question.ID] = getGradesForStudent({ RubricID: rubric.ID });
+    questionsGrades[question.ID] = getGradesForStudent(null, { RubricID: rubric.ID });
+    // todo parameter moduleId^ may result a bug
   });
   return questionsGrades;
 };
 
-export const getQuestionGradesForStudent = (questionData) => {
+export const getQuestionGradesForStudent = (questionData: Question) => {
   let question = getQuestions(questionData)[0];
   let rubric = getRubrics({ QuestionID: question.ID })[0];
-  return getGradesForStudent({ RubricID: rubric.ID });
+  return getGradesForStudent(null, { RubricID: rubric.ID });
+  // todo parameter moduleId^ may result a bug
 };
