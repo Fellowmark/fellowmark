@@ -41,13 +41,14 @@ func (controller AssignmentController) CreateAssignmentRouter(route *mux.Router)
 func (controller AssignmentController) CreateQuestionsRouter(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Question{}))
 	route.Use(utils.SanitizeDataMiddleware())
-	route.Use(controller.CreateAssignmentPermissionCheck())
+	route.Use(controller.CreateQuestionPermissionCheck())
 	route.HandleFunc("", utils.DBCreateHandleFunc(controller.DB, true)).Methods(http.MethodPost)
 }
 
 func (controller AssignmentController) CreateRubricsRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Rubric{}))
 	route.Use(utils.SanitizeDataMiddleware())
+	route.Use(controller.CreateRubricPermissionCheck())
 	route.HandleFunc("", utils.DBCreateHandleFunc(controller.DB, true)).Methods(http.MethodPost)
 }
 

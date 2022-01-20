@@ -50,9 +50,7 @@ func (controller StaffController) CreatePairingsPermissionCheck() mux.Middleware
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
-			data := r.Context().Value(utils.DecodeBodyContextKey)
-			assignment := &models.Assignment{}
-			controller.DB.Model(&models.Assignment{}).Where(data).Find(assignment)
+			assignment := r.Context().Value(utils.DecodeBodyContextKey).(*models.Assignment)
 			if pass := utils.IsSupervisor(*claims, assignment.ModuleID, controller.DB); pass {
 				next.ServeHTTP(w, r)
 			} else {

@@ -31,7 +31,6 @@ func (controller StaffController) CreateAuthRouter(route *mux.Router) {
 
 func (controller StaffController) CreatePrivilegedRouter(route *mux.Router) {
 	route.Use(utils.AuthenticationMiddleware())
-	route.Use(controller.CreatePairingsPermissionCheck())
 
 	controller.CreatePairingsRoute(route.PathPrefix("/pairing").Subrouter())
 	controller.GetPairingsRoute(route.PathPrefix("/pairing").Subrouter())
