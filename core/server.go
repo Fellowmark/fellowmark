@@ -15,6 +15,7 @@ import (
 	"github.com/nus-utils/nus-peer-review/module"
 	"github.com/nus-utils/nus-peer-review/staff"
 	"github.com/nus-utils/nus-peer-review/student"
+	"github.com/nus-utils/nus-peer-review/submissions"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
 
@@ -67,6 +68,12 @@ func InitServer(pool *gorm.DB) {
 		DB: pool,
 	}
 
+	submissionController := submissions.FileserverController{
+		DB:            pool,
+		UploadPath:    "/tmp",
+		MaxUploadSize: 30 * 1024 * 1024,
+	}
+
 	// gradingController := grading.GradingRoute{
 	// 	DB: pool,
 	// }
@@ -76,6 +83,7 @@ func InitServer(pool *gorm.DB) {
 	adminController.CreateRouters(router.PathPrefix("/admin").Subrouter())
 	moduleController.CreateRouters(router.PathPrefix("/module").Subrouter())
 	assignmentController.CreateRouters(router.PathPrefix("/assignment").Subrouter())
+	submissionController.CreateRouters(router.PathPrefix("/submission").Subrouter())
 	// gradingController.CreateRouters(route.PathPrefix("/grading").Subrouter())
 	router.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
 	mux.CORSMethodMiddleware(router)

@@ -358,14 +358,14 @@ export const uploadSubmission = async (
   studentId
 ) => {
   await axios.post(
-    `/module/${moduleId}/submit?questionId=${questionId}&studentId=${studentId}`,
+    `/submission?questionId=${questionId}&studentId=${studentId}`,
     fileFormData
   );
 };
 
 export const downloadSubmission = async (moduleId, questionId, studentId) => {
   try {
-    const res = await axios.get(`/module/${moduleId}/submit`, {
+    const res = await axios.get(`/submission`, {
       params: {
         questionId: questionId,
         studentId: studentId,

@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/grading"
 	"github.com/nus-utils/nus-peer-review/models"
-	"github.com/nus-utils/nus-peer-review/submissions"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
 )
@@ -23,9 +22,6 @@ func (controller ModuleController) CreateRouters(route *mux.Router) {
 
 	gr := grading.GradingController{DB: controller.DB}
 	gr.CreateRouters(route.PathPrefix("/{moduleId}/grade").Subrouter())
-
-	sr := submissions.FileserverController{DB: controller.DB, UploadPath: "/app", MaxUploadSize: 30 * 1024 * 1024}
-	sr.CreateRouters(route.PathPrefix("/{moduleId}/submit").Subrouter())
 }
 func (controller ModuleController) CreatePrivilegedRouter(route *mux.Router) {
 	route.Use(utils.AuthenticationMiddleware())

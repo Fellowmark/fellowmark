@@ -183,7 +183,7 @@ func IsSupervisor(user models.User, moduleId uint, db *gorm.DB) bool {
 	if errors.Is(resultStaff.Error, gorm.ErrRecordNotFound) {
 		return false
 	}
-	resultSupervision := db.Take(&models.Supervision{}, "staff_id = ? AND module_id", user.ID, moduleId)
+	resultSupervision := db.Take(&models.Supervision{}, "staff_id = ? AND module_id = ?", user.ID, moduleId)
 	if errors.Is(resultSupervision.Error, gorm.ErrRecordNotFound) {
 		return false
 	}
@@ -198,11 +198,48 @@ func IsEnrolled(user models.User, moduleId uint, db *gorm.DB) bool {
 	if errors.Is(resultStaff.Error, gorm.ErrRecordNotFound) {
 		return false
 	}
-	resultSupervision := db.Take(&models.Enrollment{}, "student_id = ? AND module_id", user.ID, moduleId)
+	resultSupervision := db.Take(&models.Enrollment{}, "student_id = ? AND module_id = ? ", user.ID, moduleId)
 	if errors.Is(resultSupervision.Error, gorm.ErrRecordNotFound) {
 		return false
 	}
 	return true
+}
+
+// Both Supervisor and Marker are authorized for marking
+func IsMarker(user models.User, assignmentId uint, studentId uint, db *gorm.DB) bool {
+	if bypass := IsAdmin(user, db); bypass {
+		return true
+	}
+
+	var assignment models.Assignment
+	db.Model(&models.Assignment{}).Where("id = ?", assignmentId).Find(&assignment)
+	if bypass := IsSupervisor(user, assignment.ModuleID, db); bypass {
+		return true
+	}
+
+	result := db.Model(&models.Pairing{}).Take(&models.Pairing{},
+		models.Pairing{MarkerID: user.ID, StudentID: studentId, AssignmentID: assignmentId})
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	return true
+}
+
+func IsReviewee(user models.User, assignmentId uint, markerId uint, db *gorm.DB) bool {
+	if bypass := IsAdmin(user, db); bypass {
+		return true
+	}
+	result := db.Model(&models.Pairing{}).Take(&models.Pairing{},
+		models.Pairing{StudentID: user.ID, MarkerID: markerId, AssignmentID: assignmentId})
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	return true
+}
+
+func IsPair(user models.User, assignmentId uint, otherStudentId uint, db *gorm.DB) bool {
+	return IsMarker(user, assignmentId, otherStudentId, db) || IsReviewee(user, assignmentId, otherStudentId, db)
 }
 
 func IsMemberOf(claims models.User, moduleId uint, db *gorm.DB) bool {

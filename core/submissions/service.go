@@ -18,6 +18,45 @@ import (
 
 const FilePathContextKey = "file"
 
+func (controller FileserverController) UploadPermissionCheck() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
+			submission := r.Context().Value(utils.DecodeParamsContextKey).(*models.Submission)
+
+			var question models.Question
+			controller.DB.Model(&models.Assignment{}).Where("id = ?", submission.QuestionID).Find(&question)
+
+			var assignment models.Assignment
+			controller.DB.Model(&models.Assignment{}).Where("id = ?", question.AssignmentID).Find(&assignment)
+
+			if pass := utils.IsEnrolled(*claims, assignment.ModuleID, controller.DB); pass {
+				next.ServeHTTP(w, r)
+			} else {
+				utils.HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
+			}
+		})
+	}
+}
+
+func (controller FileserverController) DownloadPermissionCheck() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
+			submission := r.Context().Value(utils.DecodeParamsContextKey).(*models.Submission)
+
+			var question models.Question
+			controller.DB.Model(&models.Assignment{}).Where("id = ?", submission.QuestionID).Find(&question)
+
+			if pass := utils.IsPair(*claims, question.AssignmentID, submission.StudentID, controller.DB); pass {
+				next.ServeHTTP(w, r)
+			} else {
+				utils.HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
+			}
+		})
+	}
+}
+
 func (fr FileserverController) UpdateFilePathMiddleware() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -56,39 +95,10 @@ func (fr FileserverController) StoreUploadLocationInDB(db *gorm.DB) http.Handler
 	}
 }
 
-func (fr FileserverController) FileAuthMiddleware(isMarkee bool) mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Submission)
-			user := r.Context().Value(utils.JWTClaimContextKey)
-
-			switch marker := user.(type) {
-			case *models.Student:
-				if marker.ID != data.StudentID {
-					if isMarkee {
-						utils.HandleResponse(w, "Bad request. Incorrect permissions", http.StatusUnauthorized)
-						return
-					}
-					var isMarker int64
-					fr.DB.Model(&models.Submission{}).
-						Joins("questions").Joins("pairings").
-						Where("pairings.marker_id = ? AND questions.id = ? AND pairings.student_id = ?", marker.ID, data.QuestionID, data.StudentID).
-						Count(&isMarker)
-					if isMarker != 0 {
-						utils.HandleResponse(w, "Bad request. Incorrect permissions", http.StatusUnauthorized)
-						return
-					}
-				}
-			}
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
 func (fr FileserverController) GetSubmissionMiddleware() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Submission)
+			data := r.Context().Value(utils.DecodeParamsContextKey).(*models.Submission)
 			fr.DB.Model(&models.Submission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).FirstOrCreate(data)
 			ctxWithPath := context.WithValue(r.Context(), utils.DecodeBodyContextKey, data)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))

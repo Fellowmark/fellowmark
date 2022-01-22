@@ -39,7 +39,6 @@ func (controller GradingController) GetGradesForStudent(route *mux.Router) {
 	route.Use(utils.DecodeParamsMiddleware(&models.Grade{}))
 	route.Use(utils.AuthenticationMiddleware())
 	route.Use(utils.EnrollmentCheckMiddleware(controller.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
-	route.Use(utils.MarkeeCheckMiddleware(controller.DB))
 
 	route.HandleFunc("", utils.DBGetFromDataParams(controller.DB, &models.Grade{}, &[]models.Grade{})).Methods(http.MethodGet)
 }
