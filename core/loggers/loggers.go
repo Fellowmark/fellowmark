@@ -31,9 +31,5 @@ func InitStdoutLoggers() {
 }
 
 func InitLoggers(runEnv string) {
-	if runEnv == "production" {
-		InitFileLoggers()
-	} else {
-		InitStdoutLoggers()
-	}
+	InitStdoutLoggers()
 }

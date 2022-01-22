@@ -7,7 +7,7 @@ import { AuthContext, TimeoutContext } from "./context/context";
 import { authenticate } from "./utils/auth";
 import { logoutUser, setAuthorizationHeader } from "./actions/userActions";
 
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = process.env.REACT_APP_API_URL ?? 'http://localhost:5050/api';
 
 const useAuthHook = () => {
   const { dispatch } = useContext(AuthContext);
@@ -22,7 +22,7 @@ const useAuthHook = () => {
         logoutUser(history, dispatch);;
         alert("Session expired");
       }, secondsLeft - 30));
-      setAuthorizationHeader(localStorage.FBIdToken);
+      setAuthorizationHeader(localStorage.jwt);
     } else {
       logoutUser(history, dispatch);
       cancelTimeout();

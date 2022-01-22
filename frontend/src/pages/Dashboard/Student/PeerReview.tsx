@@ -7,12 +7,12 @@ import {
   TableBody,
   TextField,
 } from "@material-ui/core";
-import { FC, useContext, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { IHighlight } from "react-pdf-highlighter";
 import {
   downloadSubmission,
   getGradesForMarker,
-  getPairings,
+  getPairingAsMarker,
   getRubrics,
   postGrade,
 } from "../../../actions/moduleActions";
@@ -23,7 +23,6 @@ import {
   StyledTableHead,
   StyledTableRow,
 } from "../../../components/StyledTable";
-import { AuthContext } from "../../../context/context";
 import { Grade, Pairing, Rubric } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 
@@ -49,8 +48,7 @@ export const PeerReview: FC<{
   assignmentId: number;
   questionId: number;
 }> = (props) => {
-  const { state } = useContext(AuthContext);
-  const [student, setStudent] = useState<number>(null);
+  const [studentId, setStudent] = useState<number>(null);
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
   const [rubrics, setRubrics] = useState<Pagination<Rubric>>({});
   const [grades, setGrades] = useState<Map<number, Grade>>(null);
@@ -62,30 +60,34 @@ export const PeerReview: FC<{
   const { moduleId, questionId } = props;
 
   useEffect(() => {
-    getPairings(moduleId, { MarkerID: state.user.ID }, setPairings);
+    getPairingAsMarker({ assignmentId: props.assignmentId }, setPairings);
     getRubrics({ QuestionID: questionId }, setRubrics);
   }, []);
 
   useEffect(() => {
-    if (student) {
-      getGradesForMarker(moduleId, { PairingID: student }, setGrades);
+    if (studentId) {
+      setGrades(null);
+      getGradesForMarker(
+        moduleId,
+        {
+          PairingID: pairings.rows.find((pair) => pair.Student.ID === studentId).ID,
+        },
+        setGrades
+      );
     }
-  }, [student]);
+  }, [studentId]);
 
   const handleGrade = () => {
     grades.forEach((value) => {
-      return postGrade(moduleId, { ...value, PairingID: student });
+      return postGrade(moduleId, {
+        ...value,
+        PairingID: pairings.rows.find((pair) => pair.Student.ID === studentId).ID,
+      });
     });
   };
 
-  const handleDownload = async () => {
-    let studentId: number = 0;
-    console.log(student);
-    pairings.rows.forEach((value) => {
-      if (value.ID == student) {
-        studentId = value.Student.ID;
-      }
-    });
+  const handleDownload = async (studentId: number) => {
+    console.log(studentId);
     try {
       setDownloadURL(await downloadSubmission(moduleId, questionId, studentId));
     } catch (e) {
@@ -98,8 +100,9 @@ export const PeerReview: FC<{
     <div>
       <Grid
         container
-        direction="row"
+        direction={downloadURL ? "row" : "column"}
         alignItems="center"
+        justifyContent="center"
         spacing={1}
         style={{
           marginBottom: "10px",
@@ -129,28 +132,17 @@ export const PeerReview: FC<{
                 name="status"
                 onChange={(e) => {
                   setStudent(e.target.value as number);
-                  setGrades(null);
+                  handleDownload(e.target.value as number);
                 }}
               >
                 {pairings?.rows?.map((pair, key) => {
                   return (
-                    <MenuItem key={key} value={pair.ID}>{`Student ${
+                    <MenuItem key={key} value={pair.Student.ID}>{`Student ${
                       key + 1
                     }`}</MenuItem>
                   );
                 })}
               </Select>
-            </Grid>
-            <Grid item>
-              <Button
-                color="primary"
-                variant="contained"
-                aria-label="menu"
-                disabled={!student}
-                onClick={() => handleDownload()}
-              >
-                Open
-              </Button>
             </Grid>
             <StyledTableContainer>
               <StyledTableHead>
@@ -237,7 +229,7 @@ export const PeerReview: FC<{
               color="primary"
               variant="contained"
               aria-label="menu"
-              disabled={!student}
+              disabled={!studentId}
               onClick={() => handleGrade()}
               style={{
                 marginTop: "10px",

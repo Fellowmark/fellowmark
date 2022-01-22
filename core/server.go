@@ -11,10 +11,12 @@ import (
 	"github.com/nus-utils/nus-peer-review/admin"
 	"github.com/nus-utils/nus-peer-review/assignment"
 	DB "github.com/nus-utils/nus-peer-review/db"
+	"github.com/nus-utils/nus-peer-review/grading"
 	"github.com/nus-utils/nus-peer-review/loggers"
 	"github.com/nus-utils/nus-peer-review/module"
 	"github.com/nus-utils/nus-peer-review/staff"
 	"github.com/nus-utils/nus-peer-review/student"
+	"github.com/nus-utils/nus-peer-review/submissions"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
 
@@ -22,6 +24,7 @@ import (
 )
 
 func main() {
+	print(os.Getenv("DATABASE_URL"))
 	loggers.InitLoggers(os.Getenv("RUN_ENV"))
 	db := DB.InitDB(os.Getenv("DATABASE_URL"))
 	InitServer(db)
@@ -44,44 +47,56 @@ func InitServer(pool *gorm.DB) {
 	loggers.InfoLogger.Println("Starting server")
 
 	utils.SchemaDecoder.IgnoreUnknownKeys(true)
-	route := mux.NewRouter()
+	router := mux.NewRouter()
 
-	studentRoute := student.StudentRoute{
+	studentController := student.StudentController{
 		DB: pool,
 	}
 
-	staffRoute := staff.StaffRoute{
+	staffController := staff.StaffController{
 		DB: pool,
 	}
 
-	adminRoute := admin.AdminRoute{
+	adminController := admin.AdminController{
 		DB: pool,
 	}
 
-	moduleRoute := module.ModuleRoute{
+	moduleController := module.ModuleController{
 		DB: pool,
 	}
 
-	assignmentRoute := assignment.AssignmentRoute{
+	assignmentController := assignment.AssignmentController{
 		DB: pool,
 	}
 
-	// gradingRoute := grading.GradingRoute{
+	submissionController := submissions.FileserverController{
+		DB:            pool,
+		UploadPath:    "/tmp",
+		MaxUploadSize: 30 * 1024 * 1024,
+	}
+
+	gradingController := grading.GradingController{
+		DB: pool,
+	}
+
+	// gradingController := grading.GradingRoute{
 	// 	DB: pool,
 	// }
 
-	studentRoute.CreateRouters(route.PathPrefix("/student").Subrouter())
-	staffRoute.CreateRouters(route.PathPrefix("/staff").Subrouter())
-	adminRoute.CreateRouters(route.PathPrefix("/admin").Subrouter())
-	moduleRoute.CreateRouters(route.PathPrefix("/module").Subrouter())
-	assignmentRoute.CreateRouters(route.PathPrefix("/assignment").Subrouter())
-	// gradingRoute.CreateRouters(route.PathPrefix("/grading").Subrouter())
-	route.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
-	mux.CORSMethodMiddleware(route)
+	studentController.CreateRouters(router.PathPrefix("/student").Subrouter())
+	staffController.CreateRouters(router.PathPrefix("/staff").Subrouter())
+	adminController.CreateRouters(router.PathPrefix("/admin").Subrouter())
+	moduleController.CreateRouters(router.PathPrefix("/module").Subrouter())
+	assignmentController.CreateRouters(router.PathPrefix("/assignment").Subrouter())
+	submissionController.CreateRouters(router.PathPrefix("/submission").Subrouter())
+	gradingController.CreateRouters(router.PathPrefix("/grade").Subrouter())
+
+	router.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
+	mux.CORSMethodMiddleware(router)
 
 	srv := &http.Server{
 		Addr:         ":5000",
-		Handler:      utils.SetHeaders(route),
+		Handler:      utils.SetHeaders(router),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		ErrorLog:     loggers.ErrorLogger,

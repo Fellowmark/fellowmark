@@ -15,7 +15,6 @@ import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   createAssignment,
   getAssignments,
-  initializePairings,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar } from "../../../components/NavBar";
 import {
@@ -59,9 +58,7 @@ export const Assignments: FC = () => {
   }, [isValid]);
 
   const addAssignment = async () => {
-    const { data } = await createAssignment(newAssignment);
-    console.log(data);
-    await initializePairings(moduleId, {id: data.ID});
+    await createAssignment(newAssignment);
     setCreateNew(false);
     setNewAssignment({ ModuleID: moduleId });
     getAssignments({ moduleId: moduleId }, setAssignments);

@@ -49,18 +49,45 @@ export const createSupervision = (moduleId, staffId) => {
  * @param {int} moduleId ID of module the assignment belongs to
  * @param {Object} assignmentData must be (Name, ModuleID) or (ID)
  */
-export const assignPairings = async (moduleId, assignmentData) => {
-  await axios.post(`/staff/module/${moduleId}/pairing/assign`, assignmentData);
+export const assignPairings = async (assignmentData) => {
+  await axios.post(`/assignment/pairs/assign`, assignmentData);
 };
 
-export const getPairings = (moduleId, pairingData, setPairings) => {
+export const getPairingAsReviewee = ({ assignmentId }, setPairings) => {
   axios
-    .get(`/staff/module/${moduleId}/pairing`, {
+    .get(`/assignment/pairs/mymarkers`, {
       params: {
-        assignmentId: pairingData.AssignmentID,
-        studentId: pairingData.StudentID,
-        markerId: pairingData.MarkerID,
-        active: true,
+        assignmentId,
+      },
+    })
+    .then((res) => {
+      setPairings(res.data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+export const getPairingAsMarker = ({ assignmentId }, setPairings) => {
+  axios
+    .get(`/assignment/pairs/myreviewees`, {
+      params: {
+        assignmentId: assignmentId,
+      },
+    })
+    .then((res) => {
+      setPairings(res.data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+export const getAllPairings = ({ assignmentId }, setPairings) => {
+  axios
+    .get(`/assignment/pairs`, {
+      params: {
+        assignmentId: assignmentId,
       },
     })
     .then((res) => {
@@ -77,18 +104,15 @@ export const getPairings = (moduleId, pairingData, setPairings) => {
  * @param {int} moduleId ID of module the assignment belongs to
  * @param {Object} assignmentData must be (Name + ModuleID) or (ID)
  */
-export const initializePairings = async (moduleId, assignmentData) => {
-  await axios.post(
-    `staff/module/${moduleId}/pairing/initialize`,
-    assignmentData
-  );
+export const initializePairings = async (assignmentData) => {
+  await axios.post(`/assignment/pairs/initialize`, assignmentData);
 };
 
-export const createPairings = async (moduleId, assignmentData) => {
-  await initializePairings(moduleId, {
+export const createPairings = async (assignmentData) => {
+  await initializePairings({
     id: assignmentData.AssignmentID,
   });
-  await assignPairings(moduleId, {
+  await assignPairings({
     id: assignmentData.AssignmentID,
   });
 };
@@ -334,14 +358,14 @@ export const uploadSubmission = async (
   studentId
 ) => {
   await axios.post(
-    `/module/${moduleId}/submit?questionId=${questionId}&studentId=${studentId}`,
+    `/submission?questionId=${questionId}&studentId=${studentId}`,
     fileFormData
   );
 };
 
 export const downloadSubmission = async (moduleId, questionId, studentId) => {
   try {
-    const res = await axios.get(`/module/${moduleId}/submit`, {
+    const res = await axios.get(`/submission`, {
       params: {
         questionId: questionId,
         studentId: studentId,
@@ -391,7 +415,7 @@ export const createGrade = (pairingId, rubricId, grade) => {
 
 export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
   axios
-    .get(`/module/${moduleId}/grade/student`, {
+    .get(`/grade/my/reviewee`, {
       method: "GET",
       params: {
         pairingId: gradeData.PairingID,
@@ -411,7 +435,7 @@ export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
 
 export const getGradesForMarker = (moduleId, gradeData, setGrades) => {
   axios
-    .get(`/module/${moduleId}/grade/marker`, {
+    .get(`grade/my/marker`, {
       method: "GET",
       params: {
         pairingId: gradeData.PairingID,
@@ -430,7 +454,7 @@ export const getGradesForMarker = (moduleId, gradeData, setGrades) => {
 };
 
 export const postGrade = async (moduleId, gradeData) => {
-  await axios.post(`/module/${moduleId}/grade`, {
+  await axios.post(`/grade`, {
     pairingId: gradeData.PairingID,
     rubricId: gradeData.RubricID,
     comment: gradeData.Comment,

@@ -1,9 +1,10 @@
-# PeerMark
+# FellowMark
 Education application for student to student cross reviewing of assignments.
 
 # Requirements
 1. docker
 2. docker-compose
+3. jq: https://stedolan.github.io/jq/
 
 ## Optional
 1. go
@@ -17,35 +18,22 @@ Education application for student to student cross reviewing of assignments.
 docker-compose --profile api-dev up
 ```
 
-Ping server for health
-```sh
-curl localhost:5000/health
+After api is running, populate with mock data by running the seed.sh script:
 ```
-## Production API setup
-```sh
-docker-compose --profile api up
+bash seed.sh
 ```
+
+The seed.sh creates the following:
+* 1 Staff 20 Student accounts
+* 1 Module
+* 1 Assignment and its marker-reviewee pairings
+* 1 Question
+* 2 Rubrics
 
 Ping server for health
 ```sh
 curl localhost:5000/health
 ```
 
-## Local complete dev setup
-```sh
-docker-compose --profile dev up
-```
-
-Ping server for health
-```sh
-curl localhost:5000/health
-```
-## Production complete setup
-```sh
-docker-compose --profile production up
-```
-
-Ping server for health
-```sh
-curl localhost:5000/health
-```
+Frontend can be accessed on `http://localhost:3000`
+Backend can be accessed on `http://localhost:5000`

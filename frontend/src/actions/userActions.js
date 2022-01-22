@@ -14,11 +14,11 @@ export const signupUser = (role, userData, history) => (dispatch) => {
 export const loginUser = (role, userData, history) => {
   axios
     .get(`${role.toLowerCase()}/auth/login`, {
-      params: userData
+      params: userData,
     })
     .then((res) => {
-      setAuthorizationHeader(res.data.message);
-      window.location.href = `/${role}`;
+      setAuthorizationHeader(res.data.message)(role);
+      window.location.href = `/${role.toLowerCase()}`;
     })
     .catch((err) => {
       alert("Email or password incorrect");
@@ -42,7 +42,8 @@ export const getUserDetails = () => (dispatch) => {
 };
 
 export const logoutUser = (history, dispatch) => {
-  localStorage.removeItem("FBIdToken");
+  localStorage.removeItem("jwt");
+  localStorage.removeItem("role");
   delete axios.defaults.headers.common["Authorization"];
   dispatch({
     type: "UNAUTHENTICATED",
@@ -51,8 +52,9 @@ export const logoutUser = (history, dispatch) => {
   history.push("/login");
 };
 
-export const setAuthorizationHeader = (token) => {
-  const FBIdToken = `Bearer ${token}`;
-  localStorage.setItem("FBIdToken", token);
-  axios.defaults.headers.common["Authorization"] = FBIdToken;
+export const setAuthorizationHeader = (token) => (role) => {
+  const jwt = `Bearer ${token}`;
+  localStorage.setItem("jwt", token);
+  localStorage.setItem("role", role);
+  axios.defaults.headers.common["Authorization"] = jwt;
 };

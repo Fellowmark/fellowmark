@@ -4,22 +4,26 @@ import {
   CardContent,
   DialogContentText,
   Grid,
-  Input,
   makeStyles,
   Typography,
 } from "@material-ui/core";
-import { FC, useContext, useEffect, useRef, useState } from "react";
+import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
-import { getPairings, getSubmissionMetadata, uploadSubmission } from "../../../actions/moduleActions";
-import { ButtonAppBar, Page } from "../../../components/NavBar";
-import { MaxWidthDialog, MaxWidthDialogActions } from "../../../components/PopUpDialog";
-import { StyledTableCell, StyledTableRow } from "../../../components/StyledTable";
+import {
+  getAllPairings,
+  getSubmissionMetadata,
+} from "../../../actions/moduleActions";
+import { ButtonAppBar } from "../../../components/NavBar";
+import {
+  MaxWidthDialog,
+  MaxWidthDialogActions,
+} from "../../../components/PopUpDialog";
 import { AuthContext } from "../../../context/context";
 import { Pairing } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import { Role } from "../../Login";
 import { getPageList } from "./Dashboard";
-import { PairingsList, ViewPairings } from "./Questions";
+import { PairingsList } from "./Questions";
 import { Review } from "./Review";
 import { Rubrics } from "./Rubrics";
 
@@ -78,20 +82,20 @@ export const QuestionBoard: FC = () => {
   const [pairings, setPairings] = useState<Pagination<Pairing>>(null);
   const [selectedPair, selectPair] = useState<Pairing>(null);
 
-  const { moduleId, assignmentId, questionId } = useValidCheck(history, state, match, setIsValid);
+  const { moduleId, assignmentId, questionId } = useValidCheck(
+    history,
+    state,
+    match,
+    setIsValid
+  );
   const pageList = getPageList(match);
 
   useEffect(() => {
     if (isValid) {
       getSubmissionMetadata(state.user.ID, questionId, setSubmitted);
-      getPairings(
-        moduleId,
-        { AssignmentID: assignmentId },
-        setPairings
-      );
+      getAllPairings({ assignmentId }, setPairings);
     }
   }, [isValid]);
-
 
   return (
     <div>
@@ -115,14 +119,21 @@ export const QuestionBoard: FC = () => {
       <MaxWidthDialog
         title="Review"
         open={Boolean(selectedPair)}
-        setOpen={(open) => {!open && selectPair(null)}}
+        setOpen={(open) => {
+          !open && selectPair(null);
+        }}
         width={"xl"}
       >
         <DialogContentText>
           Review submission and feedback of the following pair
         </DialogContentText>
 
-        <Review moduleId={moduleId} assignmentId={assignmentId} questionId={questionId} pair={selectedPair} />
+        <Review
+          moduleId={moduleId}
+          assignmentId={assignmentId}
+          questionId={questionId}
+          pair={selectedPair}
+        />
 
         <MaxWidthDialogActions handleClose={() => selectPair(null)} />
       </MaxWidthDialog>
@@ -140,12 +151,7 @@ export const QuestionBoard: FC = () => {
 
       <PairingsList pairings={pairings} setPairing={selectPair} />
 
-      <Grid
-        container
-        direction="row"
-        justifyContent="center"
-        spacing={3}
-      >
+      <Grid container direction="row" justifyContent="center" spacing={3}>
         <Grid item>
           <Button
             style={{ marginTop: "10px" }}
