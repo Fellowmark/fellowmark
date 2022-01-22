@@ -7,12 +7,12 @@ import {
   TableBody,
   TextField,
 } from "@material-ui/core";
-import { FC, useContext, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { IHighlight } from "react-pdf-highlighter";
 import {
   downloadSubmission,
   getGradesForMarker,
-  getPairings,
+  getPairingAsMarker,
   getRubrics,
   postGrade,
 } from "../../../actions/moduleActions";
@@ -23,7 +23,6 @@ import {
   StyledTableHead,
   StyledTableRow,
 } from "../../../components/StyledTable";
-import { AuthContext } from "../../../context/context";
 import { Grade, Pairing, Rubric } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 
@@ -49,7 +48,6 @@ export const PeerReview: FC<{
   assignmentId: number;
   questionId: number;
 }> = (props) => {
-  const { state } = useContext(AuthContext);
   const [student, setStudent] = useState<number>(null);
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
   const [rubrics, setRubrics] = useState<Pagination<Rubric>>({});
@@ -62,7 +60,7 @@ export const PeerReview: FC<{
   const { moduleId, questionId } = props;
 
   useEffect(() => {
-    getPairings(moduleId, { MarkerID: state.user.ID }, setPairings);
+    getPairingAsMarker({ assignmentId: props.assignmentId }, setPairings);
     getRubrics({ QuestionID: questionId }, setRubrics);
   }, []);
 
@@ -82,7 +80,7 @@ export const PeerReview: FC<{
     let studentId: number = 0;
     console.log(student);
     pairings.rows.forEach((value) => {
-      if (value.ID == student) {
+      if (value.ID === student) {
         studentId = value.Student.ID;
       }
     });
@@ -98,7 +96,7 @@ export const PeerReview: FC<{
     <div>
       <Grid
         container
-        direction={downloadURL ? "row": "column"}
+        direction={downloadURL ? "row" : "column"}
         alignItems="center"
         justifyContent="center"
         spacing={1}

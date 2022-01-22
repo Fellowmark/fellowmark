@@ -1,30 +1,20 @@
 import {
-  Button,
-  Card,
-  CardContent,
   Grid,
-  Input,
   makeStyles,
   MenuItem,
   Select,
   TableBody,
-  TextField,
-  Typography,
 } from "@material-ui/core";
 import { FC, useContext, useEffect, useRef, useState } from "react";
 import { IHighlight } from "react-pdf-highlighter";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   downloadSubmission,
-  getGradesForMarker,
   getGradesForStudent,
-  getPairings,
+  getPairingAsReviewee,
   getRubrics,
-  getSubmissionMetadata,
   postGrade,
-  uploadSubmission,
 } from "../../../actions/moduleActions";
-import { ButtonAppBar, Page } from "../../../components/NavBar";
 import { Annotator } from "../../../components/PdfViewer";
 import {
   StyledTableCell,
@@ -35,7 +25,6 @@ import {
 import { AuthContext } from "../../../context/context";
 import { Grade, Pairing, Rubric } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
-import { Role } from "../../Login";
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
@@ -59,10 +48,7 @@ export const Gradebook: FC<{
   assignmentId: number;
   questionId: number;
 }> = (props) => {
-  const match = useRouteMatch();
   const { state } = useContext(AuthContext);
-  const history = useHistory();
-  const [submitted, setSubmitted] = useState(false);
   const [student, setStudent] = useState<number>(null);
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
   const [rubrics, setRubrics] = useState<Pagination<Rubric>>({});
@@ -72,12 +58,10 @@ export const Gradebook: FC<{
   );
   const [downloadURL, setDownloadURL] = useState<string>(null);
 
-  const hiddenFileInput = useRef(null);
-
   const { moduleId, questionId } = props;
 
   useEffect(() => {
-    getPairings(moduleId, { StudentID: state.user.ID }, setPairings);
+    getPairingAsReviewee({ assignmentId: props.assignmentId }, setPairings);
     getRubrics({ QuestionID: questionId }, setRubrics);
   }, []);
 
@@ -86,12 +70,6 @@ export const Gradebook: FC<{
       getGradesForStudent(moduleId, { PairingID: student }, setGrades);
     }
   }, [student]);
-
-  const handleGrade = () => {
-    grades.forEach((value) => {
-      return postGrade(moduleId, { ...value, PairingID: student });
-    });
-  };
 
   const handleDownload = async () => {
     try {
@@ -108,7 +86,7 @@ export const Gradebook: FC<{
     <div>
       <Grid
         container
-        direction={downloadURL ? "row": "column"}
+        direction={downloadURL ? "row" : "column"}
         alignItems="center"
         justifyContent="center"
         spacing={1}

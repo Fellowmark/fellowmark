@@ -53,14 +53,26 @@ export const assignPairings = async (assignmentData) => {
   await axios.post(`/assignment/pairs/assign`, assignmentData);
 };
 
-export const getPairings = (moduleId, pairingData, setPairings) => {
+export const getPairingAsReviewee = ({ assignmentId }, setPairings) => {
   axios
-    .get(`/staff/module/${moduleId}/pairing`, {
+    .get(`/assignment/pairs/mymarkers`, {
       params: {
-        assignmentId: pairingData.AssignmentID,
-        studentId: pairingData.StudentID,
-        markerId: pairingData.MarkerID,
-        active: true,
+        assignmentId,
+      },
+    })
+    .then((res) => {
+      setPairings(res.data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+export const getPairingAsMarker = ({ assignmentId }, setPairings) => {
+  axios
+    .get(`/assignment/pairs/myreviewees`, {
+      params: {
+        assignmentId: assignmentId,
       },
     })
     .then((res) => {

@@ -128,7 +128,7 @@ func MarkeeCheckMiddleware(db *gorm.DB) mux.MiddlewareFunc {
 func EnrollmentCheckMiddleware(db *gorm.DB, moduleIdResolver func(r *http.Request) string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			data := r.Context().Value(JWTClaimContextKey).(*models.Student)
+			data := r.Context().Value(JWTClaimContextKey).(*models.User)
 			moduleId := moduleIdResolver(r)
 			var count int64
 			db.Model(&models.Enrollment{}).Where("student_id = ? and module_id = ?", data.ID, moduleId).Count(&count)

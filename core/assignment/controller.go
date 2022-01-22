@@ -18,7 +18,6 @@ func (controller AssignmentController) CreateRouters(route *mux.Router) {
 
 	controller.GetQuestionsRoute(route.PathPrefix("/question").Subrouter())
 	controller.GetRubricsRoute(route.PathPrefix("/rubric").Subrouter())
-	controller.GetStudentPairingsRoute(route.PathPrefix("/{assignmentId}/pairs").Subrouter())
 	controller.GetSubmissionRoute(route.PathPrefix("/submission").Subrouter())
 }
 
@@ -31,6 +30,10 @@ func (controller AssignmentController) CreatePrivilegedRouters(route *mux.Router
 	controller.CreateRubricsRoute(route.PathPrefix("/rubric").Subrouter())
 	controller.CreatePairingsRoute(route.PathPrefix("/pairs").Subrouter())
 	controller.GetAssignmentPairings(route.PathPrefix("/pairs").Subrouter())
+
+	// These routes return Pairings, not Users
+	controller.GetPairingsForRevieeRoute(route.PathPrefix("/pairs/mymarkers").Subrouter())
+	controller.GetPairingsForMarkerRoute(route.PathPrefix("/pairs/myreviewees").Subrouter())
 }
 
 func (controller AssignmentController) CreateAssignmentRouter(route *mux.Router) {
@@ -70,12 +73,14 @@ func (controller AssignmentController) GetRubricsRoute(route *mux.Router) {
 	route.HandleFunc("", utils.DBGetFromDataParams(controller.DB, &models.Rubric{}, &[]models.Rubric{})).Methods(http.MethodGet)
 }
 
-func (controller AssignmentController) GetStudentPairingsRoute(route *mux.Router) {
-	route.Use(utils.AuthenticationMiddleware())
-	route.Use(utils.ValidateAssignmentIdMiddlware(controller.DB, "assignmentId", "moduleId"))
-	route.Use(utils.EnrollmentCheckMiddleware(controller.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
+func (controller AssignmentController) GetPairingsForRevieeRoute(route *mux.Router) {
+	route.Use(utils.DecodeParamsMiddleware(&models.Pairing{}))
+	route.HandleFunc("", controller.GetPairingsForRevieweeHandleFunc).Methods(http.MethodGet)
+}
 
-	route.HandleFunc("", utils.GetAssignedPairingsHandlerFunc(controller.DB, "assignmentId")).Methods(http.MethodGet)
+func (controller AssignmentController) GetPairingsForMarkerRoute(route *mux.Router) {
+	route.Use(utils.DecodeParamsMiddleware(&models.Pairing{}))
+	route.HandleFunc("", controller.GetPairingsForMarkerHandleFunc).Methods(http.MethodGet)
 }
 
 func (controller AssignmentController) GetSubmissionRoute(route *mux.Router) {

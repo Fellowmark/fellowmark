@@ -1,19 +1,9 @@
-import {
-  Button,
-  DialogContentText,
-  makeStyles,
-  TableBody,
-  Typography,
-} from "@material-ui/core";
+import { makeStyles, TableBody, Typography } from "@material-ui/core";
 import moment from "moment";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
-import { getPairings, getQuestions } from "../../../actions/moduleActions";
+import { getQuestions } from "../../../actions/moduleActions";
 import { ButtonAppBar, Page } from "../../../components/NavBar";
-import {
-  MaxWidthDialog,
-  MaxWidthDialogActions,
-} from "../../../components/PopUpDialog";
 import {
   StyledTableCell,
   StyledTableContainer,
@@ -21,7 +11,7 @@ import {
   StyledTableRow,
 } from "../../../components/StyledTable";
 import { AuthContext, ContextPayload } from "../../../context/context";
-import { Pairing, Question } from "../../../models/models";
+import { Question } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import { AuthType } from "../../../reducers/reducer";
 import { Role } from "../../Login";
@@ -188,67 +178,6 @@ export const Questions: FC = () => {
           </TableBody>
         </StyledTableContainer>
       </div>
-    </div>
-  );
-};
-
-export const ViewPairings: FC<{ moduleId: number; assignmentId: number }> = (
-  props
-) => {
-  const [view, setView] = useState(false);
-  const [pairings, setPairings] = useState<Pagination<Pairing>>({});
-
-  useEffect(() => {
-    getPairings(
-      props.moduleId,
-      { AssignmentID: props.assignmentId },
-      setPairings
-    );
-  }, []);
-
-  return (
-    <div>
-      <Button color="primary" aria-label="menu" onClick={() => setView(true)}>
-        View Pairings
-      </Button>
-      <MaxWidthDialog
-        title="Pairings"
-        setOpen={setView}
-        open={view}
-        width={"xl"}
-      >
-        <DialogContentText>
-          The following marker student pairs were generated
-        </DialogContentText>
-        <StyledTableContainer>
-          <StyledTableHead>
-            <StyledTableCell>ID</StyledTableCell>
-            <StyledTableCell>Student</StyledTableCell>
-            <StyledTableCell align="right">Marker</StyledTableCell>
-          </StyledTableHead>
-          <TableBody>
-            {pairings.rows &&
-              pairings.rows.map((pairing) => {
-                return (
-                  <StyledTableRow hover={true} key={pairing.ID}>
-                    <StyledTableCell component="th" scope="row">
-                      {pairing.ID}
-                    </StyledTableCell>
-                    <StyledTableCell component="th" scope="row">
-                      {`${pairing.Student.ID}, ${pairing.Student.Name}, ${pairing.Student.Email}`}
-                    </StyledTableCell>
-                    <StyledTableCell component="th" scope="row">
-                      {`${pairing.Marker.ID}, ${pairing.Marker.Name}, ${pairing.Marker.Email}`}
-                    </StyledTableCell>
-                  </StyledTableRow>
-                );
-              })}
-          </TableBody>
-        </StyledTableContainer>
-        <MaxWidthDialogActions
-          handleClose={() => setView(false)}
-        ></MaxWidthDialogActions>
-      </MaxWidthDialog>
     </div>
   );
 };

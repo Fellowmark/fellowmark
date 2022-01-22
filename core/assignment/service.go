@@ -159,3 +159,41 @@ func (controller AssignmentController) GetAllPairings(w http.ResponseWriter, r *
 		utils.HandleResponseWithObject(w, pagination, http.StatusOK)
 	}
 }
+
+func (controller AssignmentController) GetPairingsForRevieweeHandleFunc(w http.ResponseWriter, r *http.Request) {
+	claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
+	pagination := utils.GetPagination(r)
+	pagination.Rows = &[]models.Pairing{}
+	data := r.Context().Value(utils.DecodeParamsContextKey).(*models.Pairing)
+
+	scope := utils.Paginate(controller.DB, func(tx *gorm.DB) *gorm.DB {
+		return tx.Model(&models.Pairing{}).Where(models.Pairing{AssignmentID: data.AssignmentID, StudentID: claims.ID, Active: true})
+	}, r, &pagination)
+
+	result := controller.DB.Scopes(scope).Preload(clause.Associations).Find(pagination.Rows)
+
+	if result.Error != nil {
+		utils.HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
+	} else {
+		utils.HandleResponseWithObject(w, pagination, http.StatusOK)
+	}
+}
+
+func (controller AssignmentController) GetPairingsForMarkerHandleFunc(w http.ResponseWriter, r *http.Request) {
+	claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
+	pagination := utils.GetPagination(r)
+	pagination.Rows = &[]models.Pairing{}
+	data := r.Context().Value(utils.DecodeParamsContextKey).(*models.Pairing)
+
+	scope := utils.Paginate(controller.DB, func(tx *gorm.DB) *gorm.DB {
+		return tx.Model(&models.Pairing{}).Where(models.Pairing{AssignmentID: data.AssignmentID, MarkerID: claims.ID, Active: true})
+	}, r, &pagination)
+
+	result := controller.DB.Scopes(scope).Preload(clause.Associations).Find(pagination.Rows)
+
+	if result.Error != nil {
+		utils.HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
+	} else {
+		utils.HandleResponseWithObject(w, pagination, http.StatusOK)
+	}
+}
