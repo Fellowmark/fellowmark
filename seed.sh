@@ -66,3 +66,13 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $ADMI
 
 STUDENT_ID=$(curl -X POST -H "Content-Type: application/json" http://localhost:5000/student/auth/signup -d '{"email": "violet@fm.com", "password": "12345678", "name": "Violet Liu"}' | jq '.ID')
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" http://localhost:5000/module/enroll -d '{"moduleId": '"$MODULE_ID"', "studentId":'"$STUDENT_ID"'}'
+
+ASSIGNMENT_ID=$(curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" http://localhost:5000/assignment -d '{"name": "Assignment 1", "moduleId": '"$MODULE_ID"', "groupSize": 3}' | jq '.ID')
+
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" http://localhost:5000/assignment/pairs/initialize -d '{"id": '"$ASSIGNMENT_ID"'}'
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" http://localhost:5000/assignment/pairs/assign -d '{"id": '"$ASSIGNMENT_ID"'}'
+
+QUESTION_ID=$(curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" http://localhost:5000/assignment/question -d '{"questionNumber": 1, "assignmentId": '"$ASSIGNMENT_ID"', "questionText": "This is a question"}' | jq '.ID')
+
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" http://localhost:5000/assignment/rubric -d '{"questionId": '"$QUESTION_ID"', "criteria": "Reliability", "description": "How reliable is the system", "minMark": 1, "maxMark": 10}'
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $ADMIN_TOKEN" http://localhost:5000/assignment/rubric -d '{"questionId": '"$QUESTION_ID"', "criteria": "Quality", "description": "What is the quality of your system", "minMark": 1, "maxMark": 10}'
