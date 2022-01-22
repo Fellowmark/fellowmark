@@ -415,7 +415,7 @@ export const createGrade = (pairingId, rubricId, grade) => {
 
 export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
   axios
-    .get(`/module/${moduleId}/grade/student`, {
+    .get(`/grade/my/reviewee`, {
       method: "GET",
       params: {
         pairingId: gradeData.PairingID,
@@ -435,7 +435,7 @@ export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
 
 export const getGradesForMarker = (moduleId, gradeData, setGrades) => {
   axios
-    .get(`/module/${moduleId}/grade/marker`, {
+    .get(`grade/my/marker`, {
       method: "GET",
       params: {
         pairingId: gradeData.PairingID,
@@ -454,7 +454,7 @@ export const getGradesForMarker = (moduleId, gradeData, setGrades) => {
 };
 
 export const postGrade = async (moduleId, gradeData) => {
-  await axios.post(`/module/${moduleId}/grade`, {
+  await axios.post(`/grade`, {
     pairingId: gradeData.PairingID,
     rubricId: gradeData.RubricID,
     comment: gradeData.Comment,

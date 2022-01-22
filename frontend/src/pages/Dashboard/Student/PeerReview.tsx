@@ -48,7 +48,7 @@ export const PeerReview: FC<{
   assignmentId: number;
   questionId: number;
 }> = (props) => {
-  const [student, setStudent] = useState<number>(null);
+  const [studentId, setStudent] = useState<number>(null);
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
   const [rubrics, setRubrics] = useState<Pagination<Rubric>>({});
   const [grades, setGrades] = useState<Map<number, Grade>>(null);
@@ -65,25 +65,29 @@ export const PeerReview: FC<{
   }, []);
 
   useEffect(() => {
-    if (student) {
-      getGradesForMarker(moduleId, { PairingID: student }, setGrades);
+    if (studentId) {
+      setGrades(null);
+      getGradesForMarker(
+        moduleId,
+        {
+          PairingID: pairings.rows.find((pair) => pair.Student.ID === studentId).ID,
+        },
+        setGrades
+      );
     }
-  }, [student]);
+  }, [studentId]);
 
   const handleGrade = () => {
     grades.forEach((value) => {
-      return postGrade(moduleId, { ...value, PairingID: student });
+      return postGrade(moduleId, {
+        ...value,
+        PairingID: pairings.rows.find((pair) => pair.Student.ID === studentId).ID,
+      });
     });
   };
 
-  const handleDownload = async () => {
-    let studentId: number = 0;
-    console.log(student);
-    pairings.rows.forEach((value) => {
-      if (value.ID === student) {
-        studentId = value.Student.ID;
-      }
-    });
+  const handleDownload = async (studentId: number) => {
+    console.log(studentId);
     try {
       setDownloadURL(await downloadSubmission(moduleId, questionId, studentId));
     } catch (e) {
@@ -128,28 +132,17 @@ export const PeerReview: FC<{
                 name="status"
                 onChange={(e) => {
                   setStudent(e.target.value as number);
-                  setGrades(null);
+                  handleDownload(e.target.value as number);
                 }}
               >
                 {pairings?.rows?.map((pair, key) => {
                   return (
-                    <MenuItem key={key} value={pair.ID}>{`Student ${
+                    <MenuItem key={key} value={pair.Student.ID}>{`Student ${
                       key + 1
                     }`}</MenuItem>
                   );
                 })}
               </Select>
-            </Grid>
-            <Grid item>
-              <Button
-                color="primary"
-                variant="contained"
-                aria-label="menu"
-                disabled={!student}
-                onClick={() => handleDownload()}
-              >
-                Open
-              </Button>
             </Grid>
             <StyledTableContainer>
               <StyledTableHead>
@@ -236,7 +229,7 @@ export const PeerReview: FC<{
               color="primary"
               variant="contained"
               aria-label="menu"
-              disabled={!student}
+              disabled={!studentId}
               onClick={() => handleGrade()}
               style={{
                 marginTop: "10px",

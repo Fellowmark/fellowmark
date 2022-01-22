@@ -5,15 +5,13 @@ import {
   Select,
   TableBody,
 } from "@material-ui/core";
-import { FC, useContext, useEffect, useRef, useState } from "react";
+import { FC, useContext, useEffect, useState } from "react";
 import { IHighlight } from "react-pdf-highlighter";
-import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   downloadSubmission,
   getGradesForStudent,
   getPairingAsReviewee,
   getRubrics,
-  postGrade,
 } from "../../../actions/moduleActions";
 import { Annotator } from "../../../components/PdfViewer";
 import {

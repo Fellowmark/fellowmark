@@ -150,9 +150,9 @@ func (controller AssignmentController) GetAllPairings(w http.ResponseWriter, r *
 	pagination.Rows = &[]models.Pairing{}
 	data := r.Context().Value(utils.DecodeParamsContextKey).(*models.Pairing)
 	scope := utils.Paginate(controller.DB, func(tx *gorm.DB) *gorm.DB {
-		return tx.Model(&models.Pairing{}).Where(models.Pairing{AssignmentID: data.AssignmentID, Active: true})
+		return tx.Model(&models.Pairing{})
 	}, r, &pagination)
-	result := controller.DB.Scopes(scope).Preload(clause.Associations).Find(pagination.Rows)
+	result := controller.DB.Scopes(scope).Preload(clause.Associations).Where(models.Pairing{AssignmentID: data.AssignmentID, Active: true}).Find(pagination.Rows)
 	if result.Error != nil {
 		utils.HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
 	} else {
@@ -167,10 +167,10 @@ func (controller AssignmentController) GetPairingsForRevieweeHandleFunc(w http.R
 	data := r.Context().Value(utils.DecodeParamsContextKey).(*models.Pairing)
 
 	scope := utils.Paginate(controller.DB, func(tx *gorm.DB) *gorm.DB {
-		return tx.Model(&models.Pairing{}).Where(models.Pairing{AssignmentID: data.AssignmentID, StudentID: claims.ID, Active: true})
+		return tx.Model(&models.Pairing{})
 	}, r, &pagination)
 
-	result := controller.DB.Scopes(scope).Preload(clause.Associations).Find(pagination.Rows)
+	result := controller.DB.Scopes(scope).Preload(clause.Associations).Where(models.Pairing{AssignmentID: data.AssignmentID, StudentID: claims.ID, Active: true}).Find(pagination.Rows)
 
 	if result.Error != nil {
 		utils.HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
@@ -186,10 +186,10 @@ func (controller AssignmentController) GetPairingsForMarkerHandleFunc(w http.Res
 	data := r.Context().Value(utils.DecodeParamsContextKey).(*models.Pairing)
 
 	scope := utils.Paginate(controller.DB, func(tx *gorm.DB) *gorm.DB {
-		return tx.Model(&models.Pairing{}).Where(models.Pairing{AssignmentID: data.AssignmentID, MarkerID: claims.ID, Active: true})
+		return tx.Model(&models.Pairing{})
 	}, r, &pagination)
 
-	result := controller.DB.Scopes(scope).Preload(clause.Associations).Find(pagination.Rows)
+	result := controller.DB.Scopes(scope).Preload(clause.Associations).Where(models.Pairing{AssignmentID: data.AssignmentID, MarkerID: claims.ID, Active: true}).Find(pagination.Rows)
 
 	if result.Error != nil {
 		utils.HandleResponse(w, result.Error.Error(), http.StatusBadRequest)

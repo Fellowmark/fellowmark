@@ -194,7 +194,7 @@ func DBGetFromDataBody(db *gorm.DB, model interface{}, arrayRefType interface{})
 		pagination.Rows = reflect.New(reflect.TypeOf(arrayRefType).Elem()).Interface()
 		data := r.Context().Value(DecodeBodyContextKey)
 		scope := Paginate(db, func(tx *gorm.DB) *gorm.DB {
-			return tx.Model(model).Where(data)
+			return tx.Model(model)
 		}, r, &pagination)
 		result := db.Scopes(scope).Preload(clause.Associations).Where(data).Find(pagination.Rows)
 		if result.Error != nil {

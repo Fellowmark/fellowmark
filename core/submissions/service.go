@@ -25,7 +25,7 @@ func (controller FileserverController) UploadPermissionCheck() mux.MiddlewareFun
 			submission := r.Context().Value(utils.DecodeParamsContextKey).(*models.Submission)
 
 			var question models.Question
-			controller.DB.Model(&models.Assignment{}).Where("id = ?", submission.QuestionID).Find(&question)
+			controller.DB.Model(&models.Question{}).Where("id = ?", submission.QuestionID).Find(&question)
 
 			var assignment models.Assignment
 			controller.DB.Model(&models.Assignment{}).Where("id = ?", question.AssignmentID).Find(&assignment)
@@ -46,9 +46,9 @@ func (controller FileserverController) DownloadPermissionCheck() mux.MiddlewareF
 			submission := r.Context().Value(utils.DecodeParamsContextKey).(*models.Submission)
 
 			var question models.Question
-			controller.DB.Model(&models.Assignment{}).Where("id = ?", submission.QuestionID).Find(&question)
+			controller.DB.Model(&models.Question{}).Where("id = ?", submission.QuestionID).Find(&question)
 
-			if pass := utils.IsPair(*claims, question.AssignmentID, submission.StudentID, controller.DB); pass {
+			if pass := claims.ID == submission.StudentID || utils.IsPair(*claims, question.AssignmentID, submission.StudentID, controller.DB); pass {
 				next.ServeHTTP(w, r)
 			} else {
 				utils.HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
@@ -60,7 +60,7 @@ func (controller FileserverController) DownloadPermissionCheck() mux.MiddlewareF
 func (fr FileserverController) UpdateFilePathMiddleware() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Submission)
+			data := r.Context().Value(utils.DecodeParamsContextKey).(*models.Submission)
 			fr.DB.Where(data).First(&data)
 			ctxWithPath := context.WithValue(r.Context(), FilePathContextKey, data.ContentFile)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))
