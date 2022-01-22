@@ -29,6 +29,8 @@ func (controller AssignmentController) CreatePrivilegedRouters(route *mux.Router
 	controller.CreateAssignmentRouter(route.NewRoute().Subrouter())
 	controller.CreateQuestionsRouter(route.PathPrefix("/question").Subrouter())
 	controller.CreateRubricsRoute(route.PathPrefix("/rubric").Subrouter())
+	controller.CreatePairingsRoute(route.PathPrefix("/pairs").Subrouter())
+	controller.GetAssignmentPairings(route.PathPrefix("/pairs").Subrouter())
 }
 
 func (controller AssignmentController) CreateAssignmentRouter(route *mux.Router) {
@@ -81,11 +83,15 @@ func (controller AssignmentController) GetSubmissionRoute(route *mux.Router) {
 	route.HandleFunc("", utils.DBGetFromDataParams(controller.DB, &models.Submission{}, &[]models.Submission{})).Methods(http.MethodGet)
 }
 
-func (controller AssignmentController) GetAllAssignmentPairings(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Pairing{}))
-	route.Use(utils.AuthenticationMiddleware())
-	route.Use(utils.ValidateAssignmentIdMiddlware(controller.DB, "assignmentId", "moduleId"))
-	// route.Use(utils.SupervisionCheckMiddleware(controller.DB, func(r *http.Request) string { return mux.Vars(r)["moduleId"] }))
+func (controller AssignmentController) CreatePairingsRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Assignment{}))
+	route.Use(controller.CreatePairingsPermissionCheck())
+	route.HandleFunc("/initialize", controller.InitializePairings).Methods(http.MethodPost)
+	route.HandleFunc("/assign", controller.AssignPairings).Methods(http.MethodPost)
+}
 
-	route.HandleFunc("", utils.DBGetFromDataParams(controller.DB, &models.Pairing{}, &[]models.Pairing{})).Methods(http.MethodGet)
+func (controller AssignmentController) GetAssignmentPairings(route *mux.Router) {
+	route.Use(utils.DecodeParamsMiddleware(&models.Pairing{}))
+	route.Use(controller.GetPairingsPermissionsCheck())
+	route.HandleFunc("", controller.GetAllPairings).Methods(http.MethodGet)
 }

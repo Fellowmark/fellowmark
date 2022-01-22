@@ -23,10 +23,10 @@ func InitializePairings(db *gorm.DB, assignment models.Assignment) *gorm.DB {
 			WHERE A.id != B.id
 			AND A.id in (
 				SELECT student_id FROM enrollments
-				WHERE module_id = ? AND deleted_at IS NULL
+				WHERE module_id = ?
 			) AND B.id in (
 				SELECT student_id FROM enrollments
-				WHERE  module_id = ? AND deleted_at IS NULL
+				WHERE  module_id = ?
 			)
 		) RETURNING *`,
 		assignment.ID,

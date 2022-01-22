@@ -1,24 +1,14 @@
 import {
   Button,
   DialogContentText,
-  FormControl,
-  Grid,
-  IconButton,
   makeStyles,
   TableBody,
-  TextField,
   Typography,
 } from "@material-ui/core";
-import AddIcon from "@material-ui/icons/Add";
+import moment from "moment";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
-import {
-  assignPairings,
-  createPairings,
-  createQuestion,
-  getPairings,
-  getQuestions,
-} from "../../../actions/moduleActions";
+import { getPairings, getQuestions } from "../../../actions/moduleActions";
 import { ButtonAppBar, Page } from "../../../components/NavBar";
 import {
   MaxWidthDialog,
@@ -33,10 +23,9 @@ import {
 import { AuthContext, ContextPayload } from "../../../context/context";
 import { Pairing, Question } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
-import moment from "moment";
-import { getPageList } from "./Dashboard";
-import { Role } from "../../Login";
 import { AuthType } from "../../../reducers/reducer";
+import { Role } from "../../Login";
+import { getPageList } from "./Dashboard";
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
@@ -128,28 +117,29 @@ export const Questions: FC = () => {
   return (
     <div>
       <ButtonAppBar pageList={pageList} currentPage={state?.assignment?.Name} />
-      <div><StyledTableContainer>
-        <StyledTableHead>
-          <StyledTableCell>ID</StyledTableCell>
-          <StyledTableCell>Name</StyledTableCell>
-          <StyledTableCell align="right">Deadline</StyledTableCell>
-        </StyledTableHead>
-        <TableBody>
-          <StyledTableRow hover={true} key={state?.assignment?.ID}>
-            <StyledTableCell component="th" scope="row">
-              {state?.assignment?.ID}
-            </StyledTableCell>
-            <StyledTableCell component="th" scope="row">
-              {state?.assignment?.Name}
-            </StyledTableCell>
-            <StyledTableCell align="right">
-              {state?.assignment?.Deadline
-                ? moment.unix(state?.assignment?.Deadline).toLocaleString()
-                : "No Deadline"}
-            </StyledTableCell>
-          </StyledTableRow>
-        </TableBody>
-      </StyledTableContainer>
+      <div>
+        <StyledTableContainer>
+          <StyledTableHead>
+            <StyledTableCell>ID</StyledTableCell>
+            <StyledTableCell>Name</StyledTableCell>
+            <StyledTableCell align="right">Deadline</StyledTableCell>
+          </StyledTableHead>
+          <TableBody>
+            <StyledTableRow hover={true} key={state?.assignment?.ID}>
+              <StyledTableCell component="th" scope="row">
+                {state?.assignment?.ID}
+              </StyledTableCell>
+              <StyledTableCell component="th" scope="row">
+                {state?.assignment?.Name}
+              </StyledTableCell>
+              <StyledTableCell align="right">
+                {state?.assignment?.Deadline
+                  ? moment.unix(state?.assignment?.Deadline).toLocaleString()
+                  : "No Deadline"}
+              </StyledTableCell>
+            </StyledTableRow>
+          </TableBody>
+        </StyledTableContainer>
 
         <Typography gutterBottom style={{ marginTop: "10px" }} color="primary">
           Assignment Questions
@@ -170,8 +160,8 @@ export const Questions: FC = () => {
                       dispatch({
                         type: AuthType.QUESTION,
                         payload: {
-                          question: question
-                        }
+                          question: question,
+                        },
                       });
                       history.push(`${match.url}/question/${question.ID}`);
                     }}
@@ -196,7 +186,8 @@ export const Questions: FC = () => {
                 );
               })}
           </TableBody>
-        </StyledTableContainer></div>
+        </StyledTableContainer>
+      </div>
     </div>
   );
 };

@@ -10,13 +10,13 @@ import {
   Typography,
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
+import moment from "moment";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
-  assignPairings,
   createPairings,
   createQuestion,
-  getPairings,
+  getAllPairings,
   getQuestions,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar, Page } from "../../../components/NavBar";
@@ -33,12 +33,10 @@ import {
 import { AuthContext, ContextPayload } from "../../../context/context";
 import { Pairing, Question } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
-import moment from "moment";
-import { getPageList } from "./Dashboard";
-import { Role } from "../../Login";
-import { Rubrics } from "./Rubrics";
-import { PeerReview } from "../Student/PeerReview";
 import { AuthType } from "../../../reducers/reducer";
+import { Role } from "../../Login";
+import { getPageList } from "./Dashboard";
+import { Rubrics } from "./Rubrics";
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
@@ -263,8 +261,8 @@ export const Questions: FC = () => {
                     dispatch({
                       type: AuthType.QUESTION,
                       payload: {
-                        question: question
-                      }
+                        question: question,
+                      },
                     });
                     history.push(`${match.url}/question/${question.ID}`);
                     selectQuestion(question);
@@ -304,25 +302,25 @@ export const Questions: FC = () => {
   );
 };
 
-export const ViewPairings: FC<{ moduleId: number; assignmentId: number, setPairing?: (pairing: Pairing) => void }> = (
-  props
-) => {
+export const ViewPairings: FC<{
+  moduleId: number;
+  assignmentId: number;
+  setPairing?: (pairing: Pairing) => void;
+}> = (props) => {
   const [view, setView] = useState(false);
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
 
   useEffect(() => {
-    getPairings(
-      props.moduleId,
-      { AssignmentID: props.assignmentId },
+    getAllPairings(
+      { assignmentId: props.assignmentId },
       setPairings
     );
   }, []);
 
   const generateNewPairings = async () => {
-    await assignPairings(props.moduleId, { id: props.assignmentId });
-    getPairings(
-      props.moduleId,
-      { AssignmentID: props.assignmentId },
+    await createPairings({ id: props.assignmentId });
+    getAllPairings(
+      { assignmentId: props.assignmentId },
       setPairings
     );
   };
@@ -357,9 +355,10 @@ export const ViewPairings: FC<{ moduleId: number; assignmentId: number, setPairi
   );
 };
 
-export const PairingsList: FC<{ pairings: Pagination<Pairing>, setPairing?: (pairing: Pairing) => void }> = (
-  props
-) => {
+export const PairingsList: FC<{
+  pairings: Pagination<Pairing>;
+  setPairing?: (pairing: Pairing) => void;
+}> = (props) => {
   return (
     <>
       <StyledTableContainer>
@@ -372,7 +371,13 @@ export const PairingsList: FC<{ pairings: Pagination<Pairing>, setPairing?: (pai
           {props.pairings?.rows &&
             props.pairings?.rows.map((pairing) => {
               return (
-                <StyledTableRow hover={true} key={pairing?.ID} onClick={() => { props.setPairing && props.setPairing(pairing) }}>
+                <StyledTableRow
+                  hover={true}
+                  key={pairing?.ID}
+                  onClick={() => {
+                    props.setPairing && props.setPairing(pairing);
+                  }}
+                >
                   <StyledTableCell component="th" scope="row">
                     {pairing?.ID}
                   </StyledTableCell>
@@ -389,4 +394,4 @@ export const PairingsList: FC<{ pairings: Pagination<Pairing>, setPairing?: (pai
       </StyledTableContainer>
     </>
   );
-}
+};

@@ -49,8 +49,8 @@ export const createSupervision = (moduleId, staffId) => {
  * @param {int} moduleId ID of module the assignment belongs to
  * @param {Object} assignmentData must be (Name, ModuleID) or (ID)
  */
-export const assignPairings = async (moduleId, assignmentData) => {
-  await axios.post(`/staff/module/${moduleId}/pairing/assign`, assignmentData);
+export const assignPairings = async (assignmentData) => {
+  await axios.post(`/assignment/pairs/assign`, assignmentData);
 };
 
 export const getPairings = (moduleId, pairingData, setPairings) => {
@@ -71,24 +71,36 @@ export const getPairings = (moduleId, pairingData, setPairings) => {
     });
 };
 
+export const getAllPairings = ({ assignmentId }, setPairings) => {
+  axios
+    .get(`/assignment/pairs`, {
+      params: {
+        assignmentId: assignmentId,
+      },
+    })
+    .then((res) => {
+      setPairings(res.data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
 /**
  * Deletes old pairings of assignment (if any) and reinserts all possible pairings, marking them as inactive
  *
  * @param {int} moduleId ID of module the assignment belongs to
  * @param {Object} assignmentData must be (Name + ModuleID) or (ID)
  */
-export const initializePairings = async (moduleId, assignmentData) => {
-  await axios.post(
-    `staff/module/${moduleId}/pairing/initialize`,
-    assignmentData
-  );
+export const initializePairings = async (assignmentData) => {
+  await axios.post(`/assignment/pairs/initialize`, assignmentData);
 };
 
-export const createPairings = async (moduleId, assignmentData) => {
-  await initializePairings(moduleId, {
+export const createPairings = async (assignmentData) => {
+  await initializePairings({
     id: assignmentData.AssignmentID,
   });
-  await assignPairings(moduleId, {
+  await assignPairings({
     id: assignmentData.AssignmentID,
   });
 };

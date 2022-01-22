@@ -31,15 +31,7 @@ func (controller StaffController) CreateAuthRouter(route *mux.Router) {
 
 func (controller StaffController) CreatePrivilegedRouter(route *mux.Router) {
 	route.Use(utils.AuthenticationMiddleware())
-
-	controller.CreatePairingsRoute(route.PathPrefix("/pairing").Subrouter())
 	controller.GetPairingsRoute(route.PathPrefix("/pairing").Subrouter())
-}
-
-func (controller StaffController) CreatePairingsRoute(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.Assignment{}))
-	route.HandleFunc("/initialize", controller.InitializePairings).Methods(http.MethodPost)
-	route.HandleFunc("/assign", controller.AssignPairings).Methods(http.MethodPost)
 }
 
 func (controller StaffController) GetPairingsRoute(route *mux.Router) {
