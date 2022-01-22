@@ -1,39 +1,25 @@
-import {
-  Button,
-  Card,
-  CardContent,
-  DialogContentText,
-  Grid,
-  makeStyles,
-  Typography,
-} from "@material-ui/core";
-import { FC, useContext, useEffect, useState } from "react";
-import { useHistory, useRouteMatch } from "react-router-dom";
-import {
-  getAllPairings,
-  getSubmissionMetadata,
-} from "../../../actions/moduleActions";
-import { ButtonAppBar } from "../../../components/NavBar";
-import {
-  MaxWidthDialog,
-  MaxWidthDialogActions,
-} from "../../../components/PopUpDialog";
-import { AuthContext } from "../../../context/context";
-import { Pairing } from "../../../models/models";
-import { Pagination } from "../../../models/pagination";
-import { Role } from "../../Login";
-import { getPageList } from "./Dashboard";
-import { PairingsList } from "./Questions";
-import { Review } from "./Review";
-import { Rubrics } from "./Rubrics";
+import { Button, Card, CardContent, DialogContentText, Grid, makeStyles, Typography } from '@material-ui/core';
+import { FC, useContext, useEffect, useState } from 'react';
+import { useHistory, useRouteMatch } from 'react-router-dom';
+import { getAllPairings, getSubmissionMetadata } from '../../../actions/moduleActions';
+import { ButtonAppBar } from '../../../components/NavBar';
+import { MaxWidthDialog, MaxWidthDialogActions } from '../../../components/PopUpDialog';
+import { AuthContext } from '../../../context/context';
+import { Pairing } from '../../../models/models';
+import { Pagination } from '../../../models/pagination';
+import { Role } from '../../../models/enums';
+import { getPageList } from './Dashboard';
+import { PairingsList } from './Questions';
+import { Review } from './Review';
+import { Rubrics } from './Rubrics';
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
-    display: "flex",
-    flexDirection: "column",
-    margin: "auto",
-    width: "fit-content",
-    maxHeight: "100%",
+    display: 'flex',
+    flexDirection: 'column',
+    margin: 'auto',
+    width: 'fit-content',
+    maxHeight: '100%',
   },
   formControl: {
     marginTop: theme.spacing(2),
@@ -52,17 +38,13 @@ export const useValidCheck = (history, authContext, match, setIsValid?) => {
   };
   useEffect(() => {
     if (authContext?.role !== Role.STAFF) {
-      history.push("/");
+      history.push('/');
     }
   }, []);
 
   useEffect(() => {
-    if (
-      authContext?.module?.ID != moduleId ||
-      authContext?.assignment?.ID != assignmentId ||
-      authContext?.question?.ID != questionId
-    ) {
-      history.push("/staff");
+    if (authContext?.module?.ID != moduleId || authContext?.assignment?.ID != assignmentId || authContext?.question?.ID != questionId) {
+      history.push('/staff');
     } else {
       setIsValid(true);
     }
@@ -82,12 +64,7 @@ export const QuestionBoard: FC = () => {
   const [pairings, setPairings] = useState<Pagination<Pairing>>(null);
   const [selectedPair, selectPair] = useState<Pairing>(null);
 
-  const { moduleId, assignmentId, questionId } = useValidCheck(
-    history,
-    state,
-    match,
-    setIsValid
-  );
+  const { moduleId, assignmentId, questionId } = useValidCheck(history, state, match, setIsValid);
   const pageList = getPageList(match);
 
   useEffect(() => {
@@ -99,51 +76,34 @@ export const QuestionBoard: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar
-        pageList={pageList}
-        currentPage={`${state?.assignment?.Name}`}
-      />
-      <MaxWidthDialog
-        title="Rubric"
-        setOpen={setViewRubric}
-        open={viewRubric}
-        width={"xl"}
-      >
-        <DialogContentText>
-          Rubric provides marking criteria to the markers
-        </DialogContentText>
+      <ButtonAppBar pageList={pageList} currentPage={`${state?.assignment?.Name}`} />
+      <MaxWidthDialog title='Rubric' setOpen={setViewRubric} open={viewRubric} width={'xl'}>
+        <DialogContentText>Rubric provides marking criteria to the markers</DialogContentText>
         <Rubrics question={state?.question} />
         <MaxWidthDialogActions handleClose={() => setViewRubric(false)} />
       </MaxWidthDialog>
 
       <MaxWidthDialog
-        title="Review"
+        title='Review'
         open={Boolean(selectedPair)}
         setOpen={(open) => {
           !open && selectPair(null);
         }}
-        width={"xl"}
+        width={'xl'}
       >
-        <DialogContentText>
-          Review submission and feedback of the following pair
-        </DialogContentText>
+        <DialogContentText>Review submission and feedback of the following pair</DialogContentText>
 
-        <Review
-          moduleId={moduleId}
-          assignmentId={assignmentId}
-          questionId={questionId}
-          pair={selectedPair}
-        />
+        <Review moduleId={moduleId} assignmentId={assignmentId} questionId={questionId} pair={selectedPair} />
 
         <MaxWidthDialogActions handleClose={() => selectPair(null)} />
       </MaxWidthDialog>
       <Card>
         <CardContent>
-          <Typography gutterBottom variant="h3">
+          <Typography gutterBottom variant='h3'>
             {`Question ${state?.question?.QuestionNumber}`}
           </Typography>
 
-          <Typography gutterBottom variant="body1">
+          <Typography gutterBottom variant='body1'>
             {state?.question?.QuestionText}
           </Typography>
         </CardContent>
@@ -151,11 +111,11 @@ export const QuestionBoard: FC = () => {
 
       <PairingsList pairings={pairings} setPairing={selectPair} />
 
-      <Grid container direction="row" justifyContent="center" spacing={3}>
+      <Grid container direction='row' justifyContent='center' spacing={3}>
         <Grid item>
           <Button
-            style={{ marginTop: "10px" }}
-            variant="contained"
+            style={{ marginTop: '10px' }}
+            variant='contained'
             onClick={() => {
               setViewRubric(true);
             }}

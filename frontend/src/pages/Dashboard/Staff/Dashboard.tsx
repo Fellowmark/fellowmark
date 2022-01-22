@@ -1,19 +1,17 @@
-import {
-  makeStyles,
-} from "@material-ui/core";
-import { FC, useContext, useEffect, useState } from "react";
-import { useHistory, useRouteMatch } from "react-router-dom";
-import { Page } from "../../../components/NavBar";
-import { AuthContext } from "../../../context/context";
-import { Role } from "../../Login";
+import { makeStyles } from '@material-ui/core';
+import { FC, useContext, useEffect, useState } from 'react';
+import { useHistory, useRouteMatch } from 'react-router-dom';
+import { Page } from '../../../components/NavBar';
+import { AuthContext } from '../../../context/context';
+import { Role } from '../../../models/enums';
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
-    display: "flex",
-    flexDirection: "column",
-    margin: "auto",
-    width: "fit-content",
-    maxHeight: "100%",
+    display: 'flex',
+    flexDirection: 'column',
+    margin: 'auto',
+    width: 'fit-content',
+    maxHeight: '100%',
   },
   formControl: {
     marginTop: theme.spacing(2),
@@ -29,29 +27,27 @@ export const getPageList = (match): Page[] => {
 
   return [
     {
-      title: "Class",
+      title: 'Class',
       path: `/staff/module/${moduleId}/class`,
     },
     {
-      title: "Assignments",
+      title: 'Assignments',
       path: `/staff/module/${moduleId}/assignments`,
     },
   ];
 };
 
 export const useValidCheck = (history, authContext, match, setIsValid?) => {
-  const moduleId: number = Number(
-    (match.params as { moduleId: number }).moduleId
-  );
+  const moduleId: number = Number((match.params as { moduleId: number }).moduleId);
   useEffect(() => {
     if (authContext?.role !== Role.STAFF) {
-      history.push("/");
+      history.push('/');
     }
   }, []);
 
   useEffect(() => {
     if (authContext?.module?.ID !== moduleId) {
-      history.push("/staff");
+      history.push('/staff');
     } else {
       setIsValid(true);
     }

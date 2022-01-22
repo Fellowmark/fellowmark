@@ -1,50 +1,27 @@
-import {
-  Button,
-  DialogContentText,
-  FormControl,
-  Grid,
-  IconButton,
-  makeStyles,
-  TableBody,
-  TextField,
-  Typography,
-} from "@material-ui/core";
-import AddIcon from "@material-ui/icons/Add";
-import moment from "moment";
-import { FC, useContext, useEffect, useState } from "react";
-import { useHistory, useRouteMatch } from "react-router-dom";
-import {
-  createPairings,
-  createQuestion,
-  getAllPairings,
-  getQuestions,
-} from "../../../actions/moduleActions";
-import { ButtonAppBar, Page } from "../../../components/NavBar";
-import {
-  MaxWidthDialog,
-  MaxWidthDialogActions,
-} from "../../../components/PopUpDialog";
-import {
-  StyledTableCell,
-  StyledTableContainer,
-  StyledTableHead,
-  StyledTableRow,
-} from "../../../components/StyledTable";
-import { AuthContext, ContextPayload } from "../../../context/context";
-import { Pairing, Question } from "../../../models/models";
-import { Pagination } from "../../../models/pagination";
-import { AuthType } from "../../../reducers/reducer";
-import { Role } from "../../Login";
-import { getPageList } from "./Dashboard";
-import { Rubrics } from "./Rubrics";
+import { Button, DialogContentText, FormControl, Grid, IconButton, makeStyles, TableBody, TextField, Typography } from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
+import moment from 'moment';
+import { FC, useContext, useEffect, useState } from 'react';
+import { useHistory, useRouteMatch } from 'react-router-dom';
+import { createPairings, createQuestion, getAllPairings, getQuestions } from '../../../actions/moduleActions';
+import { ButtonAppBar, Page } from '../../../components/NavBar';
+import { MaxWidthDialog, MaxWidthDialogActions } from '../../../components/PopUpDialog';
+import { StyledTableCell, StyledTableContainer, StyledTableHead, StyledTableRow } from '../../../components/StyledTable';
+import { AuthContext, ContextPayload } from '../../../context/context';
+import { Pairing, Question } from '../../../models/models';
+import { Pagination } from '../../../models/pagination';
+import { AuthType } from '../../../reducers/reducer';
+import { Role } from '../../../models/enums';
+import { getPageList } from './Dashboard';
+import { Rubrics } from './Rubrics';
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
-    display: "flex",
-    flexDirection: "column",
-    margin: "auto",
-    width: "fit-content",
-    maxHeight: "100%",
+    display: 'flex',
+    flexDirection: 'column',
+    margin: 'auto',
+    width: 'fit-content',
+    maxHeight: '100%',
   },
   formControl: {
     marginTop: theme.spacing(2),
@@ -60,11 +37,11 @@ export const getAssignmentPageList = (match): Page[] => {
 
   return [
     {
-      title: "Class",
+      title: 'Class',
       path: `/staff/module/${moduleId}/class`,
     },
     {
-      title: "Assignments",
+      title: 'Assignments',
       path: `/staff/module/${moduleId}/assignments`,
     },
   ];
@@ -76,25 +53,18 @@ export const useAssignmentValidCheck = (
   match,
   setIsValid?: (boolean) => void
 ): { moduleId: number; assignmentId: number } => {
-  const moduleId: number = Number(
-    (match.params as { moduleId: number }).moduleId
-  );
-  const assignmentId: number = Number(
-    (match.params as { assignmentId: number }).assignmentId
-  );
+  const moduleId: number = Number((match.params as { moduleId: number }).moduleId);
+  const assignmentId: number = Number((match.params as { assignmentId: number }).assignmentId);
 
   useEffect(() => {
     if (authContext?.role !== Role.STAFF) {
-      history.push("/");
+      history.push('/');
     }
   }, []);
 
   useEffect(() => {
-    if (
-      authContext?.module?.ID !== moduleId ||
-      authContext?.assignment?.ID !== assignmentId
-    ) {
-      history.push("/staff");
+    if (authContext?.module?.ID !== moduleId || authContext?.assignment?.ID !== assignmentId) {
+      history.push('/staff');
     } else {
       setIsValid(true);
     }
@@ -114,12 +84,7 @@ export const Questions: FC = () => {
   const [selectedQuestion, selectQuestion] = useState<Question>(null);
   const history = useHistory();
 
-  const { assignmentId, moduleId } = useAssignmentValidCheck(
-    history,
-    state,
-    match,
-    setIsValid
-  );
+  const { assignmentId, moduleId } = useAssignmentValidCheck(history, state, match, setIsValid);
   const [newQuestion, setNewQuestion] = useState<Question>({
     AssignmentID: assignmentId,
   });
@@ -133,11 +98,7 @@ export const Questions: FC = () => {
   }, [isValid]);
 
   const addQuestion = async () => {
-    await createQuestion(
-      newQuestion.QuestionNumber,
-      newQuestion.QuestionText,
-      assignmentId
-    );
+    await createQuestion(newQuestion.QuestionNumber, newQuestion.QuestionText, assignmentId);
     setCreateNew(false);
     setNewQuestion({ AssignmentID: assignmentId });
     getQuestions({ moduleId: moduleId }, setQuestions);
@@ -146,40 +107,31 @@ export const Questions: FC = () => {
   return (
     <div>
       <ButtonAppBar pageList={pageList} currentPage={state?.assignment?.Name} />
-      {isValid && (
-        <ViewPairings moduleId={moduleId} assignmentId={assignmentId} />
-      )}
+      {isValid && <ViewPairings moduleId={moduleId} assignmentId={assignmentId} />}
       <MaxWidthDialog
-        title="Rubric"
+        title='Rubric'
         setOpen={(open) => {
           !open && selectQuestion(null);
         }}
         open={Boolean(selectedQuestion)}
-        width={"xl"}
+        width={'xl'}
       >
-        <DialogContentText>
-          Rubric provides marking criteria to the markers
-        </DialogContentText>
+        <DialogContentText>Rubric provides marking criteria to the markers</DialogContentText>
         <Rubrics question={{ ...selectedQuestion }} />
         <MaxWidthDialogActions handleClose={() => selectQuestion(null)} />
       </MaxWidthDialog>
 
-      <MaxWidthDialog
-        title="Create Question"
-        setOpen={setCreateNew}
-        open={createNew}
-        width={"xl"}
-      >
+      <MaxWidthDialog title='Create Question' setOpen={setCreateNew} open={createNew} width={'xl'}>
         <DialogContentText>Please fill in the details</DialogContentText>
         <form className={classes.form} noValidate>
           <FormControl className={classes.formControl}>
-            <Grid container direction="column" spacing={2}>
+            <Grid container direction='column' spacing={2}>
               <Grid item>
                 <TextField
-                  type="QuestionNumber"
-                  placeholder="Question Number"
-                  name="QuestionNumber"
-                  variant="outlined"
+                  type='QuestionNumber'
+                  placeholder='Question Number'
+                  name='QuestionNumber'
+                  variant='outlined'
                   onChange={(e) =>
                     setNewQuestion({
                       ...newQuestion,
@@ -192,15 +144,15 @@ export const Questions: FC = () => {
               </Grid>
               <Grid item>
                 <TextField
-                  type="QuestionText"
-                  placeholder="Question Text"
+                  type='QuestionText'
+                  placeholder='Question Text'
                   style={{
-                    width: "70vw",
+                    width: '70vw',
                   }}
                   fullWidth
                   multiline={true}
-                  name="QuestionText"
-                  variant="outlined"
+                  name='QuestionText'
+                  variant='outlined'
                   onChange={(e) =>
                     setNewQuestion({
                       ...newQuestion,
@@ -214,7 +166,7 @@ export const Questions: FC = () => {
           </FormControl>
         </form>
         <MaxWidthDialogActions handleClose={() => setCreateNew(false)}>
-          <Button onClick={addQuestion} color="primary">
+          <Button onClick={addQuestion} color='primary'>
             Add
           </Button>
         </MaxWidthDialogActions>
@@ -223,26 +175,24 @@ export const Questions: FC = () => {
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
           <StyledTableCell>Name</StyledTableCell>
-          <StyledTableCell align="right">Deadline</StyledTableCell>
+          <StyledTableCell align='right'>Deadline</StyledTableCell>
         </StyledTableHead>
         <TableBody>
           <StyledTableRow hover={true} key={state?.assignment?.ID}>
-            <StyledTableCell component="th" scope="row">
+            <StyledTableCell component='th' scope='row'>
               {state?.assignment?.ID}
             </StyledTableCell>
-            <StyledTableCell component="th" scope="row">
+            <StyledTableCell component='th' scope='row'>
               {state?.assignment?.Name}
             </StyledTableCell>
-            <StyledTableCell align="right">
-              {state?.assignment?.Deadline
-                ? moment.unix(state?.assignment?.Deadline).toLocaleString()
-                : "No Deadline"}
+            <StyledTableCell align='right'>
+              {state?.assignment?.Deadline ? moment.unix(state?.assignment?.Deadline).toLocaleString() : 'No Deadline'}
             </StyledTableCell>
           </StyledTableRow>
         </TableBody>
       </StyledTableContainer>
 
-      <Typography gutterBottom style={{ marginTop: "10px" }} color="primary">
+      <Typography gutterBottom style={{ marginTop: '10px' }} color='primary'>
         Assignment Questions
       </Typography>
 
@@ -250,7 +200,7 @@ export const Questions: FC = () => {
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
           <StyledTableCell>Question Number</StyledTableCell>
-          <StyledTableCell align="right">Question Text</StyledTableCell>
+          <StyledTableCell align='right'>Question Text</StyledTableCell>
         </StyledTableHead>
         <TableBody>
           {questions.rows &&
@@ -270,18 +220,13 @@ export const Questions: FC = () => {
                   hover={true}
                   key={question.ID}
                 >
-                  <StyledTableCell component="th" scope="row">
+                  <StyledTableCell component='th' scope='row'>
                     {question.ID}
                   </StyledTableCell>
-                  <StyledTableCell component="th" scope="row">
+                  <StyledTableCell component='th' scope='row'>
                     {question.QuestionNumber}
                   </StyledTableCell>
-                  <StyledTableCell
-                    aria-multiline={true}
-                    align="right"
-                    component="th"
-                    scope="row"
-                  >
+                  <StyledTableCell aria-multiline={true} align='right' component='th' scope='row'>
                     {question.QuestionText}
                   </StyledTableCell>
                 </StyledTableRow>
@@ -290,12 +235,7 @@ export const Questions: FC = () => {
         </TableBody>
       </StyledTableContainer>
 
-      <IconButton
-        edge="start"
-        color="primary"
-        aria-label="menu"
-        onClick={() => setCreateNew(true)}
-      >
+      <IconButton edge='start' color='primary' aria-label='menu' onClick={() => setCreateNew(true)}>
         <AddIcon />
       </IconButton>
     </div>
@@ -311,45 +251,26 @@ export const ViewPairings: FC<{
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
 
   useEffect(() => {
-    getAllPairings(
-      { assignmentId: props.assignmentId },
-      setPairings
-    );
+    getAllPairings({ assignmentId: props.assignmentId }, setPairings);
   }, []);
 
   const generateNewPairings = async () => {
     await createPairings({ id: props.assignmentId });
-    getAllPairings(
-      { assignmentId: props.assignmentId },
-      setPairings
-    );
+    getAllPairings({ assignmentId: props.assignmentId }, setPairings);
   };
 
   return (
     <div>
-      <Button color="primary" aria-label="menu" onClick={() => setView(true)}>
+      <Button color='primary' aria-label='menu' onClick={() => setView(true)}>
         View Pairings
       </Button>
-      <MaxWidthDialog
-        title="Pairings"
-        setOpen={setView}
-        open={view}
-        width={"xl"}
-      >
-        <DialogContentText>
-          The following marker student pairs were generated
-        </DialogContentText>
-        <Button
-          color="primary"
-          aria-label="menu"
-          onClick={() => generateNewPairings()}
-        >
+      <MaxWidthDialog title='Pairings' setOpen={setView} open={view} width={'xl'}>
+        <DialogContentText>The following marker student pairs were generated</DialogContentText>
+        <Button color='primary' aria-label='menu' onClick={() => generateNewPairings()}>
           Generate
         </Button>
         <PairingsList pairings={pairings} setPairing={props.setPairing} />
-        <MaxWidthDialogActions
-          handleClose={() => setView(false)}
-        ></MaxWidthDialogActions>
+        <MaxWidthDialogActions handleClose={() => setView(false)}></MaxWidthDialogActions>
       </MaxWidthDialog>
     </div>
   );
@@ -378,13 +299,13 @@ export const PairingsList: FC<{
                     props.setPairing && props.setPairing(pairing);
                   }}
                 >
-                  <StyledTableCell component="th" scope="row">
+                  <StyledTableCell component='th' scope='row'>
                     {pairing?.ID}
                   </StyledTableCell>
-                  <StyledTableCell component="th" scope="row">
+                  <StyledTableCell component='th' scope='row'>
                     {`${pairing?.Student?.ID}, ${pairing?.Student?.Name}, ${pairing?.Student?.Email}`}
                   </StyledTableCell>
-                  <StyledTableCell component="th" scope="row">
+                  <StyledTableCell component='th' scope='row'>
                     {`${pairing?.Marker?.ID}, ${pairing?.Marker?.Name}, ${pairing?.Marker?.Email}`}
                   </StyledTableCell>
                 </StyledTableRow>
