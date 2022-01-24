@@ -459,6 +459,11 @@ export const postGrade = async (moduleId, gradeData) => {
     rubricId: gradeData.RubricID,
     comment: gradeData.Comment,
     grade: gradeData.Grade,
+  }).catch((err) => {
+    let errMessage = err.response.data.message
+    if (errMessage) {
+      alert("Grade For Rubric " + gradeData.RubricID + " : " + errMessage)
+    }
   });
 };
 
