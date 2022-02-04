@@ -9,7 +9,7 @@ import {
 } from "@material-ui/core";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
-import { getStaffModules, getStudentModules } from "../actions/moduleActions";
+import { getStaffModules, getStudentModules, getModules } from "../actions/moduleActions";
 import { ButtonAppBar, Page } from "../components/NavBar";
 import { AuthContext } from "../context/context";
 import { AuthType } from "../reducers/reducer";
@@ -44,7 +44,8 @@ export const ModuleList: FC = () => {
       getStudentModules(setModules);
     } else if (state?.role === Role.STAFF) {
       getStaffModules(setModules);
-    } else {
+    } else if (state?.role === Role.ADMIN) {
+      getModules({}, setModules);
     }
   }, []);
 

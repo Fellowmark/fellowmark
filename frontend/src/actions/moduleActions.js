@@ -129,7 +129,7 @@ export const getModules = (moduleData, setModules) => {
       params: moduleData,
     })
     .then((res) => {
-      return setModules(res);
+      return setModules(res.data ? res.data.rows : []);
     })
     .catch((err) => {
       console.log(err);
@@ -195,14 +195,14 @@ export const getStudentModules = (setModules) => {
  *
  * @param {Object} supervisionData can consist of ID, ModuleID, and/or StaffID
  */
-export const getSupervisions = (setModules) => {
+export const getSupervisions = (supervisionData, setSupervisions) => {
   axios
-    .get(`/module/supervises`)
-    .then((res) => {
-      return res.data;
+    .get(`/module/supervises`, {
+      method: "GET",
+      params: supervisionData,
     })
     .then((res) => {
-      setModules(res.data);
+      setSupervisions(res.data);
     })
     .catch((err) => {
       console.log(err);
