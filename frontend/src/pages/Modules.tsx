@@ -7,6 +7,7 @@ import {
   makeStyles,
   Typography,
 } from "@material-ui/core";
+import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import { getStaffModules, getStudentModules, getModules } from "../actions/moduleActions";
@@ -30,6 +31,10 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "center",
     color: theme.palette.text.secondary,
   },
+  add_button: {
+    display: "flex",
+    height: "100%"
+  }
 }));
 
 export const ModuleList: FC = () => {
@@ -49,10 +54,26 @@ export const ModuleList: FC = () => {
     }
   }, []);
 
+  const clickAddModule = () => {
+    console.log("clickAddModule")
+  }
+
   return (
     <div className={classes.root}>
       <ButtonAppBar pageList={pageList} currentPage="Modules" />
       <Grid container className="page-background" spacing={3}>
+        {
+          state?.role === Role.ADMIN ? (
+          <Grid item className="button-block" xs={12} sm={6} md={4} lg={3} xl={3}>
+            <Card className={`${classes.paper} ${classes.add_button}`}>
+              <CardActionArea onClick={clickAddModule}>
+                <CardContent>
+                  <AddIcon />
+                </CardContent>
+              </CardActionArea>
+            </Card>
+          </Grid>) : null
+        }
         {modules?.map((module) => {
           return <Module key={module.ID} {...module} />;
         })}
@@ -78,7 +99,7 @@ export const Module: FC<ModuleInfo> = (props) => {
   };
 
   return (
-    <Grid item className="button-block">
+    <Grid item className="button-block" xs={12} sm={6} md={4} lg={3} xl={3}>
       <Card className={classes.paper}>
         <CardActionArea onClick={clickModule}>
           <CardMedia
