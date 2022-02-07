@@ -60,6 +60,14 @@ export const Class: FC = () => {
           <StyledTableCell align="right">Email</StyledTableCell>
         </StyledTableHead>
         <TableBody>
+          <IconButton
+            edge="end"
+            color="primary"
+            aria-label="add"
+            onClick={() => console.log("add student")}
+          >
+            <AddIcon />
+          </IconButton>
           {students.rows?.map((student) => {
             return (
               <StyledTableRow key={student.Student.ID}>

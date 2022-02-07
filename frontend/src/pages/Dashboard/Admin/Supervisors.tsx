@@ -49,7 +49,6 @@ export const Supervisors: FC = () => {
       getSupervisions({ moduleId: moduleId }, setSupervisions);
     }
   }, [isValid]);
-  console.log("supervisions=", supervisions)
 
   return (
     <div>
@@ -61,6 +60,14 @@ export const Supervisors: FC = () => {
           <StyledTableCell align="right">Email</StyledTableCell>
         </StyledTableHead>
         <TableBody>
+          <IconButton
+            edge="end"
+            color="primary"
+            aria-label="add"
+            onClick={() => console.log("add supervisor")}
+          >
+            <AddIcon />
+          </IconButton>
           {supervisions.rows?.map((supervision) => {
             return (
               <StyledTableRow key={supervision.Staff.ID}>
