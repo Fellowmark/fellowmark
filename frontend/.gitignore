@@ -14,7 +14,7 @@ yarn.lock
 /build
 
 # virtual environment
-\venv
+venv
 
 # misc
 .DS_Store
