@@ -8,11 +8,7 @@ import axios from "axios";
  * @param {string} name  e.g. "Software Engineering & Object-Oriented Programming"
  */
 export const createModule = (moduleCode, semester, name) => {
-  axios
-    .post(`/module`, { Code: moduleCode, Semester: semester, Name: name })
-    .catch((err) => {
-      console.error(err);
-    });
+  return axios.post(`/module`, { Code: moduleCode, Semester: semester, Name: name })
 };
 
 /**

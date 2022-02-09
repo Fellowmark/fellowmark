@@ -6,6 +6,13 @@ import {
   Grid,
   makeStyles,
   Typography,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
@@ -15,6 +22,7 @@ import { ButtonAppBar, Page } from "../components/NavBar";
 import { AuthContext } from "../context/context";
 import { AuthType } from "../reducers/reducer";
 import { Role } from "./Login";
+import { createModule } from "../actions/moduleActions"
 
 export interface ModuleInfo {
   ID?: number;
@@ -39,6 +47,11 @@ const useStyles = makeStyles((theme) => ({
 
 export const ModuleList: FC = () => {
   const [modules, setModules] = useState<ModuleInfo[]>([]);
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [semester, setSemester] = useState("");
+  const [name, setName] = useState("");
+  const [createSuccess, setCreateSuccess] = useState(false);
   const { state } = useContext(AuthContext);
   const classes = useStyles();
 
@@ -51,11 +64,56 @@ export const ModuleList: FC = () => {
       getStaffModules(setModules);
     } else if (state?.role === Role.ADMIN) {
       getModules({}, setModules);
+      setCreateSuccess(false);
     }
-  }, []);
+  }, [createSuccess]);
 
-  const clickAddModule = () => {
-    console.log("clickAddModule")
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleCreate = () => {
+    if (code.length == 0) {
+      alert("Please enter a module code!")
+    } 
+    if (semester.length == 0) {
+      alert("Please enter a semester!")
+    } 
+    if (name.length == 0) {
+      alert("Please enter a name!")
+    } 
+    createModule(code, semester, name).then(
+      (res) => {
+        console.log(res.data)
+        alert("Module successfully created!")
+        setOpen(false)
+        setCreateSuccess(true)
+      }
+    ).catch(
+      (err) => {
+        console.log(err)
+        alert("Module creation failed!")
+      }
+    )
+  }
+
+  const codeOnBlur = (e) => {
+    console.log(e.target.value)
+    setCode(e.target.value)
+  }
+
+  const semesterOnBlur = (e) => {
+    console.log(e.target.value)
+    setSemester(e.target.value)
+  }
+
+  const nameOnBlur = (e) => {
+    console.log(e.target.value)
+    setName(e.target.value)
   }
 
   return (
@@ -66,7 +124,7 @@ export const ModuleList: FC = () => {
           state?.role === Role.ADMIN ? (
           <Grid item className="button-block" xs={12} sm={6} md={4} lg={3} xl={3}>
             <Card className={`${classes.paper} ${classes.add_button}`}>
-              <CardActionArea onClick={clickAddModule}>
+              <CardActionArea onClick={handleOpen}>
                 <CardContent>
                   <AddIcon />
                 </CardContent>
@@ -78,6 +136,46 @@ export const ModuleList: FC = () => {
           return <Module key={module.ID} {...module} />;
         })}
       </Grid>
+      {
+        state?.role === Role.ADMIN ? (
+        <Dialog open={open} onClose={handleClose}>
+          <DialogTitle>Create a Module</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="module_code"
+              label="Code"
+              type="text"
+              fullWidth
+              variant="standard"
+              onBlur={codeOnBlur}
+            />
+            <TextField
+              margin="dense"
+              id="module_semester"
+              label="Semester"
+              type="text"
+              fullWidth
+              variant="standard"
+              onBlur={semesterOnBlur}
+            />
+            <TextField
+              margin="dense"
+              id="module_name"
+              label="Name"
+              type="text"
+              fullWidth
+              variant="standard"
+              onBlur={nameOnBlur}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleCreate}>Create</Button>
+          </DialogActions>
+        </Dialog>): null
+      }
     </div>
   );
 };
