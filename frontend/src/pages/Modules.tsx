@@ -10,6 +10,7 @@ import {
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import { getStaffModules, getStudentModules } from "../actions/moduleActions";
+import { getUserDetails } from "../actions/userActions";
 import { ButtonAppBar, Page } from "../components/NavBar";
 import { AuthContext } from "../context/context";
 import { AuthType } from "../reducers/reducer";
@@ -20,6 +21,12 @@ export interface ModuleInfo {
   Code?: string;
   Semester?: string;
   Name?: string;
+}
+
+export interface UserInfo{
+  Email?: string;
+  Name?: string;
+  Password?: string
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -50,7 +57,7 @@ export const ModuleList: FC = () => {
 
   return (
     <div className={classes.root}>
-      <ButtonAppBar pageList={pageList} currentPage="Modules" />
+      <ButtonAppBar pageList={pageList} currentPage="Modules" username= {`${state?.user?.Name}`} />
       <Grid container className="page-background" spacing={3}>
         {modules?.map((module) => {
           return <Module key={module.ID} {...module} />;

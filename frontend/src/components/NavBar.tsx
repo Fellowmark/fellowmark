@@ -24,6 +24,7 @@ export interface Page {
 export interface MenuProps {
   pageList: Page[];
   currentPage: string;
+  username: string;
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -97,6 +98,9 @@ export const ButtonAppBar: FC<MenuProps> = (props) => {
           )}
           <Typography variant="h6" className={classes.title}>
             {props.currentPage}
+          </Typography>
+          <Typography variant="h6" className={classes.title}>
+            {props.username}
           </Typography>
           <Button
             color="inherit"

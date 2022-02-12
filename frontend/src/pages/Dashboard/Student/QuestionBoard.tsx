@@ -109,6 +109,7 @@ export const QuestionBoard: FC = () => {
       <ButtonAppBar
         pageList={pageList}
         currentPage={`${state?.assignment?.Name}`}
+        username={`${state?.user?.Name}`}
       />
       <MaxWidthDialog
         title="Peer Review"

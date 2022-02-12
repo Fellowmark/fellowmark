@@ -145,7 +145,7 @@ export const Questions: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage={state?.assignment?.Name} />
+      <ButtonAppBar pageList={pageList} currentPage={state?.assignment?.Name} username={`${state?.user?.Name}`} />
       {isValid && (
         <ViewPairings moduleId={moduleId} assignmentId={assignmentId} />
       )}
