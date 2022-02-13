@@ -289,3 +289,19 @@ func LoginHandleFunc(db *gorm.DB, scope func(db *gorm.DB) *gorm.DB) http.Handler
 		}
 	}
 }
+
+func AccountExistCheckMiddleware(db *gorm.DB, model interface{}, contextKey string, shouldExist bool, errMessage string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(contextKey).(*models.User)
+			account := make(map[string]interface{})
+			dbResult := db.Model(model).Where("email = ?", data.Email).Take(&account)
+			found := !(errors.Is(dbResult.Error, gorm.ErrRecordNotFound))
+			if (found && !shouldExist) || (!found && shouldExist) {
+				HandleResponse(w, errMessage, http.StatusBadRequest)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}

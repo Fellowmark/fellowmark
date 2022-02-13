@@ -61,6 +61,7 @@ func GetDatabase(databaseUrl string) *gorm.DB {
 func InitialMigration(connection *gorm.DB) {
 	connection.AutoMigrate(&models.Student{})
 	connection.AutoMigrate(&models.Staff{})
+	connection.AutoMigrate(&models.PendingStaff{})
 	connection.AutoMigrate(&models.Module{})
 	connection.AutoMigrate(&models.Assignment{})
 	connection.AutoMigrate(&models.Question{})

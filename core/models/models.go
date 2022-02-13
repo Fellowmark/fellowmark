@@ -38,6 +38,13 @@ type Staff struct {
 	Password string `gorm:"column:password;not null" validate:"min=8"`
 }
 
+type PendingStaff struct {
+	Model
+	Email    string `gorm:"type:varchar(100);column:email;unique" validate:"nonzero"`
+	Name     string `gorm:"type:varchar(255);column:name;not null"`
+	Password string `gorm:"column:password;not null" validate:"min=8"`
+}
+
 type Module struct {
 	Model
 	Code     string `gorm:"uniqueIndex:moduleIdx;type:varchar(8);column:code;not null"`
