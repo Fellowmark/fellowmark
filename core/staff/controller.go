@@ -35,6 +35,7 @@ func (controller StaffController) CreatePrivilegedRouter(route *mux.Router) {
 	route.Use(utils.AuthenticationMiddleware())
 	controller.CreateStaffApproveRoute(route.PathPrefix("/approve").Subrouter())
 	controller.GetPairingsRoute(route.PathPrefix("/module/{moduleId}/pairing").Subrouter())
+	controller.GetStaffsRoute(route.NewRoute().Subrouter())
 }
 
 func (controller StaffController) CreateStaffApproveRoute(route *mux.Router) {
@@ -49,4 +50,12 @@ func (controller StaffController) CreateStaffApproveRoute(route *mux.Router) {
 func (controller StaffController) GetPairingsRoute(route *mux.Router) {
 	route.Use(utils.DecodeParamsMiddleware(&models.Pairing{}))
 	route.HandleFunc("", utils.DBGetFromDataParams(controller.DB, &models.Pairing{}, &[]models.Pairing{})).Methods(http.MethodGet)
+}
+
+func (controller StaffController) GetStaffsRoute(route *mux.Router) {
+	route.Use(utils.IsAdminMiddleware(controller.DB))
+	route.Use(utils.DecodeParamsMiddleware(&models.User{}))
+	route.Use(utils.SanitizeDataMiddleware())
+	route.HandleFunc("/pending", utils.DBGetFromDataParams(controller.DB, &models.PendingStaff{}, &[]models.PendingStaff{})).Methods(http.MethodGet)
+	route.HandleFunc("/approve", utils.DBGetFromDataParams(controller.DB, &models.Staff{}, &[]models.Staff{})).Methods(http.MethodGet)
 }
