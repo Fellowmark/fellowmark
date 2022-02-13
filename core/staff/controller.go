@@ -33,7 +33,7 @@ func (controller StaffController) CreateAuthRouter(route *mux.Router) {
 
 func (controller StaffController) CreatePrivilegedRouter(route *mux.Router) {
 	route.Use(utils.AuthenticationMiddleware())
-	controller.CreateStaffApproveRoute(route.PathPrefix("/signup/approve").Subrouter())
+	controller.CreateStaffApproveRoute(route.PathPrefix("/approve").Subrouter())
 	controller.GetPairingsRoute(route.PathPrefix("/module/{moduleId}/pairing").Subrouter())
 }
 
