@@ -52,10 +52,9 @@ export const ModuleList: FC = () => {
   const [semester, setSemester] = useState("");
   const [name, setName] = useState("");
   const [createSuccess, setCreateSuccess] = useState(false);
+  const [pageList, setPageList] = useState<Page[]>([]);
   const { state } = useContext(AuthContext);
   const classes = useStyles();
-
-  const pageList: Page[] = [];
 
   useEffect(() => {
     if (state?.role === Role.STUDENT) {
@@ -65,6 +64,16 @@ export const ModuleList: FC = () => {
     } else if (state?.role === Role.ADMIN) {
       getModules({}, setModules);
       setCreateSuccess(false);
+      setPageList([
+        {
+          title: "Modules",
+          path: "/admin",
+        },
+        {
+          title: "Staff Signup Management",
+          path: "/admin/managestaff",
+        },
+      ])
     }
   }, [createSuccess]);
 

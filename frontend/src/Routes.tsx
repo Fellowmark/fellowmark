@@ -6,6 +6,7 @@ import { Home, RoleHome } from "./pages/Home";
 import { StaffModuleDashboard } from "./pages/Dashboard/Staff/Dashboard";
 import { StudentModuleDashboard } from "./pages/Dashboard/Student/Dashboard";
 import { AdminModuleDashboard } from "./pages/Dashboard/Admin/Dashboard";
+import { StaffManagement } from "./pages/Dashboard/Admin/StaffMangement";
 import { FC } from "react";
 import { Class as StaffClass } from "./pages/Dashboard/Staff/Class";
 import { Class as AdminClass } from "./pages/Dashboard/Admin/Class";
@@ -39,6 +40,7 @@ const Routes: FC = () => {
       <Route exact path="/student/module/:moduleId/assignments/:assignmentId/question/:questionId" component={StudentQuestionBoard} />
 
       <Route exact path="/admin" component={() => <RoleHome role={Role.ADMIN} />} />
+      <Route exact path="/admin/managestaff" component={StaffManagement} />
       <Route exact path="/admin/module/:moduleId" component={AdminModuleDashboard} />
       <Route exact path="/admin/module/:moduleId/class" component={AdminClass} />
       <Route exact path="/admin/module/:moduleId/supervisors" component={Supervisors} />
