@@ -26,7 +26,7 @@ func (controller StaffController) CreateAuthRouter(route *mux.Router) {
 	signUpRoute.Use(utils.DecodeBodyMiddleware(&models.User{}))
 	signUpRoute.Use(utils.SanitizeDataMiddleware())
 	signUpRoute.Use(utils.UserPasswordHashMiddleware)
-	signUpRoute.Use(utils.AccountExistCheckMiddleware(controller.DB, &models.PendingStaff{}, utils.DecodeBodyContextKey, false, "Wait for approval"))
+	signUpRoute.Use(utils.AccountExistCheckMiddleware(controller.DB, &models.PendingStaff{}, utils.DecodeBodyContextKey, false, "Wait for approval, please send an email to fellowmarksystem@gmail.com"))
 	signUpRoute.Use(utils.AccountExistCheckMiddleware(controller.DB, &models.Staff{}, utils.DecodeBodyContextKey, false, "Staff account already exists"))
 	signUpRoute.HandleFunc("/signup", utils.UserCreateHandleFunc(controller.DB, &models.PendingStaff{})).Methods(http.MethodPost)
 }
