@@ -31,7 +31,7 @@ func (controller ModuleController) CreatePrivilegedRouter(route *mux.Router) {
 }
 
 func (controller ModuleController) CreateModuleRouter(route *mux.Router) {
-	route.Use(utils.IsAdminMiddleware(controller.DB))
+	route.Use(utils.IsStaffMiddleware(controller.DB))
 	route.Use(utils.DecodeBodyMiddleware(&models.Module{}))
 	route.Use(utils.SanitizeDataMiddleware())
 	route.HandleFunc("", controller.ModuleCreateHandleFunc()).Methods(http.MethodPost)

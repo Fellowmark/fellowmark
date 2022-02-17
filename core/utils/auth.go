@@ -175,6 +175,14 @@ func IsAdmin(user models.User, db *gorm.DB) bool {
 	return true
 }
 
+func IsStaff(user models.User, db *gorm.DB) bool {
+	result := db.Take(&models.Staff{}, "id = ?", user.ID)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	return true
+}
+
 func IsSupervisor(user models.User, moduleId uint, db *gorm.DB) bool {
 	if bypass := IsAdmin(user, db); bypass {
 		return true
@@ -251,6 +259,19 @@ func IsAdminMiddleware(db *gorm.DB) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(JWTClaimContextKey).(*models.User)
 			if IsAdmin(*data, db) {
+				next.ServeHTTP(w, r)
+			} else {
+				HandleResponse(w, "Insufficient Permissions", http.StatusUnauthorized)
+			}
+		})
+	}
+}
+
+func IsStaffMiddleware(db *gorm.DB) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(JWTClaimContextKey).(*models.User)
+			if IsStaff(*data, db) {
 				next.ServeHTTP(w, r)
 			} else {
 				HandleResponse(w, "Insufficient Permissions", http.StatusUnauthorized)
