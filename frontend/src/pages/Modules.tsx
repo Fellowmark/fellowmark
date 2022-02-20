@@ -6,13 +6,13 @@ import {
   Grid,
   makeStyles,
   Typography,
-  TextField,
   Dialog,
-  DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
-  Button
+  Button,
+  LinearProgress,
+  MenuItem,
+  Box
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
@@ -23,6 +23,8 @@ import { AuthContext } from "../context/context";
 import { AuthType } from "../reducers/reducer";
 import { Role } from "./Login";
 import { createModule } from "../actions/moduleActions"
+import { Formik, Form, Field } from "formik"
+import { TextField } from 'formik-material-ui';
 
 export interface ModuleInfo {
   ID?: number;
@@ -48,10 +50,6 @@ const useStyles = makeStyles((theme) => ({
 export const ModuleList: FC = () => {
   const [modules, setModules] = useState<ModuleInfo[]>([]);
   const [open, setOpen] = useState(false);
-  const [code, setCode] = useState("");
-  const [semester, setSemester] = useState("");
-  const [name, setName] = useState("");
-  const [createSuccess, setCreateSuccess] = useState(false);
   const [pageList, setPageList] = useState<Page[]>([]);
   const { state } = useContext(AuthContext);
   const classes = useStyles();
@@ -63,7 +61,6 @@ export const ModuleList: FC = () => {
       getStaffModules(setModules);
     } else if (state?.role === Role.ADMIN) {
       getModules({}, setModules);
-      setCreateSuccess(false);
       setPageList([
         {
           title: "Modules",
@@ -75,7 +72,7 @@ export const ModuleList: FC = () => {
         },
       ])
     }
-  }, [createSuccess]);
+  }, []);
 
   const handleOpen = () => {
     setOpen(true);
@@ -85,54 +82,22 @@ export const ModuleList: FC = () => {
     setOpen(false);
   };
 
-  const handleCreate = () => {
-    if (code.length == 0) {
-      alert("Please enter a module code!")
-    } 
-    if (semester.length == 0) {
-      alert("Please enter a semester!")
-    } 
-    if (name.length == 0) {
-      alert("Please enter a name!")
-    } 
-    createModule(code, semester, name).then(
-      (res) => {
-        console.log(res.data)
-        alert("Module successfully created!")
-        setOpen(false)
-        setCreateSuccess(true)
-      }
-    ).catch(
-      (err) => {
-        console.log(err)
-        alert("Module creation failed!")
-      }
-    )
-  }
-
-  const codeOnBlur = (e) => {
-    console.log(e.target.value)
-    setCode(e.target.value)
-  }
-
-  const semesterOnBlur = (e) => {
-    console.log(e.target.value)
-    setSemester(e.target.value)
-  }
-
-  const nameOnBlur = (e) => {
-    console.log(e.target.value)
-    setName(e.target.value)
-  }
+  const currentYear = new Date().getFullYear()
+  const semesterRanges = [
+    {value: `AY${currentYear-1}/${currentYear} 1`, label: `AY${currentYear-1}/${currentYear} 1`},
+    {value: `AY${currentYear-1}/${currentYear} 2`, label: `AY${currentYear-1}/${currentYear} 2`},
+    {value: `AY${currentYear}/${currentYear + 1} 1`, label: `AY${currentYear}/${currentYear + 1} 1`},
+    {value: `AY${currentYear}/${currentYear + 1} 2`, label: `AY${currentYear}/${currentYear + 1} 2`}
+  ]
 
   return (
     <div className={classes.root}>
       <ButtonAppBar pageList={pageList} currentPage="Modules" />
       <Grid container className="page-background" spacing={3}>
         {
-          state?.role === Role.ADMIN ? (
+          state?.role === Role.STAFF ? (
           <Grid item className="button-block" xs={12} sm={6} md={4} lg={3} xl={3}>
-            <Card className={`${classes.paper} ${classes.add_button}`}>
+            <Card className={`${classes.paper} ${classes.add_button}`} style={{height: "210px"}}>
               <CardActionArea onClick={handleOpen}>
                 <CardContent>
                   <AddIcon />
@@ -146,43 +111,117 @@ export const ModuleList: FC = () => {
         })}
       </Grid>
       {
-        state?.role === Role.ADMIN ? (
-        <Dialog open={open} onClose={handleClose}>
+        state?.role === Role.STAFF ? (
+        <Dialog open={open} onClose={handleClose} disableEnforceFocus>
           <DialogTitle>Create a Module</DialogTitle>
           <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="module_code"
-              label="Code"
-              type="text"
-              fullWidth
-              variant="standard"
-              onBlur={codeOnBlur}
-            />
-            <TextField
-              margin="dense"
-              id="module_semester"
-              label="Semester"
-              type="text"
-              fullWidth
-              variant="standard"
-              onBlur={semesterOnBlur}
-            />
-            <TextField
-              margin="dense"
-              id="module_name"
-              label="Name"
-              type="text"
-              fullWidth
-              variant="standard"
-              onBlur={nameOnBlur}
-            />
+          <Formik
+            initialValues={{
+              Code: "",
+              Name: "",
+              Semester: ""
+            }}
+            validate={(values) => {
+              const errors: Partial<ModuleInfo> = {};
+              values.Code = values.Code.replace(/(^\s*)|(\s*$)/g, "").toUpperCase()
+              values.Name = values.Name.replace(/(^\s*)|(\s*$)/g, "")
+              if (!values.Code) {
+                errors.Code = 'Required';
+              }
+              if (!values.Name.replace(/(^\s*)|(\s*$)/g, "")) {
+                errors.Name= 'Required';
+              }
+              if (!values.Semester) {
+                errors.Semester = 'Required';
+              }
+              return errors;
+            }}
+            onSubmit={(values, {setSubmitting, resetForm}) => {
+              createModule(values).then(_ => {
+                setSubmitting(false)
+                getStaffModules(setModules);
+                alert("Successfully created!")
+                resetForm()
+                setOpen(false)
+              }).catch(err => {
+                setSubmitting(false)
+                if (err && err.response  && err.response.data && err.response.data.message) {
+                  alert(err.response.data.message)
+                } else {
+                  alert("Creation failed.")
+                }
+              })
+            }}
+            render={({ submitForm, resetForm, isSubmitting }) => (
+              <Form>
+                <Box margin={1}>
+                  <Field
+                    component={TextField}
+                    name="Code"
+                    type="text"
+                    label="Code"
+                    helperText="Please Enter Module Code"
+                  />
+                </Box>
+                <Box margin={1}>
+                  <Field
+                    component={TextField}
+                    name="Name"
+                    type="text"
+                    label="Name"
+                    helperText="Please Enter Module Name"
+                  />
+                </Box>
+                <Box margin={2}>
+                  <Field
+                    component={TextField}
+                    name="Semester"
+                    type="text"
+                    label="Semester"
+                    select
+                    variant="standard"
+                    helperText="Please Select Semester"
+                    margin="normal"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  >
+                    {semesterRanges.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Field>
+                </Box>
+                {isSubmitting && <LinearProgress />}
+                <Box 
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between"
+                  }}
+                  margin={1}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={isSubmitting}
+                    onClick={submitForm}
+                  >
+                    Submit
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    disabled={isSubmitting}
+                    onClick={() => { resetForm() }}
+                  >
+                    Reset
+                  </Button>
+                </Box>
+              </Form>
+            )}
+          >
+          </Formik>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleCreate}>Create</Button>
-          </DialogActions>
         </Dialog>): null
       }
     </div>
@@ -207,7 +246,7 @@ export const Module: FC<ModuleInfo> = (props) => {
 
   return (
     <Grid item className="button-block" xs={12} sm={6} md={4} lg={3} xl={3}>
-      <Card className={classes.paper}>
+      <Card className={classes.paper} style={{height: "210px"}}>
         <CardActionArea onClick={clickModule}>
           <CardMedia
             component="img"
