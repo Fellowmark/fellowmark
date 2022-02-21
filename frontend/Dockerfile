@@ -1,5 +1,5 @@
 # for development use
-FROM node:alpine AS base
+FROM node:14-alpine AS base
 WORKDIR /app
 COPY ./package.json ./
 RUN npm install
@@ -15,7 +15,7 @@ ARG REACT_APP_API_URL
 ENV REACT_APP_API_URL $REACT_APP_API_URL
 RUN npm run build
 
-FROM node:alpine AS prod
+FROM node:14-alpine AS prod
 WORKDIR /app
 COPY --from=builder /app/build build
 COPY --from=builder /app/public public
