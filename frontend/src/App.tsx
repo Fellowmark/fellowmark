@@ -67,7 +67,7 @@ function App() {
           <DialogTitle id="alert-dialog-title">{"Privacy Notice"}</DialogTitle>
           <DialogContent>
             <DialogContentText id="alert-dialog-description">
-              Agree This site uses cookies. By clicking accept or continuing to
+              This site uses cookies. By clicking accept or continuing to
               use this site, you agree to our use of cookies. For more details,
               please see our{" "}
               <a href="https://www.nus.edu.sg/privacy-notice/">
