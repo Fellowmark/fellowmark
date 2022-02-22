@@ -292,13 +292,13 @@ func LoginHandleFunc(db *gorm.DB, scope func(db *gorm.DB) *gorm.DB) http.Handler
 		result := db.Scopes(scope).Take(&user, "email = ?", input.Email)
 
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
+			HandleResponse(w, "Email or password incorrect", http.StatusUnauthorized)
 			return
 		}
 
 		isEqual, _ := argon2id.ComparePasswordAndHash(input.Password, user.Password)
 		if !isEqual {
-			HandleResponse(w, "Incorrect Password", http.StatusUnauthorized)
+			HandleResponse(w, "Email or password incorrect", http.StatusUnauthorized)
 			return
 		}
 

@@ -43,8 +43,12 @@ export const loginUser = (role, userData, history) => {
       window.location.href = `/${role.toLowerCase()}`;
     })
     .catch((err) => {
-      alert("Email or password incorrect");
       console.error(err);
+      if (err && err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message);
+      } else {
+        alert("Email or password incorrect");
+      }
     });
 };
 

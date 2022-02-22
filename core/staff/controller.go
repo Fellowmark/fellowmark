@@ -20,6 +20,8 @@ func (controller StaffController) CreateRouters(route *mux.Router) {
 
 func (controller StaffController) CreateAuthRouter(route *mux.Router) {
 	loginRoute := route.NewRoute().Subrouter()
+	loginRoute.Use(utils.DecodeParamsMiddleware(&models.User{}))
+	loginRoute.Use(utils.AccountExistCheckMiddleware(controller.DB, &models.PendingStaff{}, utils.DecodeParamsContextKey, false, "Wait for approval, please send an email to fellowmarksystem@gmail.com"))
 	loginRoute.HandleFunc("/login", utils.LoginHandleFunc(controller.DB, utils.ModelDBScope(&models.Staff{}))).Methods(http.MethodGet)
 
 	signUpRoute := route.NewRoute().Subrouter()
