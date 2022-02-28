@@ -17,12 +17,8 @@ export const createModule = (moduleInfo) => {
  * @param {int} moduleId ID of module
  * @param {int} studentId ID of student
  */
-export const createEnrollment = (moduleId, studentId) => {
-  axios
-    .post(`/module/enroll`, { ModuleID: moduleId, StudentID: studentId })
-    .catch((err) => {
-      console.error(err);
-    });
+export const createEnrollment = (moduleId, studentEmails) => {
+  return axios.post(`/module/enroll`, { ModuleID: moduleId, StudentEmails: studentEmails })
 };
 
 /**
