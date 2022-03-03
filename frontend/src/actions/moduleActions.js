@@ -7,12 +7,8 @@ import axios from "axios";
  * @param {string} semester e.g. "2122-1" for AY2021/2022 Semester 1
  * @param {string} name  e.g. "Software Engineering & Object-Oriented Programming"
  */
-export const createModule = (moduleCode, semester, name) => {
-  axios
-    .post(`/module`, { Code: moduleCode, Semester: semester, Name: name })
-    .catch((err) => {
-      console.error(err);
-    });
+export const createModule = (moduleInfo) => {
+  return axios.post(`/module`, moduleInfo)
 };
 
 /**
@@ -21,12 +17,8 @@ export const createModule = (moduleCode, semester, name) => {
  * @param {int} moduleId ID of module
  * @param {int} studentId ID of student
  */
-export const createEnrollment = (moduleId, studentId) => {
-  axios
-    .post(`/module/enroll`, { ModuleID: moduleId, StudentID: studentId })
-    .catch((err) => {
-      console.error(err);
-    });
+export const createEnrollment = (moduleId, studentEmails) => {
+  return axios.post(`/module/enroll`, { ModuleID: moduleId, StudentEmails: studentEmails })
 };
 
 /**
@@ -129,7 +121,7 @@ export const getModules = (moduleData, setModules) => {
       params: moduleData,
     })
     .then((res) => {
-      return setModules(res);
+      return setModules(res.data ? res.data.rows : []);
     })
     .catch((err) => {
       console.log(err);
@@ -195,14 +187,14 @@ export const getStudentModules = (setModules) => {
  *
  * @param {Object} supervisionData can consist of ID, ModuleID, and/or StaffID
  */
-export const getSupervisions = (setModules) => {
+export const getSupervisions = (supervisionData, setSupervisions) => {
   axios
-    .get(`/module/supervises`)
-    .then((res) => {
-      return res.data;
+    .get(`/module/supervises`, {
+      method: "GET",
+      params: supervisionData,
     })
     .then((res) => {
-      setModules(res.data);
+      setSupervisions(res.data);
     })
     .catch((err) => {
       console.log(err);

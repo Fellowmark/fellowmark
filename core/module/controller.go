@@ -13,6 +13,13 @@ type ModuleController struct {
 	DB *gorm.DB
 }
 
+type BatchEnrollment struct {
+	ModuleID  uint `json:"moduleId"`
+	StudentID uint `json:"studentId"`
+	StudentIDs []uint `json:"studentIds"`
+	StudentEmails []string `json:"studentEmails"`
+}
+
 func (controller ModuleController) CreateRouters(route *mux.Router) {
 	controller.CreatePrivilegedRouter(route.NewRoute().Subrouter())
 	controller.GetModulesRoute(route.NewRoute().Subrouter())
@@ -31,15 +38,17 @@ func (controller ModuleController) CreatePrivilegedRouter(route *mux.Router) {
 }
 
 func (controller ModuleController) CreateModuleRouter(route *mux.Router) {
-	route.Use(utils.IsAdminMiddleware(controller.DB))
+	route.Use(utils.IsStaffMiddleware(controller.DB))
 	route.Use(utils.DecodeBodyMiddleware(&models.Module{}))
 	route.Use(utils.SanitizeDataMiddleware())
 	route.HandleFunc("", controller.ModuleCreateHandleFunc()).Methods(http.MethodPost)
 }
 
 func (controller ModuleController) CreateEnrollmentRoute(route *mux.Router) {
-	route.Use(utils.IsAdminMiddleware(controller.DB))
-	route.Use(utils.DecodeBodyMiddleware(&models.Enrollment{}))
+	route.Use(utils.IsStaffMiddleware(controller.DB))
+	route.Use(utils.DecodeBodyMiddleware(&BatchEnrollment{}))
+	route.Use(controller.CheckStaffSupervision())
+	route.Use(controller.EnrollmentDataPrepare())
 	route.HandleFunc("", controller.EnrollmentCreateHandleFunc()).Methods(http.MethodPost)
 }
 

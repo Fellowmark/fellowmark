@@ -12,5 +12,5 @@ export const ProgressBar: FC<ProgressProps> = (props) => {
   ) : (
     <LinearProgress className="progressBar" />
   );
-  return <Grid item>{showComponent}</Grid>;
+  return <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>{showComponent}</Grid>;
 }

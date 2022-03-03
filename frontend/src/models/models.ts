@@ -10,6 +10,11 @@ export interface Enrollment {
   Student?: User
 }
 
+export interface Supervision {
+  ModuleId?: number,
+  Staff?: User
+}
+
 export interface Assignment {
   ID?: number,
   Name?: string,
