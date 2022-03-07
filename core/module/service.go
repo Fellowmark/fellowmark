@@ -14,10 +14,17 @@ import (
 const EmailsNotFoundKey = "emailNotFoundIndexes"
 const EnrollmentExistIndexesKey = "enrollmentExistIndexes"
 const EnrollErrorsKey = "enrollErrors"
+const SupervisionExistIndexesKey = "supervisionExistIndexes"
+const SuperviseErrorsKey = "superviseErrors"
 
 type EnrollmentResult struct {
 	SuccessCount int `json:"success"`
 	EnrollErrors []string `json:"enrollErrors"`
+}
+
+type SupervisionResult struct {
+	SuccessCount int `json:"success"`
+	SuperviseErrors []string `json:"superviseErrors"`
 }
 
 func (controller ModuleController) ModuleCreateHandleFunc() http.HandlerFunc {
@@ -70,14 +77,20 @@ func (controller ModuleController) EnrollmentCreateHandleFunc() http.HandlerFunc
 
 func (controller ModuleController) SupervisionCreateHandleFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Supervision)
-
-		result := controller.DB.Model(data).Create(data)
+		supervisions := r.Context().Value(utils.DecodeBodyContextKey).(*[]models.Supervision)
+		superviseErrors := r.Context().Value(SuperviseErrorsKey).(*[]string)
+		result := controller.DB.Model(supervisions).Create(supervisions)
 		if result.Error != nil {
-			utils.HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
-			return
+			if result.Error.Error() == "empty slice found" {
+				response := SupervisionResult{0, *superviseErrors}
+				utils.HandleResponseWithObject(w, &response, http.StatusOK)
+			} else {
+				utils.HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
+			}
+		} else {
+			response := SupervisionResult{len(*supervisions), *superviseErrors}
+			utils.HandleResponseWithObject(w, &response, http.StatusOK)
 		}
-		utils.HandleResponseWithObject(w, data, http.StatusOK)
 	}
 }
 
@@ -103,8 +116,15 @@ func (controller ModuleController) CheckStaffSupervision() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
-			data := r.Context().Value(utils.DecodeBodyContextKey).(*BatchEnrollment)
-			if pass := utils.IsSupervisor(*claims, data.ModuleID, controller.DB); pass {
+			data := r.Context().Value(utils.DecodeBodyContextKey)
+			var moduleID uint
+			switch data.(type) {
+				case *BatchEnrollment:
+					moduleID = data.(*BatchEnrollment).ModuleID
+				case *BatchSupervision:
+					moduleID = data.(*BatchSupervision).ModuleID
+			}
+			if pass := utils.IsSupervisor(*claims, moduleID, controller.DB); pass {
 				next.ServeHTTP(w, r)
 			} else {
 				utils.HandleResponse(w, "Not a supervisor", http.StatusUnauthorized)
@@ -169,6 +189,67 @@ func (controller ModuleController) EnrollmentDataPrepare() mux.MiddlewareFunc {
 				next.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				utils.HandleResponse(w, "Empty Enrollments Data", http.StatusBadRequest)
+			}
+		})
+	}
+}
+
+func (controller ModuleController) SupervisionDataPrepare() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			const duplicateErrorMessage = "Supervision exists"
+			const staffNotFoundErrorMessage = "Staff not found"
+			data := r.Context().Value(utils.DecodeBodyContextKey).(*BatchSupervision)
+			if (data.StaffID > 0) {
+				supervisions := make([]models.Supervision, 0, 1)
+				superviseErrors := make([]string, 1, 1)
+				existSupervision := models.Supervision{}
+				if controller.DB.Take(&models.Staff{}, data.StaffID).Error != nil {
+					superviseErrors[0] = staffNotFoundErrorMessage
+				} else if controller.DB.Model(&existSupervision).Where("staff_id = ? and module_id = ?", data.StaffID, data.ModuleID).Take(&existSupervision).Error == nil {
+					superviseErrors[0] = duplicateErrorMessage
+				} else {
+					supervisions = append(supervisions, models.Supervision{ModuleID: data.ModuleID, StaffID: data.StaffID})
+				}
+				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &supervisions)
+				ctx = context.WithValue(ctx, SuperviseErrorsKey, &superviseErrors)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			} else if (len(data.StaffIDs) > 0) {
+				supervisions := make([]models.Supervision, 0, len(data.StaffIDs))
+				superviseErrors := make([]string, len(data.StaffIDs), len(data.StaffIDs))
+				for i, staffID := range data.StaffIDs {
+					existSupervision := models.Supervision{}
+					if controller.DB.Take(&models.Staff{}, staffID).Error != nil {
+						superviseErrors[i] = staffNotFoundErrorMessage
+					} else if controller.DB.Model(&existSupervision).Where("staff_id = ? and module_id = ?", staffID, data.ModuleID).Take(&existSupervision).Error == nil {
+						superviseErrors[i] = duplicateErrorMessage
+					} else {
+						supervisions = append(supervisions, models.Supervision{ModuleID: data.ModuleID, StaffID: staffID})
+					}
+				}
+				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &supervisions)
+				ctx = context.WithValue(ctx, SuperviseErrorsKey, &superviseErrors)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			} else if (len(data.StaffEmails) > 0) {
+				supervisions := make([]models.Supervision, 0, len(data.StaffEmails))
+				superviseErrors := make([]string, len(data.StaffEmails), len(data.StaffEmails))
+				for i, email := range data.StaffEmails {
+					staff := models.Staff{}
+					staffResult := controller.DB.Model(&staff).Where("email = ?", email).Take(&staff)
+					existSupervision := models.Supervision{}
+					if staffResult.Error != nil {
+						superviseErrors[i] = staffNotFoundErrorMessage
+					} else if controller.DB.Model(&existSupervision).Where("staff_id = ? and module_id = ?", staff.ID, data.ModuleID).Take(&existSupervision).Error == nil {
+						superviseErrors[i] = duplicateErrorMessage
+					} else {
+						supervisions = append(supervisions, models.Supervision{ModuleID: data.ModuleID, StaffID: staff.ID})
+					}
+				}
+				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &supervisions)
+				ctx = context.WithValue(ctx, SuperviseErrorsKey, &superviseErrors)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			} else {
+				utils.HandleResponse(w, "Empty Supervisions Data", http.StatusBadRequest)
 			}
 		})
 	}

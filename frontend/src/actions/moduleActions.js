@@ -27,12 +27,8 @@ export const createEnrollment = (moduleId, studentEmails) => {
  * @param {int} moduleId
  * @param {int} staffId
  */
-export const createSupervision = (moduleId, staffId) => {
-  axios
-    .post(`/module/supervise`, { ModuleID: moduleId, StaffID: staffId })
-    .catch((err) => {
-      console.error(err);
-    });
+export const createSupervision = (moduleId, staffEmails) => {
+  return axios.post(`/module/supervise`, { ModuleID: moduleId, StaffEmails: staffEmails })
 };
 
 /**

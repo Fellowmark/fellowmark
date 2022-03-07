@@ -9,6 +9,7 @@ import { AdminModuleDashboard } from "./pages/Dashboard/Admin/Dashboard";
 import { StaffManagement } from "./pages/Dashboard/Admin/StaffMangement";
 import { FC } from "react";
 import { Class as StaffClass } from "./pages/Dashboard/Staff/Class";
+import { Supervisors as StaffSupervisors } from "./pages/Dashboard/Staff/Supervisors";
 import { Class as AdminClass } from "./pages/Dashboard/Admin/Class";
 import { Assignments as StaffAssignments } from "./pages/Dashboard/Staff/Assignments";
 import { Assignments as StudentAssignments} from "./pages/Dashboard/Student/Assignments";
@@ -29,6 +30,7 @@ const Routes: FC = () => {
       <Route exact path="/staff" component={() => <RoleHome role={Role.STAFF} />} />
       <Route exact path="/staff/module/:moduleId" component={StaffModuleDashboard} />
       <Route exact path="/staff/module/:moduleId/class" component={StaffClass} />
+      <Route exact path="/staff/module/:moduleId/supervisors" component={StaffSupervisors} />
       <Route exact path="/staff/module/:moduleId/assignments" component={StaffAssignments} />
       <Route exact path="/staff/module/:moduleId/assignments/:assignmentId" component={StaffQuestions} />
       <Route exact path="/staff/module/:moduleId/assignments/:assignmentId/question/:questionId" component={StaffQuestionBoard} />
