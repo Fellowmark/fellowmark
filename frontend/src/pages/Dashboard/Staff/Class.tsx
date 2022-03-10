@@ -27,7 +27,7 @@ import { AuthContext } from "../../../context/context";
 import { Enrollment } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import { getPageList, useValidCheck } from "./Dashboard";
-import { createEnrollment } from "../../../actions/moduleActions";
+import { createEnrollment, deleteEnrollment } from "../../../actions/moduleActions";
 
 const useStyles = makeStyles((theme) => ({
   error: {
@@ -40,7 +40,7 @@ export const Class: FC = () => {
   const match = useRouteMatch();
   const { state } = useContext(AuthContext);
   const [isValid, setIsValid] = useState(false);
-  const [students, setStudents] = useState<Pagination<Enrollment>>({});
+  const [enrollments, setEnrollments] = useState<Pagination<Enrollment>>({});
   const [open, setOpen] = useState(false);
   const [enrollEmails, setEnrollEmails] = useState("");
   const [enrollErrorMessages, setEnrollErrorMessages] = useState([]);
@@ -62,7 +62,7 @@ export const Class: FC = () => {
 
   useEffect(() => {
     if (isValid) {
-      getEnrollments({ moduleId: moduleId }, setStudents);
+      getEnrollments({ moduleId: moduleId }, setEnrollments);
     }
   }, [isValid]);
 
@@ -85,7 +85,7 @@ export const Class: FC = () => {
       if (successCount == emailCount) {
         setEnrollEmails("")
         setEnrollErrorMessages([])
-        getEnrollments({ moduleId: moduleId }, setStudents);
+        getEnrollments({ moduleId: moduleId }, setEnrollments);
         alert("All students are enrolled successfully!")
         setIsSubmitting(false)
       } else {
@@ -100,7 +100,7 @@ export const Class: FC = () => {
         setEnrollErrorMessages(emailAndErrors)
         setEnrollEmails(failedEmails.join('\n'))
         if (failedEmails.length < emailCount) {
-          getEnrollments({ moduleId: moduleId }, setStudents);
+          getEnrollments({ moduleId: moduleId }, setEnrollments);
         }
         alert("Not all students are enrolled successfully. Please check the error messages.")
         setIsSubmitting(false)
@@ -115,6 +115,19 @@ export const Class: FC = () => {
       setEnrollErrorMessages([message])
       alert(message)
       setIsSubmitting(false)
+    })
+  }
+
+  const deleteStudent = (enrollment) => {
+    deleteEnrollment(moduleId, enrollment.Student.ID).then(res => {
+      getEnrollments({ moduleId: moduleId }, setEnrollments);
+      alert("Successfully deleted!")
+    }).catch(err => {
+      if (err && err.response && err.response.data && err.response.data.message) {
+        alert("Deletion failed:" + err.response.data.message)
+      } else {
+        alert("Deletion failed")
+      }
     })
   }
 
@@ -161,7 +174,8 @@ export const Class: FC = () => {
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
           <StyledTableCell>Name</StyledTableCell>
-          <StyledTableCell align="right">Email</StyledTableCell>
+          <StyledTableCell>Email</StyledTableCell>
+          <StyledTableCell align="right">Delete</StyledTableCell>
         </StyledTableHead>
         <TableBody>
           <IconButton
@@ -172,17 +186,20 @@ export const Class: FC = () => {
           >
             <AddIcon />
           </IconButton>
-          {students.rows?.map((student) => {
+          {enrollments.rows?.map((enrollment) => {
             return (
-              <StyledTableRow key={student.Student.ID}>
+              <StyledTableRow key={enrollment.Student.ID}>
                 <StyledTableCell component="th" scope="row">
-                  {student.Student.ID}
+                  {enrollment.Student.ID}
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {student.Student.Name}
+                  {enrollment.Student.Name}
+                </StyledTableCell>
+                <StyledTableCell component="th" scope="row">
+                  {enrollment.Student.Email}
                 </StyledTableCell>
                 <StyledTableCell align="right">
-                  {student.Student.Email}
+                  <Button onClick={() => deleteStudent(enrollment)} color="primary">Delete</Button>
                 </StyledTableCell>
               </StyledTableRow>
             );

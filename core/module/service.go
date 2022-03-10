@@ -9,6 +9,7 @@ import (
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
+	"errors"
 )
 
 const EmailsNotFoundKey = "emailNotFoundIndexes"
@@ -75,6 +76,32 @@ func (controller ModuleController) EnrollmentCreateHandleFunc() http.HandlerFunc
 	}
 }
 
+func (controller ModuleController) EnrollmentDeleteHandleFunc() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		enrollment := r.Context().Value(utils.DecodeBodyContextKey).(*models.Enrollment)
+		txError := controller.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Model(enrollment).Where(enrollment).Take(enrollment).Error; err != nil {
+				return err
+			}
+			if err := tx.Model(enrollment).Delete(enrollment).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+		if txError != nil {
+			var errMessage string
+			if errors.Is(txError, gorm.ErrRecordNotFound) {
+				errMessage = "Deletion failed: Student not found."
+			} else {
+				errMessage = "Deletion failed: " + txError.Error()
+			}
+			utils.HandleResponse(w, errMessage, http.StatusBadRequest)
+			return
+		}
+		utils.HandleResponseWithObject(w, enrollment, http.StatusOK)
+	}
+}
+
 func (controller ModuleController) SupervisionCreateHandleFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		supervisions := r.Context().Value(utils.DecodeBodyContextKey).(*[]models.Supervision)
@@ -91,6 +118,32 @@ func (controller ModuleController) SupervisionCreateHandleFunc() http.HandlerFun
 			response := SupervisionResult{len(*supervisions), *superviseErrors}
 			utils.HandleResponseWithObject(w, &response, http.StatusOK)
 		}
+	}
+}
+
+func (controller ModuleController) SupervisionDeleteHandleFunc() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		supervision := r.Context().Value(utils.DecodeBodyContextKey).(*models.Supervision)
+		txError := controller.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Model(supervision).Where(supervision).Take(supervision).Error; err != nil {
+				return err
+			}
+			if err := tx.Model(supervision).Delete(supervision).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+		if txError != nil {
+			var errMessage string
+			if errors.Is(txError, gorm.ErrRecordNotFound) {
+				errMessage = "Deletion failed: Supervisor not found."
+			} else {
+				errMessage = "Deletion failed: " + txError.Error()
+			}
+			utils.HandleResponse(w, errMessage, http.StatusBadRequest)
+			return
+		}
+		utils.HandleResponseWithObject(w, supervision, http.StatusOK)
 	}
 }
 
@@ -123,6 +176,10 @@ func (controller ModuleController) CheckStaffSupervision() mux.MiddlewareFunc {
 					moduleID = data.(*BatchEnrollment).ModuleID
 				case *BatchSupervision:
 					moduleID = data.(*BatchSupervision).ModuleID
+				case *models.Supervision:
+					moduleID = data.(*models.Supervision).ModuleID
+				case *models.Enrollment:
+					moduleID = data.(*models.Enrollment).ModuleID
 			}
 			if pass := utils.IsSupervisor(*claims, moduleID, controller.DB); pass {
 				next.ServeHTTP(w, r)

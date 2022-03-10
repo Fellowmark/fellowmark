@@ -35,7 +35,7 @@ import { Assignment, Supervision } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import moment from "moment";
 import { getPageList, useFormStyles, useValidCheck } from "./Dashboard";
-import { createSupervision } from "../../../actions/moduleActions";
+import { createSupervision, deleteSupervision } from "../../../actions/moduleActions";
 
 const useStyles = makeStyles((theme) => ({
   error: {
@@ -125,6 +125,19 @@ export const Supervisors: FC = () => {
     })
   }
 
+  const deleteStaff = (supervision) => {
+    deleteSupervision(moduleId, supervision.Staff.ID).then(res => {
+      getSupervisions({ moduleId: moduleId }, setSupervisions);
+      alert("Successfully deleted!")
+    }).catch(err => {
+      if (err && err.response && err.response.data && err.response.data.message) {
+        alert("Deletion failed:" + err.response.data.message)
+      } else {
+        alert("Deletion failed")
+      }
+    })
+  }
+
   return (
     <div>
       <ButtonAppBar pageList={pageList} currentPage="Supervisors" />
@@ -168,7 +181,8 @@ export const Supervisors: FC = () => {
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
           <StyledTableCell>Name</StyledTableCell>
-          <StyledTableCell align="right">Email</StyledTableCell>
+          <StyledTableCell>Email</StyledTableCell>
+          <StyledTableCell align="right">Delete</StyledTableCell>
         </StyledTableHead>
         <TableBody>
           <IconButton
@@ -188,8 +202,11 @@ export const Supervisors: FC = () => {
                 <StyledTableCell component="th" scope="row">
                   {supervision.Staff.Name}
                 </StyledTableCell>
-                <StyledTableCell align="right">
+                <StyledTableCell component="th" scope="row">
                   {supervision.Staff.Email}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  <Button onClick={() => deleteStaff(supervision)} color="primary">Delete</Button>
                 </StyledTableCell>
               </StyledTableRow>
             );
