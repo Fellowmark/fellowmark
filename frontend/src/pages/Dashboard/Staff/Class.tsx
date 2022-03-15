@@ -119,6 +119,10 @@ export const Class: FC = () => {
   }
 
   const deleteStudent = (enrollment) => {
+    const confirmed = window.confirm(`Are you sure you want to delete student ${enrollment.Student.Name}?`)
+    if (!confirmed) {
+      return
+    }
     deleteEnrollment(moduleId, enrollment.Student.ID).then(res => {
       getEnrollments({ moduleId: moduleId }, setEnrollments);
       alert("Successfully deleted!")

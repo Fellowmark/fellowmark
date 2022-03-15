@@ -126,6 +126,10 @@ export const Supervisors: FC = () => {
   }
 
   const deleteStaff = (supervision) => {
+    const confirmed = window.confirm(`Are you sure you want to delete supervisor ${supervision.Staff.Name}?`)
+    if (!confirmed) {
+      return
+    }
     deleteSupervision(moduleId, supervision.Staff.ID).then(res => {
       getSupervisions({ moduleId: moduleId }, setSupervisions);
       alert("Successfully deleted!")
