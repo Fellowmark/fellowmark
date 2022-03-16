@@ -11,6 +11,8 @@ import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   getAllPairings,
+  getAllPairingsId,
+  getGradesForStudent,
   getSubmissionMetadata,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar } from "../../../components/NavBar";
@@ -19,7 +21,7 @@ import {
   MaxWidthDialogActions,
 } from "../../../components/PopUpDialog";
 import { AuthContext } from "../../../context/context";
-import { Pairing } from "../../../models/models";
+import { Grade, Pairing } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import { Role } from "../../Login";
 import { getPageList } from "./Dashboard";
@@ -78,7 +80,9 @@ export const QuestionBoard: FC = () => {
   const [isValid, setIsValid] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [review, setReview] = useState(false);
+  const [student, setStudent] = useState<number>(null);
   const [viewRubric, setViewRubric] = useState(false);
+  const [grades, setGrades] = useState<Map<number, Grade>>(null);
   const [pairings, setPairings] = useState<Pagination<Pairing>>(null);
   const [selectedPair, selectPair] = useState<Pairing>(null);
 
@@ -90,6 +94,12 @@ export const QuestionBoard: FC = () => {
   );
   const pageList = getPageList(match);
 
+  useEffect(() => {
+    if (student) {
+      getGradesForStudent(moduleId, { PairingID: student }, setGrades);
+    }
+  }, [student]);
+  
   useEffect(() => {
     if (isValid) {
       getSubmissionMetadata(state.user.ID, questionId, setSubmitted);
@@ -150,7 +160,7 @@ export const QuestionBoard: FC = () => {
         </CardContent>
       </Card>
 
-      <PairingsList pairings={pairings} setPairing={selectPair} />
+      <PairingsList assignmentId={assignmentId} pairings={pairings} setPairing={selectPair} />
 
       <Grid container direction="row" justifyContent="center" spacing={3}>
         <Grid item>

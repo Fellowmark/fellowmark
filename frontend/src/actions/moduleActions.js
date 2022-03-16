@@ -1,4 +1,5 @@
 import axios from "axios";
+import {array_name} from "../pages/Dashboard/Staff/Questions"
 
 /**
  * Creates module using given data
@@ -92,6 +93,50 @@ export const getAllPairings = ({ assignmentId }, setPairings) => {
     })
     .then((res) => {
       setPairings(res.data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+export const getAllPairingsId = ({ assignmentId }, setPairingsId) => {
+  let pairingIds = [];
+  let grades = [];
+  axios
+    .get(`/assignment/pairs`, {
+      params: {
+        assignmentId: assignmentId,
+      },
+    })
+    .then((res) => {
+      res.data.rows.forEach((pairing) => {
+        pairingIds.push(pairing.ID);
+        //console.log(pairing.ID);
+      });
+      for (var pairingId of pairingIds) {
+        console.log(pairingId);
+        let index = 0;
+        axios
+          .get(`/grade/my/reviewee`, {
+            method: "GET",
+            params: {
+              pairingId: pairingId,
+            },
+          })
+          .then((res) => {
+            let totalGrade = 0;
+            res.data.rows.forEach((grade) => {
+              totalGrade += grade.Grade;
+            });
+            //grades.push(totalGrade);
+            grades[index] = totalGrade;
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+        index += 1;
+      }
+      setPairingsId(pairingIds);
     })
     .catch((err) => {
       console.error(err);
@@ -427,6 +472,66 @@ export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
         grades.set(grade.RubricID, grade);
       });
       setGrades(grades);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
+export const getTotalGradeForStudent = ({ pairingsId }, setTotalGrade) => {
+  let grades = [];
+  //console.log(pairingsId)
+  for (var pairingId of pairingsId) {
+    //console.log(pairingId);
+    axios
+    .get(`/grade/my/reviewee`, {
+      method: "GET",
+      params: {
+        pairingId: pairingId,
+      },
+    })
+    .then((res) => {
+      let totalGrade = 0;
+      res.data.rows.forEach((grade) => {
+        totalGrade += grade.Grade;
+      });
+      //console.log("pairing id: " + pairingId);
+      //console.log("total grades: " + totalGrade);
+      //console.log(grades);
+      grades.push(totalGrade);
+      //array_name[index] = totalGrade;
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+  //console.log(grades);
+  setTotalGrade(grades);
+  //setTotalGrade(array_name);
+  //console.log(grades);
+};
+
+export const getAverageGradesForStudent = (moduleId, gradeData, setAverageGrades) => {
+  axios
+    .get(`/grade/my/reviewee`, {
+      method: "GET",
+      params: {
+        rubricId: gradeData.RubricID,
+      },
+    })
+    .then((res) => {
+      //let grades = new Map();
+      let grades = 0;
+      let count = 0;
+      res.data.rows.forEach((grade) => {
+        //console.log("displaying each grade");
+        //console.log(grade.Grade);
+        grades += grade.Grade;
+        count += 1;
+      });
+      //console.log("displaying average grade");
+      //console.log(grades);
+      setAverageGrades(grades/count);
     })
     .catch((err) => {
       console.log(err);

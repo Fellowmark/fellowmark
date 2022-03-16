@@ -17,7 +17,10 @@ import {
   createPairings,
   createQuestion,
   getAllPairings,
+  getAllPairingsId,
+  getGradesForStudent,
   getQuestions,
+  getTotalGradeForStudent,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar, Page } from "../../../components/NavBar";
 import {
@@ -37,6 +40,10 @@ import { AuthType } from "../../../reducers/reducer";
 import { Role } from "../../Login";
 import { getPageList } from "./Dashboard";
 import { Rubrics } from "./Rubrics";
+import axios from "axios";
+
+export var array_name:number[];        //declaration 
+array_name = [12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
@@ -346,7 +353,7 @@ export const ViewPairings: FC<{
         >
           Generate
         </Button>
-        <PairingsList pairings={pairings} setPairing={props.setPairing} />
+        <PairingsList assignmentId={props.assignmentId} pairings={pairings} setPairing={props.setPairing} />
         <MaxWidthDialogActions
           handleClose={() => setView(false)}
         ></MaxWidthDialogActions>
@@ -356,9 +363,28 @@ export const ViewPairings: FC<{
 };
 
 export const PairingsList: FC<{
+  assignmentId : number;
   pairings: Pagination<Pairing>;
   setPairing?: (pairing: Pairing) => void;
 }> = (props) => {
+
+  const [pairingsId, setPairingsId] = useState([]);
+  //const[grades, setTotalGrade] = useState([]);
+  
+  useEffect(() => {
+    getAllPairingsId(
+      { assignmentId: props.assignmentId },
+      setPairingsId
+    );
+  }, []);
+
+  // useEffect(() => {
+  //   if (pairingsId) {
+  //     //console.log(pairingsId);
+  //     getTotalGradeForStudent({ pairingsId: pairingsId }, setTotalGrade);   
+  //   }
+  // }, [pairingsId]);
+
   return (
     <>
       <StyledTableContainer>
@@ -366,16 +392,20 @@ export const PairingsList: FC<{
           <StyledTableCell>ID</StyledTableCell>
           <StyledTableCell>Student</StyledTableCell>
           <StyledTableCell>Marker</StyledTableCell>
+          <StyledTableCell>Grade</StyledTableCell>
         </StyledTableHead>
         <TableBody>
           {props.pairings?.rows &&
-            props.pairings?.rows.map((pairing) => {
+            props.pairings?.rows.map((pairing, index) => {
               return (
                 <StyledTableRow
                   hover={true}
                   key={pairing?.ID}
                   onClick={() => {
                     props.setPairing && props.setPairing(pairing);
+                    //console.log(pairingsId);
+                    //console.log(grades);
+                    //getTotalGradeForStudent({ pairingsId: pairingsId }, setTotalGrade);
                   }}
                 >
                   <StyledTableCell component="th" scope="row">
@@ -387,9 +417,12 @@ export const PairingsList: FC<{
                   <StyledTableCell component="th" scope="row">
                     {`${pairing?.Marker?.ID}, ${pairing?.Marker?.Name}, ${pairing?.Marker?.Email}`}
                   </StyledTableCell>
+                  <StyledTableCell component="th" scope="row">
+                    {array_name[index]}
+                  </StyledTableCell>
                 </StyledTableRow>
               );
-            })}
+           })}
         </TableBody>
       </StyledTableContainer>
     </>

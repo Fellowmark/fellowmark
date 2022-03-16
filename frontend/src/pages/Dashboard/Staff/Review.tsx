@@ -16,6 +16,7 @@ import { IHighlight } from "react-pdf-highlighter";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   downloadSubmission,
+  getAllPairingsId,
   getGradesForMarker,
   getRubrics,
 } from "../../../actions/moduleActions";
@@ -66,7 +67,7 @@ export const Review: FC<{
 
   return (
     <div>
-      <PairingsList pairings={{ rows: [props.pair] }} />
+      <PairingsList assignmentId={props.assignmentId} pairings={{ rows: [props.pair] }} />
       <a style={{ display: "none" }} href="empty" ref={ref}>
         ref
       </a>

@@ -9,6 +9,7 @@ import { FC, useContext, useEffect, useState } from "react";
 import { IHighlight } from "react-pdf-highlighter";
 import {
   downloadSubmission,
+  getAverageGradesForStudent,
   getGradesForStudent,
   getPairingAsReviewee,
   getRubrics,
@@ -48,9 +49,11 @@ export const Gradebook: FC<{
 }> = (props) => {
   const { state } = useContext(AuthContext);
   const [student, setStudent] = useState<number>(null);
+  const [rubric, setRubric] = useState<number>(null);
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
   const [rubrics, setRubrics] = useState<Pagination<Rubric>>({});
   const [grades, setGrades] = useState<Map<number, Grade>>(null);
+  const [averageGrade, setAverageGrades] = useState<number>(null);
   const [highlights, setHighlights] = useState<Array<IHighlight>>(
     new Array<IHighlight>()
   );
@@ -68,6 +71,12 @@ export const Gradebook: FC<{
       getGradesForStudent(moduleId, { PairingID: student }, setGrades);
     }
   }, [student]);
+
+  useEffect(() => {
+    if (rubric) {
+      getAverageGradesForStudent(moduleId, { RubricID: rubric }, setAverageGrades);
+    }
+  }, [rubric]);
 
   const handleDownload = async () => {
     try {
@@ -116,6 +125,7 @@ export const Gradebook: FC<{
               onChange={(e) => {
                 setStudent(e.target.value as number);
                 setGrades(null);
+                //setRubrics(null);
                 handleDownload();
               }}
             >
@@ -134,6 +144,7 @@ export const Gradebook: FC<{
                 <StyledTableCell>Description</StyledTableCell>
                 <StyledTableCell>Min</StyledTableCell>
                 <StyledTableCell>Max</StyledTableCell>
+                <StyledTableCell>Summary</StyledTableCell>
                 {grades && (
                   <>
                     <StyledTableCell>Grade</StyledTableCell>
@@ -144,7 +155,7 @@ export const Gradebook: FC<{
               <TableBody>
                 {rubrics.rows?.map((rubric) => {
                   return (
-                    <StyledTableRow hover={true} key={rubric.ID}>
+                    <StyledTableRow hover={true} key={rubric.ID} onClick={(e) => setRubric(rubric.ID)}>
                       <StyledTableCell component="th" scope="row">
                         {rubric.ID}
                       </StyledTableCell>
@@ -159,6 +170,9 @@ export const Gradebook: FC<{
                       </StyledTableCell>
                       <StyledTableCell component="th" scope="row">
                         {rubric.MaxMark}
+                      </StyledTableCell>
+                      <StyledTableCell component="th" scope="row">
+                        {averageGrade}
                       </StyledTableCell>
                       {grades && (
                         <>
