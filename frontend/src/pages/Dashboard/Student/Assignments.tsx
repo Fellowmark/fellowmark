@@ -39,7 +39,7 @@ export const Assignments: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage="Assignments" username={`${state?.user?.Name}`}/>
+      <ButtonAppBar pageList={pageList} currentPage="Assignments" username={`${state?.user?.Name}`} colour='pink'/>
       <StyledTableContainer>
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>

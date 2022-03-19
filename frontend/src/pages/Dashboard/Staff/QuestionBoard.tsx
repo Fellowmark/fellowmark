@@ -113,6 +113,7 @@ export const QuestionBoard: FC = () => {
         pageList={pageList}
         currentPage={`${state?.assignment?.Name}`}
         username={`${state?.user?.Name}`}
+        colour='deepPurple'
       />
       <MaxWidthDialog
         title="Rubric"

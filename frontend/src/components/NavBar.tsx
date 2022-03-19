@@ -25,6 +25,7 @@ export interface MenuProps {
   pageList: Page[];
   currentPage: string;
   username: string;
+  colour: string;
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -56,7 +57,7 @@ export const ButtonAppBar: FC<MenuProps> = (props) => {
 
   return (
     <div className={classes.root}>
-      <AppBar>
+      <AppBar style={{backgroundColor: props.colour}}>
         <Toolbar>
           {props.pageList.length > 0 && (
             <div>

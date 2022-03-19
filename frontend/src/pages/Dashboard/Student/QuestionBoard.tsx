@@ -110,6 +110,7 @@ export const QuestionBoard: FC = () => {
         pageList={pageList}
         currentPage={`${state?.assignment?.Name}`}
         username={`${state?.user?.Name}`}
+        colour='pink'
       />
       <MaxWidthDialog
         title="Peer Review"

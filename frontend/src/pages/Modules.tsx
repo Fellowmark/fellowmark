@@ -43,8 +43,14 @@ export const ModuleList: FC = () => {
   const [modules, setModules] = useState<ModuleInfo[]>([]);
   const { state } = useContext(AuthContext);
   const classes = useStyles();
-
+  var colour = '';
   const pageList: Page[] = [];
+
+  if (state?.role === Role.STUDENT) {
+    colour = 'pink';
+  } else if (state?.role === Role.STAFF) {
+    colour = 'deepPurple';
+  }
 
   useEffect(() => {
     if (state?.role === Role.STUDENT) {
@@ -57,7 +63,7 @@ export const ModuleList: FC = () => {
 
   return (
     <div className={classes.root}>
-      <ButtonAppBar pageList={pageList} currentPage="Modules" username= {`${state?.user?.Name}`} />
+      <ButtonAppBar pageList={pageList} currentPage="Modules" username= {`${state?.user?.Name}`} colour={colour} />
       <Grid container className="page-background" spacing={3}>
         {modules?.map((module) => {
           return <Module key={module.ID} {...module} />;
