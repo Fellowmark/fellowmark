@@ -67,6 +67,14 @@ type Supervision struct {
 	StaffID  uint  `gorm:"uniqueIndex:supervisionIdx;column:staff_id;not null"`
 }
 
+type Assistance struct {
+	Model
+	Module    Module  `gorm:"foreignKey:ModuleID;references:ID" json:"-"`
+	ModuleID uint  `gorm:"uniqueIndex:assistanceIdx;column:module_id;not null"`
+	Student   Student `gorm:"foreignKey:StudentID"`
+	StudentID uint    `gorm:"uniqueIndex:assistanceIdx;column:student_id;not null"`
+}
+
 type Assignment struct {
 	Model
 	Name      string `gorm:"uniqueIndex:assignmentIdx;column:name;not null"`
