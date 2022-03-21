@@ -34,7 +34,7 @@ import {
   StyledTableRow,
 } from "../../../components/StyledTable";
 import { AuthContext, ContextPayload } from "../../../context/context";
-import { Pairing, Question } from "../../../models/models";
+import { Grade, Pairing, Question } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import { AuthType } from "../../../reducers/reducer";
 import { Role } from "../../Login";
@@ -368,23 +368,16 @@ export const PairingsList: FC<{
   setPairing?: (pairing: Pairing) => void;
 }> = (props) => {
 
-  const [pairingsId, setPairingsId] = useState([]);
-  //const[grades, setTotalGrade] = useState([]);
+  const [grades, setTotalGrade] = useState<Map<number, number>>(null);
   
   useEffect(() => {
     getAllPairingsId(
       { assignmentId: props.assignmentId },
-      setPairingsId
+      setTotalGrade
     );
   }, []);
 
-  // useEffect(() => {
-  //   if (pairingsId) {
-  //     //console.log(pairingsId);
-  //     getTotalGradeForStudent({ pairingsId: pairingsId }, setTotalGrade);   
-  //   }
-  // }, [pairingsId]);
-
+  //console.log('[Question page]: grades', grades);
   return (
     <>
       <StyledTableContainer>
@@ -397,15 +390,14 @@ export const PairingsList: FC<{
         <TableBody>
           {props.pairings?.rows &&
             props.pairings?.rows.map((pairing, index) => {
+              //onsole.log('[Questions page] grade map', grades);
+              //console.log('[Questions page] grades', grades?.get(pairing?.ID));
               return (
                 <StyledTableRow
                   hover={true}
                   key={pairing?.ID}
                   onClick={() => {
                     props.setPairing && props.setPairing(pairing);
-                    //console.log(pairingsId);
-                    //console.log(grades);
-                    //getTotalGradeForStudent({ pairingsId: pairingsId }, setTotalGrade);
                   }}
                 >
                   <StyledTableCell component="th" scope="row">
@@ -418,7 +410,7 @@ export const PairingsList: FC<{
                     {`${pairing?.Marker?.ID}, ${pairing?.Marker?.Name}, ${pairing?.Marker?.Email}`}
                   </StyledTableCell>
                   <StyledTableCell component="th" scope="row">
-                    {array_name[index]}
+                    {grades?.get(pairing?.ID)}
                   </StyledTableCell>
                 </StyledTableRow>
               );

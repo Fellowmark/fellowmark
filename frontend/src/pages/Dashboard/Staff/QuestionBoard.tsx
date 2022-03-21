@@ -145,6 +145,7 @@ export const QuestionBoard: FC = () => {
           assignmentId={assignmentId}
           questionId={questionId}
           pair={selectedPair}
+          //grade={grade}
         />
 
         <MaxWidthDialogActions handleClose={() => selectPair(null)} />

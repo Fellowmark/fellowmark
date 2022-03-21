@@ -64,7 +64,6 @@ export const Review: FC<{
       alert("No submission found");
     }
   };
-
   return (
     <div>
       <PairingsList assignmentId={props.assignmentId} pairings={{ rows: [props.pair] }} />
@@ -116,6 +115,7 @@ export const Review: FC<{
             </StyledTableHead>
             <TableBody>
               {rubrics.rows?.map((rubric) => {
+                
                 return (
                   <StyledTableRow hover={true} key={rubric.ID}>
                     <StyledTableCell component="th" scope="row">

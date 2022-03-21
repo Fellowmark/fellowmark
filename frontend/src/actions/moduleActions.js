@@ -99,44 +99,46 @@ export const getAllPairings = ({ assignmentId }, setPairings) => {
     });
 };
 
-export const getAllPairingsId = ({ assignmentId }, setPairingsId) => {
+export const getAllPairingsId = async ({ assignmentId }, setTotalGrade) => {
   let pairingIds = [];
-  let grades = [];
-  axios
-    .get(`/assignment/pairs`, {
-      params: {
-        assignmentId: assignmentId,
-      },
-    })
-    .then((res) => {
-      res.data.rows.forEach((pairing) => {
-        pairingIds.push(pairing.ID);
-        //console.log(pairing.ID);
-      });
-      for (var pairingId of pairingIds) {
-        console.log(pairingId);
-        let index = 0;
-        axios
-          .get(`/grade/my/reviewee`, {
-            method: "GET",
-            params: {
-              pairingId: pairingId,
-            },
-          })
-          .then((res) => {
-            let totalGrade = 0;
-            res.data.rows.forEach((grade) => {
-              totalGrade += grade.Grade;
-            });
-            //grades.push(totalGrade);
-            grades[index] = totalGrade;
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-        index += 1;
-      }
-      setPairingsId(pairingIds);
+  let grades = new Map();
+  //console.log('[Module actions] assignment id', assignmentId);
+  await axios 
+    .get(`/assignment/pairs`, { 
+      params: { 
+        assignmentId: assignmentId, 
+      }, 
+    }) 
+    .then(async (res) => { 
+      console.log('[res data for pairing id]', res.data.rows[0].ID);
+      if(res.data.rows){ 
+        //for(var pairing in res.data.rows) { 
+        for (var i = 0; i < res.data.rows.length; i++) {
+          let pairing = res.data.rows[i].ID;
+          pairingIds.push(pairing); 
+          console.log('[pairing id in for loop]', pairing);
+          const pairingGrade = await axios.get(`/grade/my/reviewee`, { 
+            method: "GET", 
+            params: { 
+              pairingId: pairing, 
+            }, 
+          }) 
+          let totalGrade = 0;  
+          //console.log('[pairing grade data rows]', pairingGrade.data.rows);
+          if(pairingGrade.data.rows){ 
+            let idx = 0;
+            //for (var i = 0; i < pairingGrade.data.rows.length; i++) {
+            for(const grade in pairingGrade.data.rows){ 
+              //totalGrade += pairingGrade.data.rows[i].Grade; 
+              totalGrade += pairingGrade.data.rows[idx].Grade;
+              idx += 1; 
+            } 
+            grades.set(pairing, totalGrade); 
+          } 
+        } 
+    } 
+      //console.log('[Module Actions] grades', grades);
+      setTotalGrade(grades);
     })
     .catch((err) => {
       console.error(err);
