@@ -29,8 +29,8 @@ export const getPageList = (match): Page[] => {
 
   return [
     {
-      title: "Assignments",
-      path: `/student/module/${moduleId}/assignments`,
+      title: "Class",
+      path: `/student/ta/module/${moduleId}/class`,
     },
   ];
 };
@@ -47,16 +47,20 @@ export const useValidCheck = (history, authContext, match, setIsValid?) => {
 
   useEffect(() => {
     if (authContext?.module?.ID !== moduleId) {
-      history.push("/student");
+      history.push("/student/ta");
     } else {
       setIsValid(true);
     }
   }, []);
 
+  useEffect(() => {
+    //TODO: if he/she is a ta of this module
+  }, [])
+
   return moduleId;
 };
 
-export const StudentModuleDashboard: FC = () => {
+export const TAModuleDashboard: FC = () => {
   const match = useRouteMatch();
   const { state } = useContext(AuthContext);
   const history = useHistory();
@@ -66,7 +70,7 @@ export const StudentModuleDashboard: FC = () => {
 
   useEffect(() => {
     if (isValid) {
-      history.push(`${match.url}/assignments`);
+      history.push(`${match.url}/class`);
     }
   }, [isValid]);
 

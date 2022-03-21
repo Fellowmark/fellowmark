@@ -17,6 +17,7 @@ export enum Role {
   STUDENT = "Student",
   STAFF = "Staff",
   ADMIN = "Admin",
+  TA = "TA",
 }
 
 export const Login: React.FC<RouteComponentProps> = (props) => {

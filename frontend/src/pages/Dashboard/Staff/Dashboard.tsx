@@ -37,6 +37,10 @@ export const getPageList = (match): Page[] => {
       path: `/staff/module/${moduleId}/supervisors`,
     },
     {
+      title: "TAs",
+      path: `/staff/module/${moduleId}/tas`,
+    },
+    {
       title: "Assignments",
       path: `/staff/module/${moduleId}/assignments`,
     },

@@ -17,7 +17,7 @@ import {
 import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
-import { getStaffModules, getStudentModules, getModules } from "../actions/moduleActions";
+import { getStaffModules, getStudentModules, getTAModules, getModules } from "../actions/moduleActions";
 import { ButtonAppBar, Page } from "../components/NavBar";
 import { AuthContext } from "../context/context";
 import { AuthType } from "../reducers/reducer";
@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-export const ModuleList: FC = () => {
+export const ModuleList: FC<{ role: Role }> = (props) => {
   const [modules, setModules] = useState<ModuleInfo[]>([]);
   const [open, setOpen] = useState(false);
   const [pageList, setPageList] = useState<Page[]>([]);
@@ -56,7 +56,21 @@ export const ModuleList: FC = () => {
 
   useEffect(() => {
     if (state?.role === Role.STUDENT) {
-      getStudentModules(setModules);
+      if (props.role === Role.STUDENT) {
+        getStudentModules(setModules);
+      } else if (props.role === Role.TA) {
+        getTAModules(setModules);
+      }
+      setPageList([
+        {
+          title: "Modules",
+          path: "/student",
+        },
+        {
+          title: "TA Modules",
+          path: "/student/ta",
+        },
+      ])
     } else if (state?.role === Role.STAFF) {
       getStaffModules(setModules);
     } else if (state?.role === Role.ADMIN) {
@@ -92,7 +106,7 @@ export const ModuleList: FC = () => {
 
   return (
     <div className={classes.root}>
-      <ButtonAppBar pageList={pageList} currentPage="Modules" />
+      <ButtonAppBar pageList={pageList} currentPage={props.role === Role.TA? "TA Modules" : "Modules"} />
       <Grid container className="page-background" spacing={3}>
         {
           state?.role === Role.STAFF ? (

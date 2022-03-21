@@ -32,13 +32,17 @@ export const RoleHome: FC<{ role: Role }> = (props) => {
 
   useEffect(() => {
     if (state?.role !== props.role) {
-      history.replace("/");
+      if (state?.role === Role.STUDENT && props.role === Role.TA) {
+        setIsLoaded(true);
+      } else {
+        history.replace("/");
+      }
     } else {
       setIsLoaded(true);
     }
   }, []);
 
-  const userComponent = <ModuleList />;
+  const userComponent = <ModuleList role={props.role}/>;
 
   return (
     <Grid container>
