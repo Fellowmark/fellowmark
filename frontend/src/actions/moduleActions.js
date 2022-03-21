@@ -22,17 +22,33 @@ export const createEnrollment = (moduleId, studentEmails) => {
 };
 
 /**
- * Adds a staff member to a module
+ * delete a student from a module
  *
  * @param {int} moduleId
  * @param {int} staffId
  */
-export const createSupervision = (moduleId, staffId) => {
-  axios
-    .post(`/module/supervise`, { ModuleID: moduleId, StaffID: staffId })
-    .catch((err) => {
-      console.error(err);
-    });
+ export const deleteEnrollment = (moduleId, studentId) => {
+  return axios.delete(`/module/enroll`, { data: {ModuleID: moduleId, StudentID: studentId} })
+};
+
+/**
+ * Adds a staff member to a module
+ *
+ * @param {int} moduleId
+ * @param {string[]} staffEmails
+ */
+export const createSupervision = (moduleId, staffEmails) => {
+  return axios.post(`/module/supervise`, { ModuleID: moduleId, StaffEmails: staffEmails })
+};
+
+/**
+ * delete a staff member from a module
+ *
+ * @param {int} moduleId
+ * @param {int} staffId
+ */
+ export const deleteSupervision = (moduleId, staffId) => {
+  return axios.delete(`/module/supervise`, { data: {ModuleID: moduleId, StaffID: staffId} })
 };
 
 /**

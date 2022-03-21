@@ -20,6 +20,13 @@ type BatchEnrollment struct {
 	StudentEmails []string `json:"studentEmails"`
 }
 
+type BatchSupervision struct {
+	ModuleID  uint `json:"moduleId"`
+	StaffID uint `json:"staffId"`
+	StaffIDs []uint `json:"staffIds"`
+	StaffEmails []string `json:"staffEmails"`
+}
+
 func (controller ModuleController) CreateRouters(route *mux.Router) {
 	controller.CreatePrivilegedRouter(route.NewRoute().Subrouter())
 	controller.GetModulesRoute(route.NewRoute().Subrouter())
@@ -32,7 +39,9 @@ func (controller ModuleController) CreatePrivilegedRouter(route *mux.Router) {
 
 	controller.CreateModuleRouter(route.NewRoute().Subrouter())
 	controller.CreateEnrollmentRoute(route.PathPrefix("/enroll").Subrouter())
+	controller.DeleteEnrollmentRoute(route.PathPrefix("/enroll").Subrouter())
 	controller.CreateSupervisionRoute(route.PathPrefix("/supervise").Subrouter())
+	controller.DeleteSupervisionRoute(route.PathPrefix("/supervise").Subrouter())
 	controller.GetStudentEnrolledModules(route.PathPrefix("/enroll").Subrouter())
 	controller.GetStaffSupervisions(route.PathPrefix("/supervise").Subrouter())
 }
@@ -52,10 +61,26 @@ func (controller ModuleController) CreateEnrollmentRoute(route *mux.Router) {
 	route.HandleFunc("", controller.EnrollmentCreateHandleFunc()).Methods(http.MethodPost)
 }
 
+func (controller ModuleController) DeleteEnrollmentRoute(route *mux.Router) {
+	route.Use(utils.IsStaffMiddleware(controller.DB))
+	route.Use(utils.DecodeBodyMiddleware(&models.Enrollment{}))
+	route.Use(controller.CheckStaffSupervision())
+	route.HandleFunc("", controller.EnrollmentDeleteHandleFunc()).Methods(http.MethodDelete)
+}
+
 func (controller ModuleController) CreateSupervisionRoute(route *mux.Router) {
-	route.Use(utils.IsAdminMiddleware(controller.DB))
-	route.Use(utils.DecodeBodyMiddleware(&models.Supervision{}))
+	route.Use(utils.IsStaffMiddleware(controller.DB))
+	route.Use(utils.DecodeBodyMiddleware(&BatchSupervision{}))
+	route.Use(controller.CheckStaffSupervision())
+	route.Use(controller.SupervisionDataPrepare())
 	route.HandleFunc("", controller.SupervisionCreateHandleFunc()).Methods(http.MethodPost)
+}
+
+func (controller ModuleController) DeleteSupervisionRoute(route *mux.Router) {
+	route.Use(utils.IsStaffMiddleware(controller.DB))
+	route.Use(utils.DecodeBodyMiddleware(&models.Supervision{}))
+	route.Use(controller.CheckStaffSupervision())
+	route.HandleFunc("", controller.SupervisionDeleteHandleFunc()).Methods(http.MethodDelete)
 }
 
 func (controller ModuleController) GetModulesRoute(route *mux.Router) {
