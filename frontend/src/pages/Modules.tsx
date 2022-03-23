@@ -47,8 +47,10 @@ export const ModuleList: FC = () => {
   const pageList: Page[] = [];
 
   if (state?.role === Role.STUDENT) {
-    colour = 'pink';
+    colour = 'teal';
   } else if (state?.role === Role.STAFF) {
+    colour = 'deepPurple';
+  } else if (state?.role === Role.ADMIN) {
     colour = 'deepPurple';
   }
 

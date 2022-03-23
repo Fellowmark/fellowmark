@@ -1,5 +1,4 @@
 import axios from "axios";
-import {array_name} from "../pages/Dashboard/Staff/Questions"
 
 /**
  * Creates module using given data
@@ -99,7 +98,7 @@ export const getAllPairings = ({ assignmentId }, setPairings) => {
     });
 };
 
-export const getAllPairingsId = async ({ assignmentId }, setTotalGrade) => {
+export const getTotalGradesForStaff = async ({ assignmentId }, setTotalGrade) => {
   let pairingIds = [];
   let grades = new Map();
   //console.log('[Module actions] assignment id', assignmentId);
@@ -110,34 +109,26 @@ export const getAllPairingsId = async ({ assignmentId }, setTotalGrade) => {
       }, 
     }) 
     .then(async (res) => { 
-      console.log('[res data for pairing id]', res.data.rows[0].ID);
       if(res.data.rows){ 
-        //for(var pairing in res.data.rows) { 
-        for (var i = 0; i < res.data.rows.length; i++) {
-          let pairing = res.data.rows[i].ID;
-          pairingIds.push(pairing); 
-          console.log('[pairing id in for loop]', pairing);
+        for(const pairingIndex in res.data.rows) {
+          const pairingId = res.data.rows[pairingIndex].ID;
+          pairingIds.push(pairingId); 
           const pairingGrade = await axios.get(`/grade/my/reviewee`, { 
             method: "GET", 
             params: { 
-              pairingId: pairing, 
+              pairingId: pairingId, 
             }, 
           }) 
           let totalGrade = 0;  
-          //console.log('[pairing grade data rows]', pairingGrade.data.rows);
           if(pairingGrade.data.rows){ 
-            let idx = 0;
-            //for (var i = 0; i < pairingGrade.data.rows.length; i++) {
-            for(const grade in pairingGrade.data.rows){ 
-              //totalGrade += pairingGrade.data.rows[i].Grade; 
-              totalGrade += pairingGrade.data.rows[idx].Grade;
-              idx += 1; 
+            for(const gradeIndex in pairingGrade.data.rows){ 
+              const grade = pairingGrade.data.rows[gradeIndex]
+              totalGrade += grade.Grade; 
             } 
-            grades.set(pairing, totalGrade); 
+            grades.set(pairingId, totalGrade); 
           } 
         } 
-    } 
-      //console.log('[Module Actions] grades', grades);
+      } 
       setTotalGrade(grades);
     })
     .catch((err) => {
@@ -480,64 +471,60 @@ export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
     });
 };
 
-export const getTotalGradeForStudent = ({ pairingsId }, setTotalGrade) => {
-  let grades = [];
-  //console.log(pairingsId)
-  for (var pairingId of pairingsId) {
-    //console.log(pairingId);
-    axios
-    .get(`/grade/my/reviewee`, {
-      method: "GET",
-      params: {
-        pairingId: pairingId,
-      },
-    })
-    .then((res) => {
-      let totalGrade = 0;
-      res.data.rows.forEach((grade) => {
-        totalGrade += grade.Grade;
-      });
-      //console.log("pairing id: " + pairingId);
-      //console.log("total grades: " + totalGrade);
-      //console.log(grades);
-      grades.push(totalGrade);
-      //array_name[index] = totalGrade;
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-  }
-  //console.log(grades);
-  setTotalGrade(grades);
-  //setTotalGrade(array_name);
-  //console.log(grades);
-};
-
-export const getAverageGradesForStudent = (moduleId, gradeData, setAverageGrades) => {
-  axios
-    .get(`/grade/my/reviewee`, {
-      method: "GET",
-      params: {
-        rubricId: gradeData.RubricID,
-      },
-    })
-    .then((res) => {
-      //let grades = new Map();
-      let grades = 0;
-      let count = 0;
-      res.data.rows.forEach((grade) => {
-        //console.log("displaying each grade");
-        //console.log(grade.Grade);
-        grades += grade.Grade;
-        count += 1;
-      });
-      //console.log("displaying average grade");
-      //console.log(grades);
-      setAverageGrades(grades/count);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+export const getAverageGradesForStudent = async (moduleId, assignmentId, setAverageGrades) => {
+  const grades = new Map();
+  await axios 
+  .get(`/assignment/pairs/mymarkers`, { 
+    params: { 
+      assignmentId,
+    }, 
+  }) 
+  .then(async (res) => { 
+    if(res.data.rows){ 
+      let gradeByRubric = {};
+      let pairingIds = [];
+      let countGradeByRubric = {};
+      for(const pairingIndex in res.data.rows) {
+        const pairingId = res.data.rows[pairingIndex].ID;
+        pairingIds.push(pairingId); 
+        const pairingGrade = await axios.get(`/grade/my/reviewee`, { 
+          method: "GET", 
+          params: { 
+            pairingId: pairingId, 
+          }, 
+        })
+        if(pairingGrade.data.rows) { 
+          for(const gradeIndex in pairingGrade.data.rows){  
+            const gradeObj = pairingGrade.data.rows[gradeIndex];
+            const grade = gradeObj.Grade;
+            const rubricID = gradeObj.RubricID;
+            if(gradeByRubric[rubricID]){
+            const newGradeByRubric = gradeByRubric[rubricID] + (grade);
+            console.log('new grade', newGradeByRubric);
+            const newCountGradeByRubric = countGradeByRubric[rubricID] + 1;
+                gradeByRubric = {...gradeByRubric, [rubricID]: newGradeByRubric };
+                countGradeByRubric = {...countGradeByRubric, [rubricID]: newCountGradeByRubric };
+            }
+            else{
+                gradeByRubric = {...gradeByRubric, [rubricID]: grade };
+                countGradeByRubric = {...countGradeByRubric, [rubricID]: 1};
+            }
+          } 
+        }
+      }
+      console.log('grade by rubric', gradeByRubric);
+      Object.keys(gradeByRubric).forEach((rubricId)=> {
+        const totalScore = gradeByRubric[rubricId];
+        const averageScore = totalScore / countGradeByRubric[rubricId];
+        grades.set(parseInt(rubricId), averageScore);
+      })
+    }
+    console.log('[grades]', grades);
+    setAverageGrades(grades);
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 };
 
 export const getGradesForMarker = (moduleId, gradeData, setGrades) => {

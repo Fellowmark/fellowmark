@@ -53,7 +53,7 @@ export const Gradebook: FC<{
   const [pairings, setPairings] = useState<Pagination<Pairing>>({});
   const [rubrics, setRubrics] = useState<Pagination<Rubric>>({});
   const [grades, setGrades] = useState<Map<number, Grade>>(null);
-  const [averageGrade, setAverageGrades] = useState<number>(null);
+  const [averageGrade, setAverageGrades] = useState<Map<number, number>>(null);
   const [highlights, setHighlights] = useState<Array<IHighlight>>(
     new Array<IHighlight>()
   );
@@ -71,12 +71,11 @@ export const Gradebook: FC<{
       getGradesForStudent(moduleId, { PairingID: student }, setGrades);
     }
   }, [student]);
-
+  console.log('[grades gradebook]', grades);
+  console.log('[average grade]', averageGrade);
   useEffect(() => {
-    if (rubric) {
-      getAverageGradesForStudent(moduleId, { RubricID: rubric }, setAverageGrades);
-    }
-  }, [rubric]);
+      getAverageGradesForStudent(moduleId, props.assignmentId , setAverageGrades);
+  }, []);
 
   const handleDownload = async () => {
     try {
@@ -172,7 +171,7 @@ export const Gradebook: FC<{
                         {rubric.MaxMark}
                       </StyledTableCell>
                       <StyledTableCell component="th" scope="row">
-                        {averageGrade}
+                        {averageGrade?.get(rubric.ID)}
                       </StyledTableCell>
                       {grades && (
                         <>

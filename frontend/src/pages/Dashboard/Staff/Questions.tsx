@@ -17,10 +17,9 @@ import {
   createPairings,
   createQuestion,
   getAllPairings,
-  getAllPairingsId,
   getGradesForStudent,
   getQuestions,
-  getTotalGradeForStudent,
+  getTotalGradesForStaff,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar, Page } from "../../../components/NavBar";
 import {
@@ -371,7 +370,7 @@ export const PairingsList: FC<{
   const [grades, setTotalGrade] = useState<Map<number, number>>(null);
   
   useEffect(() => {
-    getAllPairingsId(
+    getTotalGradesForStaff(
       { assignmentId: props.assignmentId },
       setTotalGrade
     );

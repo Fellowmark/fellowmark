@@ -16,8 +16,8 @@ import { IHighlight } from "react-pdf-highlighter";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   downloadSubmission,
-  getAllPairingsId,
   getGradesForMarker,
+  getAllPairings,
   getRubrics,
 } from "../../../actions/moduleActions";
 import { Annotator } from "../../../components/PdfViewer";

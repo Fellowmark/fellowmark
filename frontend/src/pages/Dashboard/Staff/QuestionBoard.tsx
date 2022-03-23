@@ -11,7 +11,6 @@ import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   getAllPairings,
-  getAllPairingsId,
   getGradesForStudent,
   getSubmissionMetadata,
 } from "../../../actions/moduleActions";
