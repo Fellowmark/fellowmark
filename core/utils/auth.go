@@ -175,6 +175,14 @@ func IsAdmin(user models.User, db *gorm.DB) bool {
 	return true
 }
 
+func IsStaff(user models.User, db *gorm.DB) bool {
+	result := db.Take(&models.Staff{}, "id = ?", user.ID)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	return true
+}
+
 func IsSupervisor(user models.User, moduleId uint, db *gorm.DB) bool {
 	if bypass := IsAdmin(user, db); bypass {
 		return true
@@ -259,6 +267,19 @@ func IsAdminMiddleware(db *gorm.DB) mux.MiddlewareFunc {
 	}
 }
 
+func IsStaffMiddleware(db *gorm.DB) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(JWTClaimContextKey).(*models.User)
+			if IsStaff(*data, db) {
+				next.ServeHTTP(w, r)
+			} else {
+				HandleResponse(w, "Insufficient Permissions", http.StatusUnauthorized)
+			}
+		})
+	}
+}
+
 func LoginHandleFunc(db *gorm.DB, scope func(db *gorm.DB) *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var input models.User
@@ -271,13 +292,13 @@ func LoginHandleFunc(db *gorm.DB, scope func(db *gorm.DB) *gorm.DB) http.Handler
 		result := db.Scopes(scope).Take(&user, "email = ?", input.Email)
 
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			HandleResponse(w, "Incorrect email", http.StatusUnauthorized)
+			HandleResponse(w, "Email or password incorrect", http.StatusUnauthorized)
 			return
 		}
 
 		isEqual, _ := argon2id.ComparePasswordAndHash(input.Password, user.Password)
 		if !isEqual {
-			HandleResponse(w, "Incorrect Password", http.StatusUnauthorized)
+			HandleResponse(w, "Email or password incorrect", http.StatusUnauthorized)
 			return
 		}
 
@@ -287,5 +308,21 @@ func LoginHandleFunc(db *gorm.DB, scope func(db *gorm.DB) *gorm.DB) http.Handler
 		} else {
 			HandleResponse(w, token, http.StatusOK)
 		}
+	}
+}
+
+func AccountExistCheckMiddleware(db *gorm.DB, model interface{}, contextKey string, shouldExist bool, errMessage string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(contextKey).(*models.User)
+			account := make(map[string]interface{})
+			dbResult := db.Model(model).Where("email = ?", data.Email).Take(&account)
+			found := !(errors.Is(dbResult.Error, gorm.ErrRecordNotFound))
+			if (found && !shouldExist) || (!found && shouldExist) {
+				HandleResponse(w, errMessage, http.StatusBadRequest)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
 	}
 }

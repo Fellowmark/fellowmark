@@ -1,5 +1,7 @@
 import {
   Button,
+  FormControl,
+  Grid,
   IconButton,
   TableBody,
   TextField,
@@ -7,15 +9,20 @@ import {
   DialogActions,
   makeStyles
 } from "@material-ui/core";
+import DateFnsUtils from "@date-io/moment"; // choose your lib
 import AddIcon from "@material-ui/icons/Add";
+import { DateTimePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
-  getEnrollments,
+  createAssignment,
+  getAssignments,
+  getSupervisions,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar } from "../../../components/NavBar";
 import {
   MaxWidthDialog,
+  MaxWidthDialogActions,
 } from "../../../components/PopUpDialog";
 import {
   StyledTableCell,
@@ -24,10 +31,11 @@ import {
   StyledTableRow,
 } from "../../../components/StyledTable";
 import { AuthContext } from "../../../context/context";
-import { Enrollment } from "../../../models/models";
+import { Assignment, Supervision } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
-import { getPageList, useValidCheck } from "./Dashboard";
-import { createEnrollment, deleteEnrollment } from "../../../actions/moduleActions";
+import moment from "moment";
+import { getPageList, useFormStyles, useValidCheck } from "./Dashboard";
+import { createSupervision, deleteSupervision } from "../../../actions/moduleActions";
 
 const useStyles = makeStyles((theme) => ({
   error: {
@@ -36,24 +44,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export const Class: FC = () => {
+export const Supervisors: FC = () => {
   const match = useRouteMatch();
   const { state } = useContext(AuthContext);
   const [isValid, setIsValid] = useState(false);
-  const [enrollments, setEnrollments] = useState<Pagination<Enrollment>>({});
+  const [supervisions, setSupervisions] = useState<Pagination<Supervision>>({});
   const [open, setOpen] = useState(false);
-  const [enrollEmails, setEnrollEmails] = useState("");
-  const [enrollErrorMessages, setEnrollErrorMessages] = useState([]);
+  const [superviseEmails, setSuperviseEmails] = useState("");
+  const [superviseErrorMessages, setSuperviseErrorMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false)
   const classes = useStyles()
-
-  const handleEnrollEmailsChange = (event) => {
-    setEnrollEmails(event.target.value)
-    if (enrollErrorMessages.length > 0){
-      setEnrollErrorMessages([])
-    }
-  };
-
   const history = useHistory();
 
   const moduleId: number = useValidCheck(history, state, match, setIsValid);
@@ -62,9 +62,16 @@ export const Class: FC = () => {
 
   useEffect(() => {
     if (isValid) {
-      getEnrollments({ moduleId: moduleId }, setEnrollments);
+      getSupervisions({ moduleId: moduleId }, setSupervisions);
     }
   }, [isValid]);
+
+  const handleSuperviseEmailsChange = (event) => {
+    setSuperviseEmails(event.target.value)
+    if (superviseErrorMessages.length > 0){
+      setSuperviseErrorMessages([])
+    }
+  };
 
   const handleOpen = () => {
     setOpen(true);
@@ -74,19 +81,19 @@ export const Class: FC = () => {
     setOpen(false);
   };
 
-  const enrollStudents = () => {
+  const addStaffs = () => {
     setIsSubmitting(true)
-    let emailArr = enrollEmails.split(/,|\n|\s/)
+    let emailArr = superviseEmails.split(/,|\n|\s/)
     emailArr = emailArr.filter(email => email)
     const emailCount = emailArr.length
-    createEnrollment(moduleId, emailArr).then(res => {
+    createSupervision(moduleId, emailArr).then(res => {
       const successCount = res.data.success
-      const errMessages =  res.data.enrollErrors
+      const errMessages =  res.data.superviseErrors
       if (successCount == emailCount) {
-        setEnrollEmails("")
-        setEnrollErrorMessages([])
-        getEnrollments({ moduleId: moduleId }, setEnrollments);
-        alert("All students are enrolled successfully!")
+        setSuperviseEmails("")
+        setSuperviseErrorMessages([])
+        getSupervisions({ moduleId: moduleId }, setSupervisions);
+        alert("All supervisors are added successfully!")
         setIsSubmitting(false)
       } else {
         const failedEmails = []
@@ -97,34 +104,34 @@ export const Class: FC = () => {
             emailAndErrors.push(emailArr[i] + " : " + errMessages[i])
           }
         }
-        setEnrollErrorMessages(emailAndErrors)
-        setEnrollEmails(failedEmails.join('\n'))
+        setSuperviseErrorMessages(emailAndErrors)
+        setSuperviseEmails(failedEmails.join('\n'))
         if (failedEmails.length < emailCount) {
-          getEnrollments({ moduleId: moduleId }, setEnrollments);
+          getSupervisions({ moduleId: moduleId }, setSupervisions);
         }
-        alert("Not all students are enrolled successfully. Please check the error messages.")
+        alert("Not all supervisors are added successfully. Please check the error messages.")
         setIsSubmitting(false)
       }
     }).catch(err => {
       let message = ""
       if (err && err.response && err.response.data && err.response.data.message) {
-        message = "Enrollment failed:" + err.response.data.message
+        message = "Add supervisors failed:" + err.response.data.message
       } else {
-        message = "Enrollment failed"
+        message = "Add supervisors failed"
       }
-      setEnrollErrorMessages([message])
+      setSuperviseErrorMessages([message])
       alert(message)
       setIsSubmitting(false)
     })
   }
 
-  const deleteStudent = (enrollment) => {
-    const confirmed = window.confirm(`Are you sure you want to delete student ${enrollment.Student.Name}?`)
+  const deleteStaff = (supervision) => {
+    const confirmed = window.confirm(`Are you sure you want to delete supervisor ${supervision.Staff.Name}?`)
     if (!confirmed) {
       return
     }
-    deleteEnrollment(moduleId, enrollment.Student.ID).then(res => {
-      getEnrollments({ moduleId: moduleId }, setEnrollments);
+    deleteSupervision(moduleId, supervision.Staff.ID).then(res => {
+      getSupervisions({ moduleId: moduleId }, setSupervisions);
       alert("Successfully deleted!")
     }).catch(err => {
       if (err && err.response && err.response.data && err.response.data.message) {
@@ -137,28 +144,28 @@ export const Class: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage="Class" username={`${state?.user?.Name}`} colour='deepPurple'/>
+      <ButtonAppBar pageList={pageList} currentPage="Supervisors" username={`${state?.user?.Name}`} colour='deepPurple'/>
       <MaxWidthDialog
-        title="Enroll Students"
+        title="Add Supervisors"
         setOpen={setOpen}
         open={open}
         width={"xl"}>
           <DialogContent>
             <TextField
-              label="Please enter student emails seperated by comma or space or return"
+              label="Please enter staff emails seperated by comma or space or return"
               multiline
               minRows={5}
               maxRows={10}
               fullWidth
-              value={enrollEmails}
-              onChange={handleEnrollEmailsChange}
+              value={superviseEmails}
+              onChange={handleSuperviseEmailsChange}
               variant="outlined"
-              error = {enrollErrorMessages.length > 0}
+              error = {superviseErrorMessages.length > 0}
             />
             {
-              enrollErrorMessages.length > 0 ? (
+              superviseErrorMessages.length > 0 ? (
                 <div className={classes.error}>
-                  {enrollErrorMessages.map((message,i) => (
+                  {superviseErrorMessages.map((message,i) => (
                     <div key={i}>{message}</div>
                   ))}
                 </div>
@@ -166,7 +173,7 @@ export const Class: FC = () => {
             }
           </DialogContent>
           <DialogActions>
-            <Button onClick={enrollStudents} color="primary" disabled={isSubmitting}>
+            <Button onClick={addStaffs} color="primary" disabled={isSubmitting}>
               Add
             </Button>
             <Button onClick={handleClose} color="primary" disabled={isSubmitting}>
@@ -190,20 +197,20 @@ export const Class: FC = () => {
           >
             <AddIcon />
           </IconButton>
-          {enrollments.rows?.map((enrollment) => {
+          {supervisions.rows?.map((supervision) => {
             return (
-              <StyledTableRow key={enrollment.Student.ID}>
+              <StyledTableRow key={supervision.Staff.ID}>
                 <StyledTableCell component="th" scope="row">
-                  {enrollment.Student.ID}
+                  {supervision.Staff.ID}
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {enrollment.Student.Name}
+                  {supervision.Staff.Name}
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {enrollment.Student.Email}
+                  {supervision.Staff.Email}
                 </StyledTableCell>
                 <StyledTableCell align="right">
-                  <Button onClick={() => deleteStudent(enrollment)} color="primary">Delete</Button>
+                  <Button onClick={() => deleteStaff(supervision)} color="primary">Delete</Button>
                 </StyledTableCell>
               </StyledTableRow>
             );

@@ -30,15 +30,11 @@ export const getPageList = (match): Page[] => {
   return [
     {
       title: "Class",
-      path: `/staff/module/${moduleId}/class`,
+      path: `/admin/module/${moduleId}/class`,
     },
     {
       title: "Supervisors",
-      path: `/staff/module/${moduleId}/supervisors`,
-    },
-    {
-      title: "Assignments",
-      path: `/staff/module/${moduleId}/assignments`,
+      path: `/admin/module/${moduleId}/supervisors`,
     },
   ];
 };
@@ -48,14 +44,14 @@ export const useValidCheck = (history, authContext, match, setIsValid?) => {
     (match.params as { moduleId: number }).moduleId
   );
   useEffect(() => {
-    if (authContext?.role !== Role.STAFF) {
+    if (authContext?.role !== Role.ADMIN) {
       history.push("/");
     }
   }, []);
 
   useEffect(() => {
     if (authContext?.module?.ID !== moduleId) {
-      history.push("/staff");
+      history.push("/admin");
     } else {
       setIsValid(true);
     }
@@ -64,7 +60,7 @@ export const useValidCheck = (history, authContext, match, setIsValid?) => {
   return moduleId;
 };
 
-export const StaffModuleDashboard: FC = () => {
+export const AdminModuleDashboard: FC = () => {
   const match = useRouteMatch();
   const { state } = useContext(AuthContext);
   const history = useHistory();

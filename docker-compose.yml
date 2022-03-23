@@ -106,7 +106,6 @@ services:
       target: copy
     environment:
       - REACT_APP_API_URL=http://localhost:5000
-      - NODE_OPTIONS=--openssl-legacy-provider
     volumes:
       - /app/node_modules
       - ./frontend/src:/app/src
