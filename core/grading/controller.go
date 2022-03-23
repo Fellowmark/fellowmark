@@ -30,7 +30,7 @@ func (controller GradingController) CreateGradeRouter(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Grade{}))
 	route.Use(controller.GradeCreatePermissionCheck())
 	// TODO: check if controllerade is valid (i.e., between min and max mark)
-
+	route.Use(controller.GradeCreateValidCheck())
 	route.HandleFunc("", utils.DBCreateHandleFunc(controller.DB, true)).Methods(http.MethodPost)
 }
 

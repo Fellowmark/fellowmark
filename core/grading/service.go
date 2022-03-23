@@ -70,3 +70,22 @@ func (controller GradingController) DownloadPermissionCheck() mux.MiddlewareFunc
 		})
 	}
 }
+
+func (controller GradingController) GradeCreateValidCheck() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.Grade)
+
+			var rubric models.Rubric
+			controller.DB.Model(&models.Rubric{}).Where("id = ?", data.RubricID).Find(&rubric)
+
+			if data.Grade < rubric.MinMark {
+				utils.HandleResponse(w, "Grade cannot below minimum mark", http.StatusBadRequest)
+			} else if data.Grade > rubric.MaxMark {
+				utils.HandleResponse(w, "Grade cannot above maximum mark", http.StatusBadRequest)
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
+}
