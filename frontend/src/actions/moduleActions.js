@@ -109,7 +109,6 @@ export const getAllPairings = ({ assignmentId }, setPairings) => {
 export const getTotalGradesForStaff = async ({ assignmentId }, setTotalGrade) => {
   let pairingIds = [];
   let grades = new Map();
-  //console.log('[Module actions] assignment id', assignmentId);
   await axios 
     .get(`/assignment/pairs`, { 
       params: { 
