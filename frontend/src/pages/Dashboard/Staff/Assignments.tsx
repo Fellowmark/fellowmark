@@ -66,7 +66,7 @@ export const Assignments: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage="Assignments" />
+      <ButtonAppBar pageList={pageList} currentPage="Assignments" username={`${state?.user?.Name}`} colour='deepPurple'/>
       <MaxWidthDialog
         title="Create Assignment"
         setOpen={setCreateNew}

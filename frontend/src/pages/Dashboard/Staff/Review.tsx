@@ -17,6 +17,7 @@ import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   downloadSubmission,
   getGradesForMarker,
+  getAllPairings,
   getRubrics,
 } from "../../../actions/moduleActions";
 import { Annotator } from "../../../components/PdfViewer";
@@ -63,10 +64,9 @@ export const Review: FC<{
       alert("No submission found");
     }
   };
-
   return (
     <div>
-      <PairingsList pairings={{ rows: [props.pair] }} />
+      <PairingsList assignmentId={props.assignmentId} pairings={{ rows: [props.pair] }} />
       <a style={{ display: "none" }} href="empty" ref={ref}>
         ref
       </a>
@@ -115,6 +115,7 @@ export const Review: FC<{
             </StyledTableHead>
             <TableBody>
               {rubrics.rows?.map((rubric) => {
+                
                 return (
                   <StyledTableRow hover={true} key={rubric.ID}>
                     <StyledTableCell component="th" scope="row">

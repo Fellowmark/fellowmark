@@ -17,7 +17,9 @@ import {
   createPairings,
   createQuestion,
   getAllPairings,
+  getGradesForStudent,
   getQuestions,
+  getTotalGradesForStaff,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar, Page } from "../../../components/NavBar";
 import {
@@ -31,12 +33,16 @@ import {
   StyledTableRow,
 } from "../../../components/StyledTable";
 import { AuthContext, ContextPayload } from "../../../context/context";
-import { Pairing, Question } from "../../../models/models";
+import { Grade, Pairing, Question } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import { AuthType } from "../../../reducers/reducer";
 import { Role } from "../../Login";
 import { getPageList } from "./Dashboard";
 import { Rubrics } from "./Rubrics";
+import axios from "axios";
+
+export var array_name:number[];        //declaration 
+array_name = [12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
@@ -145,7 +151,7 @@ export const Questions: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage={state?.assignment?.Name} />
+      <ButtonAppBar pageList={pageList} currentPage={state?.assignment?.Name} username={`${state?.user?.Name}`} colour='deepPurple'/>
       {isValid && (
         <ViewPairings moduleId={moduleId} assignmentId={assignmentId} />
       )}
@@ -346,7 +352,7 @@ export const ViewPairings: FC<{
         >
           Generate
         </Button>
-        <PairingsList pairings={pairings} setPairing={props.setPairing} />
+        <PairingsList assignmentId={props.assignmentId} pairings={pairings} setPairing={props.setPairing} />
         <MaxWidthDialogActions
           handleClose={() => setView(false)}
         ></MaxWidthDialogActions>
@@ -356,9 +362,21 @@ export const ViewPairings: FC<{
 };
 
 export const PairingsList: FC<{
+  assignmentId : number;
   pairings: Pagination<Pairing>;
   setPairing?: (pairing: Pairing) => void;
 }> = (props) => {
+
+  const [grades, setTotalGrade] = useState<Map<number, number>>(null);
+  
+  useEffect(() => {
+    getTotalGradesForStaff(
+      { assignmentId: props.assignmentId },
+      setTotalGrade
+    );
+  }, []);
+
+  //console.log('[Question page]: grades', grades);
   return (
     <>
       <StyledTableContainer>
@@ -366,10 +384,13 @@ export const PairingsList: FC<{
           <StyledTableCell>ID</StyledTableCell>
           <StyledTableCell>Student</StyledTableCell>
           <StyledTableCell>Marker</StyledTableCell>
+          <StyledTableCell>Grade</StyledTableCell>
         </StyledTableHead>
         <TableBody>
           {props.pairings?.rows &&
-            props.pairings?.rows.map((pairing) => {
+            props.pairings?.rows.map((pairing, index) => {
+              //onsole.log('[Questions page] grade map', grades);
+              //console.log('[Questions page] grades', grades?.get(pairing?.ID));
               return (
                 <StyledTableRow
                   hover={true}
@@ -387,9 +408,12 @@ export const PairingsList: FC<{
                   <StyledTableCell component="th" scope="row">
                     {`${pairing?.Marker?.ID}, ${pairing?.Marker?.Name}, ${pairing?.Marker?.Email}`}
                   </StyledTableCell>
+                  <StyledTableCell component="th" scope="row">
+                    {grades?.get(pairing?.ID)}
+                  </StyledTableCell>
                 </StyledTableRow>
               );
-            })}
+           })}
         </TableBody>
       </StyledTableContainer>
     </>

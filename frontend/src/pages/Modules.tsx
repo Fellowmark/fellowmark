@@ -17,6 +17,7 @@ import {
 import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
+import { getUserDetails } from "../actions/userActions";
 import { getStaffModules, getStudentModules, getModules } from "../actions/moduleActions";
 import { ButtonAppBar, Page } from "../components/NavBar";
 import { AuthContext } from "../context/context";
@@ -31,6 +32,12 @@ export interface ModuleInfo {
   Code?: string;
   Semester?: string;
   Name?: string;
+}
+
+export interface UserInfo{
+  Email?: string;
+  Name?: string;
+  Password?: string
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -53,6 +60,16 @@ export const ModuleList: FC = () => {
   const [pageList, setPageList] = useState<Page[]>([]);
   const { state } = useContext(AuthContext);
   const classes = useStyles();
+
+  var colour = '';
+
+  if (state?.role === Role.STUDENT) {
+    colour = 'teal';
+  } else if (state?.role === Role.STAFF) {
+    colour = 'deepPurple';
+  } else if (state?.role === Role.ADMIN) {
+    colour = 'orange';
+  }
 
   useEffect(() => {
     if (state?.role === Role.STUDENT) {
@@ -92,7 +109,7 @@ export const ModuleList: FC = () => {
 
   return (
     <div className={classes.root}>
-      <ButtonAppBar pageList={pageList} currentPage="Modules" />
+      <ButtonAppBar pageList={pageList} currentPage="Modules" username= {`${state?.user?.Name}`} colour={colour} />
       <Grid container className="page-background" spacing={3}>
         {
           state?.role === Role.STAFF ? (
