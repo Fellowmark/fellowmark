@@ -1,19 +1,11 @@
-import {
-  Card,
-  CardActionArea,
-  CardContent,
-  CardMedia,
-  Grid,
-  makeStyles,
-  Typography,
-} from "@material-ui/core";
-import { FC, useContext, useEffect, useState } from "react";
-import { useHistory, useRouteMatch } from "react-router-dom";
-import { getStaffModules, getStudentModules } from "../actions/moduleActions";
-import { ButtonAppBar, Page } from "../components/NavBar";
-import { AuthContext } from "../context/context";
-import { AuthType } from "../reducers/reducer";
-import { Role } from "./Login";
+import { Card, CardActionArea, CardContent, CardMedia, Grid, makeStyles, Typography } from '@material-ui/core';
+import { FC, useContext, useEffect, useState } from 'react';
+import { useHistory, useRouteMatch } from 'react-router-dom';
+import { getStaffModules, getStudentModules } from '../actions/moduleActions';
+import { ButtonAppBar, Page } from '../components/NavBar';
+import { AuthContext } from '../context/context';
+import { AuthType } from '../reducers/reducer';
+import { Role } from '../models/enums';
 
 export interface ModuleInfo {
   ID?: number;
@@ -27,7 +19,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
   },
   paper: {
-    textAlign: "center",
+    textAlign: 'center',
     color: theme.palette.text.secondary,
   },
 }));
@@ -50,8 +42,8 @@ export const ModuleList: FC = () => {
 
   return (
     <div className={classes.root}>
-      <ButtonAppBar pageList={pageList} currentPage="Modules" />
-      <Grid container className="page-background" spacing={3}>
+      <ButtonAppBar pageList={pageList} currentPage='Modules' />
+      <Grid container className='page-background' spacing={3}>
         {modules?.map((module) => {
           return <Module key={module.ID} {...module} />;
         })}
@@ -77,23 +69,18 @@ export const Module: FC<ModuleInfo> = (props) => {
   };
 
   return (
-    <Grid item className="button-block">
+    <Grid item className='button-block'>
       <Card className={classes.paper}>
         <CardActionArea onClick={clickModule}>
-          <CardMedia
-            component="img"
-            height="80"
-            image="https://picsum.photos/400/600"
-            title="Contemplative Reptile"
-          />
+          <CardMedia component='img' height='80' image='https://picsum.photos/400/600' title='Contemplative Reptile' />
           <CardContent>
-            <Typography gutterBottom variant="h4" component="h2">
+            <Typography gutterBottom variant='h4' component='h2'>
               {props.Code}
             </Typography>
-            <Typography variant="body1" color="textSecondary" component="p">
+            <Typography variant='body1' color='textSecondary' component='p'>
               {props.Name}
             </Typography>
-            <Typography variant="body2" color="textSecondary" component="p">
+            <Typography variant='body2' color='textSecondary' component='p'>
               {props.Semester}
             </Typography>
           </CardContent>

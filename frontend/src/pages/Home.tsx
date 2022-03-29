@@ -1,15 +1,15 @@
-import { FC, useContext, useEffect, useState } from "react";
+import { FC, useContext, useEffect, useState } from 'react';
 
-import { AuthContext } from "../context/context";
-import { Redirect, useHistory } from "react-router-dom";
-import { Role } from "./Login";
-import { ProgressBar } from "../components/ProgressBar";
-import { ModuleList } from "./Modules";
-import { Grid } from "@material-ui/core";
+import { AuthContext } from '../context/context';
+import { Redirect, useHistory } from 'react-router-dom';
+import { Role } from '../models/enums';
+import { ProgressBar } from '../components/ProgressBar';
+import { ModuleList } from './Modules';
+import { Grid } from '@material-ui/core';
 
 export const Home: React.FC = () => {
   const { state } = useContext(AuthContext);
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState('');
 
   useEffect(() => {
     if (state) {
@@ -32,7 +32,7 @@ export const RoleHome: FC<{ role: Role }> = (props) => {
 
   useEffect(() => {
     if (state?.role !== props.role) {
-      history.replace("/");
+      history.replace('/');
     } else {
       setIsLoaded(true);
     }

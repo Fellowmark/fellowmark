@@ -1,27 +1,22 @@
-import React, { FormEvent, useContext, useState } from "react";
-import { Link, RouteComponentProps } from "react-router-dom";
+import React, { FormEvent, useContext, useState } from 'react';
+import { Link, RouteComponentProps } from 'react-router-dom';
 
-import Grid from "@material-ui/core/Grid";
-import Paper from "@material-ui/core/Paper";
-import TextField from "@material-ui/core/TextField";
-import Typography from "@material-ui/core/Typography";
-import Button from "@material-ui/core/Button";
+import Grid from '@material-ui/core/Grid';
+import Paper from '@material-ui/core/Paper';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import Select from '@material-ui/core/Select';
 
-import { AuthContext } from "../context/context";
-import { loginUser } from "../actions/userActions";
+import { AuthContext } from '../context/context';
+import { loginUser } from '../actions/userActions';
+import { Role } from '../models/enums';
 
-import "./Login.css";
-import { Select } from "@material-ui/core";
-
-export enum Role {
-  STUDENT = "Student",
-  STAFF = "Staff",
-  ADMIN = "Admin",
-}
+import './Login.css';
 
 export const Login: React.FC<RouteComponentProps> = (props) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [role, setRole] = useState(Role.STUDENT);
   const { dispatch } = useContext(AuthContext);
 
@@ -37,35 +32,25 @@ export const Login: React.FC<RouteComponentProps> = (props) => {
 
   return (
     <div>
-      <Grid container spacing={0} justifyContent="center" direction="row">
+      <Grid container spacing={0} justifyContent='center' direction='row'>
         <Grid item>
-          <Grid
-            container
-            direction="column"
-            justifyContent="center"
-            spacing={2}
-            className="login-form"
-          >
-            <Paper
-              variant="elevation"
-              elevation={2}
-              className="login-background"
-            >
+          <Grid container direction='column' justifyContent='center' spacing={2} className='login-form'>
+            <Paper variant='elevation' elevation={2} className='login-background'>
               <Grid item>
-                <Typography component="h1" variant="h5">
+                <Typography component='h1' variant='h5'>
                   Welcome to NUS FellowMark!
                 </Typography>
               </Grid>
               <Grid item>
                 <form onSubmit={submitLogin}>
-                  <Grid container direction="column" spacing={2}>
+                  <Grid container direction='column' spacing={2}>
                     <Grid item>
                       <TextField
-                        type="email"
-                        placeholder="Email"
+                        type='email'
+                        placeholder='Email'
                         fullWidth
-                        name="email"
-                        variant="outlined"
+                        name='email'
+                        variant='outlined'
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         autoFocus
@@ -73,11 +58,11 @@ export const Login: React.FC<RouteComponentProps> = (props) => {
                     </Grid>
                     <Grid item>
                       <TextField
-                        type="password"
-                        placeholder="Password"
+                        type='password'
+                        placeholder='Password'
                         fullWidth
-                        name="password"
-                        variant="outlined"
+                        name='password'
+                        variant='outlined'
                         onChange={(e) => setPassword(e.target.value)}
                         required
                       />
@@ -87,7 +72,7 @@ export const Login: React.FC<RouteComponentProps> = (props) => {
                         native
                         fullWidth
                         defaultValue={Role.STUDENT}
-                        name="role"
+                        name='role'
                         onChange={(e) => setRole(e.target.value as Role)}
                         required
                       >
@@ -97,22 +82,13 @@ export const Login: React.FC<RouteComponentProps> = (props) => {
                       </Select>
                     </Grid>
                     <Grid item>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        type="submit"
-                        className="button-block"
-                      >
+                      <Button variant='contained' color='primary' type='submit' className='button-block'>
                         Login
                       </Button>
                     </Grid>
                     <Grid item>
-                      <Link to="/signup">
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          className="button-block"
-                        >
+                      <Link to='/signup'>
+                        <Button variant='contained' color='primary' className='button-block'>
                           Sign Up
                         </Button>
                       </Link>
