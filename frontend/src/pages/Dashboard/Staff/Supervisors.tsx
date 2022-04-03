@@ -144,7 +144,7 @@ export const Supervisors: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage="Supervisors" />
+      <ButtonAppBar pageList={pageList} currentPage="Supervisors" username={`${state?.user?.Name}`} colour='deepPurple'/>
       <MaxWidthDialog
         title="Add Supervisors"
         setOpen={setOpen}

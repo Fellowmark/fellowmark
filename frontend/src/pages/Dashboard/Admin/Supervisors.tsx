@@ -52,7 +52,7 @@ export const Supervisors: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage="Supervisors" />
+      <ButtonAppBar pageList={pageList} currentPage="Supervisors" username= {`${state?.user?.Name}`} colour='orange'/>
       <StyledTableContainer>
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>

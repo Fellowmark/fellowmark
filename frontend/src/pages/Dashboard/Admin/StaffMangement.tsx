@@ -60,7 +60,7 @@ export const StaffManagement: FC = () => {
 
   return (
     <div className={classes.root}>
-      <ButtonAppBar pageList={pageList} currentPage="Staff Signup Management" />
+      <ButtonAppBar pageList={pageList} currentPage="Staff Signup Management" username= {`${state?.user?.Name}`} colour='orange'/>
       <Typography variant="h5" component="div" color="primary" gutterBottom style={{ paddingTop: "10px" }} >
         Pending
       </Typography>

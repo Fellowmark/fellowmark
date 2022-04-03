@@ -126,6 +126,43 @@ export const getAllPairings = ({ assignmentId }, setPairings) => {
     });
 };
 
+export const getTotalGradesForStaff = async ({ assignmentId }, setTotalGrade) => {
+  let pairingIds = [];
+  let grades = new Map();
+  await axios 
+    .get(`/assignment/pairs`, { 
+      params: { 
+        assignmentId: assignmentId, 
+      }, 
+    }) 
+    .then(async (res) => { 
+      if(res.data.rows){ 
+        for(const pairingIndex in res.data.rows) {
+          const pairingId = res.data.rows[pairingIndex].ID;
+          pairingIds.push(pairingId); 
+          const pairingGrade = await axios.get(`/grade/my/reviewee`, { 
+            method: "GET", 
+            params: { 
+              pairingId: pairingId, 
+            }, 
+          }) 
+          let totalGrade = 0;  
+          if(pairingGrade.data.rows){ 
+            for(const gradeIndex in pairingGrade.data.rows){ 
+              const grade = pairingGrade.data.rows[gradeIndex]
+              totalGrade += grade.Grade; 
+            } 
+            grades.set(pairingId, totalGrade); 
+          } 
+        } 
+      } 
+      setTotalGrade(grades);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
 /**
  * Deletes old pairings of assignment (if any) and reinserts all possible pairings, marking them as inactive
  *
@@ -497,6 +534,62 @@ export const getGradesForStudent = (moduleId, gradeData, setGrades) => {
     .catch((err) => {
       console.log(err);
     });
+};
+
+export const getAverageGradesForStudent = async (moduleId, assignmentId, setAverageGrades) => {
+  const grades = new Map();
+  await axios 
+  .get(`/assignment/pairs/mymarkers`, { 
+    params: { 
+      assignmentId,
+    }, 
+  }) 
+  .then(async (res) => { 
+    if(res.data.rows){ 
+      let gradeByRubric = {};
+      let pairingIds = [];
+      let countGradeByRubric = {};
+      for(const pairingIndex in res.data.rows) {
+        const pairingId = res.data.rows[pairingIndex].ID;
+        pairingIds.push(pairingId); 
+        const pairingGrade = await axios.get(`/grade/my/reviewee`, { 
+          method: "GET", 
+          params: { 
+            pairingId: pairingId, 
+          }, 
+        })
+        if(pairingGrade.data.rows) { 
+          for(const gradeIndex in pairingGrade.data.rows){  
+            const gradeObj = pairingGrade.data.rows[gradeIndex];
+            const grade = gradeObj.Grade;
+            const rubricID = gradeObj.RubricID;
+            if(gradeByRubric[rubricID]){
+            const newGradeByRubric = gradeByRubric[rubricID] + (grade);
+            console.log('new grade', newGradeByRubric);
+            const newCountGradeByRubric = countGradeByRubric[rubricID] + 1;
+                gradeByRubric = {...gradeByRubric, [rubricID]: newGradeByRubric };
+                countGradeByRubric = {...countGradeByRubric, [rubricID]: newCountGradeByRubric };
+            }
+            else{
+                gradeByRubric = {...gradeByRubric, [rubricID]: grade };
+                countGradeByRubric = {...countGradeByRubric, [rubricID]: 1};
+            }
+          } 
+        }
+      }
+      console.log('grade by rubric', gradeByRubric);
+      Object.keys(gradeByRubric).forEach((rubricId)=> {
+        const totalScore = gradeByRubric[rubricId];
+        const averageScore = totalScore / countGradeByRubric[rubricId];
+        grades.set(parseInt(rubricId), averageScore);
+      })
+    }
+    console.log('[grades]', grades);
+    setAverageGrades(grades);
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 };
 
 export const getGradesForMarker = (moduleId, gradeData, setGrades) => {

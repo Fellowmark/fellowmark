@@ -18,6 +18,7 @@ import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import { getStaffModules, getStudentModules, getTAModules, getModules } from "../actions/moduleActions";
+import { getUserDetails } from "../actions/userActions";
 import { ButtonAppBar, Page } from "../components/NavBar";
 import { AuthContext } from "../context/context";
 import { AuthType } from "../reducers/reducer";
@@ -31,6 +32,12 @@ export interface ModuleInfo {
   Code?: string;
   Semester?: string;
   Name?: string;
+}
+
+export interface UserInfo{
+  Email?: string;
+  Name?: string;
+  Password?: string
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -53,6 +60,16 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
   const [pageList, setPageList] = useState<Page[]>([]);
   const { state } = useContext(AuthContext);
   const classes = useStyles();
+
+  var colour = '';
+
+  if (state?.role === Role.STUDENT) {
+    colour = 'teal';
+  } else if (state?.role === Role.STAFF) {
+    colour = 'deepPurple';
+  } else if (state?.role === Role.ADMIN) {
+    colour = 'orange';
+  }
 
   useEffect(() => {
     if (state?.role === Role.STUDENT) {
@@ -106,7 +123,7 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
 
   return (
     <div className={classes.root}>
-      <ButtonAppBar pageList={pageList} currentPage={props.role === Role.TA? "TA Modules" : "Modules"} />
+      <ButtonAppBar pageList={pageList} currentPage={props.role === Role.TA? "TA Modules" : "Modules"} username= {`${state?.user?.Name}`} colour={colour}/>
       <Grid container className="page-background" spacing={3}>
         {
           state?.role === Role.STAFF ? (
