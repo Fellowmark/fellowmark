@@ -290,6 +290,16 @@ export const createAssignment = async (assignment) => {
   });
 };
 
+export const editAssignmentCall = async (assignment) => {
+  return await axios.post(`/assignment`, {
+    id: assignment.ID,
+    name: assignment.Name,
+    moduleId: assignment.ModuleID,
+    groupSize: assignment.GroupSize,
+    deadline: assignment.Deadline,
+  });
+};
+
 /**
  * Creates question using given data
  *
@@ -307,6 +317,21 @@ export const createQuestion = async (
     questionText: questionText,
     assignmentId: assignmentId,
   });
+};
+
+export const editQuestionCall = async (
+  questionId,
+  questionNumber,
+  questionText,
+  assignmentId
+) => {
+  await axios.post(`/assignment/question`, {
+    id: questionId,
+    questionNumber: questionNumber,
+    questionText: questionText,
+    assignmentId: assignmentId,
+  });
+  //console.log(questionId);
 };
 
 /**
