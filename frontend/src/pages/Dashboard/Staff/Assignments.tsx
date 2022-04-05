@@ -166,6 +166,7 @@ export const Assignments: FC = () => {
                   placeholder="Name"
                   fullWidth
                   name="Name"
+                  label="Name"
                   defaultValue={newAssignment.Name}
                   variant="outlined"
                   onChange={(e) =>
@@ -182,6 +183,7 @@ export const Assignments: FC = () => {
                   fullWidth
                   name="GroupSize"
                   variant="outlined"
+                  label="Group Size"
                   defaultValue={newAssignment.GroupSize}
                   onChange={(e) =>
                     setNewAssignment({
@@ -267,7 +269,7 @@ export const Assignments: FC = () => {
                       GroupSize, 
                       Deadline 
                     }))
-                    console.log("edit button clicked");
+                    //console.log("edit button clicked");
                   }}
                 >
                   <EditIcon />

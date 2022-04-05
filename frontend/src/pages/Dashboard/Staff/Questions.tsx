@@ -262,6 +262,7 @@ export const Questions: FC = () => {
                   placeholder="Question Number"
                   name="QuestionNumber"
                   variant="outlined"
+                  label="Question Number"
                   defaultValue={newQuestion.QuestionNumber}
                   onChange={(e) =>
                     setNewQuestion({
@@ -283,6 +284,7 @@ export const Questions: FC = () => {
                   fullWidth
                   multiline={true}
                   name="QuestionText"
+                  label="Question Text"
                   defaultValue={newQuestion.QuestionText}
                   variant="outlined"
                   onChange={(e) =>
