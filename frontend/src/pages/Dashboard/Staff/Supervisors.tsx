@@ -106,7 +106,11 @@ export const Supervisors: FC = () => {
         setSuperviseErrorMessages([])
         const totalRowsAfter = supervisions.totalRows + successCount
         const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
-        getSupervisions({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setSupervisions);
+        if (noPagination) {
+          getSupervisions({ moduleId: moduleId }, setSupervisions);
+        } else {
+          getSupervisions({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setSupervisions);
+        }
         setPage(lastPageAfter)
         alert("All supervisors are added successfully!")
         setIsSubmitting(false)
@@ -124,7 +128,11 @@ export const Supervisors: FC = () => {
         if (failedEmails.length < emailCount) {
           const totalRowsAfter = supervisions.totalRows + successCount
           const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
-          getSupervisions({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setSupervisions);
+          if (noPagination) {
+            getSupervisions({ moduleId: moduleId }, setSupervisions);
+          } else {
+            getSupervisions({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setSupervisions);
+          }
           setPage(lastPageAfter)
         }
         alert("Not all supervisors are added successfully. Please check the error messages.")
@@ -153,7 +161,11 @@ export const Supervisors: FC = () => {
       if (page == supervisions.totalPages && supervisions.totalRows % PAGE_SIZE == 1) {//last page && only 1 row in last page
         showPage--
       }
-      getSupervisions({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setSupervisions);
+      if (noPagination) {
+        getSupervisions({ moduleId: moduleId }, setSupervisions);
+      } else {
+        getSupervisions({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setSupervisions);
+      }
       setPage(showPage)
       alert("Successfully deleted!")
     }).catch(err => {

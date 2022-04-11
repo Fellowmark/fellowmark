@@ -99,7 +99,11 @@ export const Class: FC = () => {
         setEnrollErrorMessages([])
         const totalRowsAfter = enrollments.totalRows + successCount
         const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
-        getEnrollments({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setEnrollments);
+        if (noPagination) {
+          getEnrollments({ moduleId: moduleId }, setEnrollments);
+        } else {
+          getEnrollments({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setEnrollments);
+        }
         setPage(lastPageAfter)
         alert("All students are enrolled successfully!")
         setIsSubmitting(false)
@@ -117,7 +121,11 @@ export const Class: FC = () => {
         if (failedEmails.length < emailCount) {
           const totalRowsAfter = enrollments.totalRows + successCount
           const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
-          getEnrollments({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setEnrollments);
+          if (noPagination) {
+            getEnrollments({ moduleId: moduleId }, setEnrollments);
+          } else {
+            getEnrollments({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setEnrollments);
+          }
           setPage(lastPageAfter)
         }
         alert("Not all students are enrolled successfully. Please check the error messages.")
@@ -146,7 +154,11 @@ export const Class: FC = () => {
       if (page == enrollments.totalPages && enrollments.totalRows % PAGE_SIZE == 1) {//last page && only 1 row in last page
         showPage--
       }
-      getEnrollments({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setEnrollments);
+      if (noPagination) {
+        getEnrollments({ moduleId: moduleId }, setEnrollments);
+      } else {
+        getEnrollments({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setEnrollments);
+      }
       setPage(showPage)
       alert("Successfully deleted!")
     }).catch(err => {

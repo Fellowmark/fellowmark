@@ -99,7 +99,11 @@ export const TAs: FC = () => {
         setAssistanceErrorMessages([])
         const totalRowsAfter = assistances.totalRows + successCount
         const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
-        getAssistances({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setAssistances);
+        if (noPagination) {
+          getAssistances({ moduleId: moduleId }, setAssistances);
+        } else {
+          getAssistances({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setAssistances);
+        }
         setPage(lastPageAfter)
         alert("All TAs are added successfully!")
         setIsSubmitting(false)
@@ -117,7 +121,11 @@ export const TAs: FC = () => {
         if (failedEmails.length < emailCount) {
           const totalRowsAfter = assistances.totalRows + successCount
           let lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
-          getAssistances({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setAssistances);
+          if (noPagination) {
+            getAssistances({ moduleId: moduleId }, setAssistances);
+          } else {
+            getAssistances({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setAssistances);
+          }
           setPage(lastPageAfter)
         }
         alert("Not all TAs are added successfully. Please check the error messages.")
@@ -146,7 +154,11 @@ export const TAs: FC = () => {
       if (page == assistances.totalPages && assistances.totalRows % PAGE_SIZE == 1) {//last page && only 1 row in last page
         showPage--
       }
-      getAssistances({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setAssistances);
+      if (noPagination) {
+        getAssistances({ moduleId: moduleId }, setAssistances);
+      } else {
+        getAssistances({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setAssistances);
+      }
       setPage(showPage)
       alert("Successfully deleted!")
     }).catch(err => {
