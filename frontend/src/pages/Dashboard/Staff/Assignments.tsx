@@ -166,7 +166,7 @@ export const Assignments: FC = () => {
                   placeholder="Name"
                   fullWidth
                   name="Name"
-                  label="Name"
+                  label="Assignment Name"
                   defaultValue={newAssignment.Name}
                   variant="outlined"
                   onChange={(e) =>
@@ -197,7 +197,7 @@ export const Assignments: FC = () => {
               <Grid item>
                 <MuiPickersUtilsProvider utils={DateFnsUtils}>
                   <DateTimePicker
-                    label="Deadline"
+                    label="Assignment Deadline"
                     inputVariant="outlined"
                     defaultValue={newAssignment.Deadline}
                     value={
