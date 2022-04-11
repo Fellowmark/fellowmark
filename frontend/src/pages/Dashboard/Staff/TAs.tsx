@@ -7,6 +7,7 @@ import {
   DialogActions,
   makeStyles
 } from "@material-ui/core";
+import PaginationMui from '@material-ui/lab/Pagination';
 import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
@@ -45,6 +46,9 @@ export const TAs: FC = () => {
   const [taEmails, setTAEmails] = useState("");
   const [assistanceErrorMessages, setAssistanceErrorMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 2 //to test
+  const [noPagination, setNoPagination] = useState(false)
   const classes = useStyles()
 
   const handleTAEmailsChange = (event) => {
@@ -62,9 +66,17 @@ export const TAs: FC = () => {
 
   useEffect(() => {
     if (isValid) {
-      getAssistances({ moduleId: moduleId }, setAssistances);
+      if (noPagination) {
+        getAssistances({ moduleId: moduleId }, setAssistances);
+      } else {
+        getAssistances({ moduleId: moduleId, page: page, limit: PAGE_SIZE }, setAssistances);
+      }
     }
-  }, [isValid]);
+  }, [isValid, page, noPagination]);
+
+  const handlePageChange = (event, page) => {
+    setPage(page)
+  }
 
   const handleOpen = () => {
     setOpen(true);
@@ -85,7 +97,10 @@ export const TAs: FC = () => {
       if (successCount == emailCount) {
         setTAEmails("")
         setAssistanceErrorMessages([])
-        getAssistances({ moduleId: moduleId }, setAssistances);
+        const totalRowsAfter = assistances.totalRows + successCount
+        const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
+        getAssistances({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setAssistances);
+        setPage(lastPageAfter)
         alert("All TAs are added successfully!")
         setIsSubmitting(false)
       } else {
@@ -100,7 +115,10 @@ export const TAs: FC = () => {
         setAssistanceErrorMessages(emailAndErrors)
         setTAEmails(failedEmails.join('\n'))
         if (failedEmails.length < emailCount) {
-          getAssistances({ moduleId: moduleId }, setAssistances);
+          const totalRowsAfter = assistances.totalRows + successCount
+          let lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
+          getAssistances({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setAssistances);
+          setPage(lastPageAfter)
         }
         alert("Not all TAs are added successfully. Please check the error messages.")
         setIsSubmitting(false)
@@ -124,7 +142,12 @@ export const TAs: FC = () => {
       return
     }
     deleteAssistance(moduleId, assistance.Student.ID).then(res => {
-      getAssistances({ moduleId: moduleId }, setAssistances);
+      let showPage = page
+      if (page == assistances.totalPages && assistances.totalRows % PAGE_SIZE == 1) {//last page && only 1 row in last page
+        showPage--
+      }
+      getAssistances({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setAssistances);
+      setPage(showPage)
       alert("Successfully deleted!")
     }).catch(err => {
       if (err && err.response && err.response.data && err.response.data.message) {
@@ -137,7 +160,7 @@ export const TAs: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage="TAs" />
+      <ButtonAppBar pageList={pageList} currentPage="TAs" username= {`${state?.user?.Name}`} colour='deepPurple'/>
       <MaxWidthDialog
         title="Add TAs"
         setOpen={setOpen}
@@ -210,6 +233,13 @@ export const TAs: FC = () => {
           })}
         </TableBody>
       </StyledTableContainer>
+      {
+        !noPagination && assistances.totalPages > 1 ?
+        <div style={{marginTop: 20, display: 'flex', justifyContent: 'center'}}>
+          <PaginationMui count={assistances.totalPages} page={page} onChange={handlePageChange} variant="outlined" color="primary" />
+          <Button color="primary" onClick={()=>{setNoPagination(true)}}>Show full list</Button>
+        </div> : null 
+      }
     </div>
   );
 };

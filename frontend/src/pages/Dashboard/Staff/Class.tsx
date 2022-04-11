@@ -7,6 +7,7 @@ import {
   DialogActions,
   makeStyles
 } from "@material-ui/core";
+import PaginationMui from '@material-ui/lab/Pagination';
 import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
@@ -45,7 +46,10 @@ export const Class: FC = () => {
   const [enrollEmails, setEnrollEmails] = useState("");
   const [enrollErrorMessages, setEnrollErrorMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [page, setPage] = useState(1)
   const classes = useStyles()
+  const PAGE_SIZE = 3 //to test
+  const [noPagination, setNoPagination] = useState(false)
 
   const handleEnrollEmailsChange = (event) => {
     setEnrollEmails(event.target.value)
@@ -62,9 +66,13 @@ export const Class: FC = () => {
 
   useEffect(() => {
     if (isValid) {
-      getEnrollments({ moduleId: moduleId }, setEnrollments);
+      if (noPagination) {
+        getEnrollments({ moduleId: moduleId }, setEnrollments);
+      } else {
+        getEnrollments({ moduleId: moduleId, page: page, limit: PAGE_SIZE }, setEnrollments);
+      }
     }
-  }, [isValid]);
+  }, [isValid, page, noPagination]);
 
   const handleOpen = () => {
     setOpen(true);
@@ -73,6 +81,10 @@ export const Class: FC = () => {
   const handleClose = () => {
     setOpen(false);
   };
+
+  const handlePageChange = (event, page) => {
+    setPage(page)
+  }
 
   const enrollStudents = () => {
     setIsSubmitting(true)
@@ -85,7 +97,10 @@ export const Class: FC = () => {
       if (successCount == emailCount) {
         setEnrollEmails("")
         setEnrollErrorMessages([])
-        getEnrollments({ moduleId: moduleId }, setEnrollments);
+        const totalRowsAfter = enrollments.totalRows + successCount
+        const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
+        getEnrollments({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setEnrollments);
+        setPage(lastPageAfter)
         alert("All students are enrolled successfully!")
         setIsSubmitting(false)
       } else {
@@ -100,7 +115,10 @@ export const Class: FC = () => {
         setEnrollErrorMessages(emailAndErrors)
         setEnrollEmails(failedEmails.join('\n'))
         if (failedEmails.length < emailCount) {
-          getEnrollments({ moduleId: moduleId }, setEnrollments);
+          const totalRowsAfter = enrollments.totalRows + successCount
+          const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
+          getEnrollments({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setEnrollments);
+          setPage(lastPageAfter)
         }
         alert("Not all students are enrolled successfully. Please check the error messages.")
         setIsSubmitting(false)
@@ -124,7 +142,12 @@ export const Class: FC = () => {
       return
     }
     deleteEnrollment(moduleId, enrollment.Student.ID).then(res => {
-      getEnrollments({ moduleId: moduleId }, setEnrollments);
+      let showPage = page
+      if (page == enrollments.totalPages && enrollments.totalRows % PAGE_SIZE == 1) {//last page && only 1 row in last page
+        showPage--
+      }
+      getEnrollments({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setEnrollments);
+      setPage(showPage)
       alert("Successfully deleted!")
     }).catch(err => {
       if (err && err.response && err.response.data && err.response.data.message) {
@@ -210,6 +233,13 @@ export const Class: FC = () => {
           })}
         </TableBody>
       </StyledTableContainer>
+      {
+        !noPagination && enrollments.totalPages > 1 ?
+        <div style={{marginTop: 20, display: 'flex', justifyContent: 'center'}}>
+          <PaginationMui count={enrollments.totalPages} page={page} onChange={handlePageChange} variant="outlined" color="primary" />
+          <Button color="primary" onClick={()=>{setNoPagination(true)}}>Show full list</Button>
+        </div> : null 
+      }
     </div>
   );
 };

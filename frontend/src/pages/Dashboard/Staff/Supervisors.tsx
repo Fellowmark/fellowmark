@@ -9,6 +9,7 @@ import {
   DialogActions,
   makeStyles
 } from "@material-ui/core";
+import PaginationMui from '@material-ui/lab/Pagination';
 import DateFnsUtils from "@date-io/moment"; // choose your lib
 import AddIcon from "@material-ui/icons/Add";
 import { DateTimePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
@@ -53,6 +54,9 @@ export const Supervisors: FC = () => {
   const [superviseEmails, setSuperviseEmails] = useState("");
   const [superviseErrorMessages, setSuperviseErrorMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 2 //to test
+  const [noPagination, setNoPagination] = useState(false)
   const classes = useStyles()
   const history = useHistory();
 
@@ -62,9 +66,17 @@ export const Supervisors: FC = () => {
 
   useEffect(() => {
     if (isValid) {
-      getSupervisions({ moduleId: moduleId }, setSupervisions);
+      if (noPagination) {
+        getSupervisions({ moduleId: moduleId }, setSupervisions);
+      } else {
+        getSupervisions({ moduleId: moduleId, page: page, limit: PAGE_SIZE }, setSupervisions);
+      }
     }
-  }, [isValid]);
+  }, [isValid, page, noPagination]);
+
+  const handlePageChange = (event, page) => {
+    setPage(page)
+  }
 
   const handleSuperviseEmailsChange = (event) => {
     setSuperviseEmails(event.target.value)
@@ -92,7 +104,10 @@ export const Supervisors: FC = () => {
       if (successCount == emailCount) {
         setSuperviseEmails("")
         setSuperviseErrorMessages([])
-        getSupervisions({ moduleId: moduleId }, setSupervisions);
+        const totalRowsAfter = supervisions.totalRows + successCount
+        const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
+        getSupervisions({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setSupervisions);
+        setPage(lastPageAfter)
         alert("All supervisors are added successfully!")
         setIsSubmitting(false)
       } else {
@@ -107,7 +122,10 @@ export const Supervisors: FC = () => {
         setSuperviseErrorMessages(emailAndErrors)
         setSuperviseEmails(failedEmails.join('\n'))
         if (failedEmails.length < emailCount) {
-          getSupervisions({ moduleId: moduleId }, setSupervisions);
+          const totalRowsAfter = supervisions.totalRows + successCount
+          const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
+          getSupervisions({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setSupervisions);
+          setPage(lastPageAfter)
         }
         alert("Not all supervisors are added successfully. Please check the error messages.")
         setIsSubmitting(false)
@@ -131,7 +149,12 @@ export const Supervisors: FC = () => {
       return
     }
     deleteSupervision(moduleId, supervision.Staff.ID).then(res => {
-      getSupervisions({ moduleId: moduleId }, setSupervisions);
+      let showPage = page
+      if (page == supervisions.totalPages && supervisions.totalRows % PAGE_SIZE == 1) {//last page && only 1 row in last page
+        showPage--
+      }
+      getSupervisions({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setSupervisions);
+      setPage(showPage)
       alert("Successfully deleted!")
     }).catch(err => {
       if (err && err.response && err.response.data && err.response.data.message) {
@@ -217,6 +240,13 @@ export const Supervisors: FC = () => {
           })}
         </TableBody>
       </StyledTableContainer>
+      {
+        !noPagination && supervisions.totalPages > 1 ?
+        <div style={{marginTop: 20, display: 'flex', justifyContent: 'center'}}>
+          <PaginationMui count={supervisions.totalPages} page={page} onChange={handlePageChange} variant="outlined" color="primary" />
+          <Button color="primary" onClick={()=>{setNoPagination(true)}}>Show full list</Button>
+        </div> : null 
+      }
     </div>
   );
 };
