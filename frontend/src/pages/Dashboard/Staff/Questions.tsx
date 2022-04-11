@@ -10,13 +10,18 @@ import {
   Typography,
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
+import EditIcon from "@material-ui/icons/Edit";
+import DateFnsUtils from "@date-io/moment"; 
 import moment from "moment";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
+  createAssignment,
   createPairings,
   createQuestion,
+  editQuestionCall,
   getAllPairings,
+  getAssignments,
   getGradesForStudent,
   getQuestions,
   getTotalGradesForStaff,
@@ -33,13 +38,14 @@ import {
   StyledTableRow,
 } from "../../../components/StyledTable";
 import { AuthContext, ContextPayload } from "../../../context/context";
-import { Grade, Pairing, Question } from "../../../models/models";
+import { Assignment, Grade, Pairing, Question } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import { AuthType } from "../../../reducers/reducer";
 import { Role } from "../../Login";
 import { getPageList } from "./Dashboard";
 import { Rubrics } from "./Rubrics";
 import axios from "axios";
+import { DateTimePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
 
 export var array_name:number[];        //declaration 
 array_name = [12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -116,6 +122,7 @@ export const Questions: FC = () => {
   const { state, dispatch } = useContext(AuthContext);
   const [isValid, setIsValid] = useState(false);
   const [createNew, setCreateNew] = useState(false);
+  const [editNew, setEditNew] = useState(false);
   const [questions, setQuestions] = useState<Pagination<Question>>({});
   const [selectedQuestion, selectQuestion] = useState<Question>(null);
   const history = useHistory();
@@ -126,6 +133,7 @@ export const Questions: FC = () => {
     match,
     setIsValid
   );
+
   const [newQuestion, setNewQuestion] = useState<Question>({
     AssignmentID: assignmentId,
   });
@@ -145,6 +153,18 @@ export const Questions: FC = () => {
       assignmentId
     );
     setCreateNew(false);
+    setNewQuestion({ AssignmentID: assignmentId });
+    getQuestions({ moduleId: moduleId }, setQuestions);
+  };
+
+  const editQuestion = async () => {
+    await editQuestionCall(
+      newQuestion.ID, 
+      newQuestion.QuestionNumber,
+      newQuestion.QuestionText,
+      assignmentId
+    );
+    setEditNew(false);
     setNewQuestion({ AssignmentID: assignmentId });
     getQuestions({ moduleId: moduleId }, setQuestions);
   };
@@ -225,6 +245,67 @@ export const Questions: FC = () => {
           </Button>
         </MaxWidthDialogActions>
       </MaxWidthDialog>
+
+      <MaxWidthDialog
+        title="Edit Question"
+        setOpen={setEditNew}
+        open={editNew}
+        width={"xl"}
+      >
+        <DialogContentText>Please fill in the details</DialogContentText>
+        <form className={classes.form} noValidate>
+          <FormControl className={classes.formControl}>
+            <Grid container direction="column" spacing={2}>
+              <Grid item>
+                <TextField
+                  type="QuestionNumber"
+                  placeholder="Question Number"
+                  name="QuestionNumber"
+                  variant="outlined"
+                  label="Question Number"
+                  defaultValue={newQuestion.QuestionNumber}
+                  onChange={(e) =>
+                    setNewQuestion({
+                      ...newQuestion,
+                      QuestionNumber: Number(e.target.value),
+                    })
+                  }
+                  required
+                  autoFocus
+                />
+              </Grid>
+              <Grid item>
+                <TextField
+                  type="QuestionText"
+                  placeholder="Question Text"
+                  style={{
+                    width: "70vw",
+                  }}
+                  fullWidth
+                  multiline={true}
+                  name="QuestionText"
+                  label="Question Text"
+                  defaultValue={newQuestion.QuestionText}
+                  variant="outlined"
+                  onChange={(e) =>
+                    setNewQuestion({
+                      ...newQuestion,
+                      QuestionText: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </Grid>
+            </Grid>
+          </FormControl>
+        </form>
+        <MaxWidthDialogActions handleClose={() => setEditNew(false)}>
+          <Button onClick={editQuestion} color="primary">
+            Edit
+          </Button>
+        </MaxWidthDialogActions>
+      </MaxWidthDialog>
+
       <StyledTableContainer>
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
@@ -256,11 +337,13 @@ export const Questions: FC = () => {
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
           <StyledTableCell>Question Number</StyledTableCell>
-          <StyledTableCell align="right">Question Text</StyledTableCell>
+          <StyledTableCell>Question Text</StyledTableCell>
+          <StyledTableCell align="right">Edit</StyledTableCell>
         </StyledTableHead>
         <TableBody>
           {questions.rows &&
             questions.rows.map((question) => {
+              const { ID, QuestionNumber, QuestionText } = question
               return (
                 <StyledTableRow
                   onClick={() => {
@@ -284,11 +367,29 @@ export const Questions: FC = () => {
                   </StyledTableCell>
                   <StyledTableCell
                     aria-multiline={true}
-                    align="right"
                     component="th"
                     scope="row"
                   >
                     {question.QuestionText}
+                  </StyledTableCell>
+                  <StyledTableCell align="right">       
+                  <IconButton
+                    edge="start"
+                    color="primary"
+                    aria-label="menu"
+                    onClick={(e: React.MouseEvent<HTMLElement>) => {
+                      e.stopPropagation();
+                      setEditNew(true);
+                      setNewQuestion(question => ({
+                        ...question, 
+                        ID,
+                        QuestionNumber,
+                        QuestionText,  
+                      }))
+                    }}
+                   >
+                    <EditIcon />
+                  </IconButton>
                   </StyledTableCell>
                 </StyledTableRow>
               );
@@ -304,6 +405,7 @@ export const Questions: FC = () => {
       >
         <AddIcon />
       </IconButton>
+
     </div>
   );
 };

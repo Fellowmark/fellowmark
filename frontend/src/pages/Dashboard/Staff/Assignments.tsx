@@ -9,11 +9,13 @@ import {
 } from "@material-ui/core";
 import DateFnsUtils from "@date-io/moment"; // choose your lib
 import AddIcon from "@material-ui/icons/Add";
+import EditIcon from "@material-ui/icons/Edit";
 import { DateTimePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   createAssignment,
+  editAssignmentCall,
   getAssignments,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar } from "../../../components/NavBar";
@@ -33,6 +35,7 @@ import { Pagination } from "../../../models/pagination";
 import moment from "moment";
 import { getPageList, useFormStyles, useValidCheck } from "./Dashboard";
 import { AuthType } from "../../../reducers/reducer";
+import { Select } from "formik-material-ui";
 
 export const Assignments: FC = () => {
   const classes = useFormStyles();
@@ -41,6 +44,7 @@ export const Assignments: FC = () => {
   const { state, dispatch } = useContext(AuthContext);
   const [isValid, setIsValid] = useState(false);
   const [createNew, setCreateNew] = useState(false);
+  const [editNew, setEditNew] = useState(false);
   const [assignments, setAssignments] = useState<Pagination<Assignment>>({});
   const history = useHistory();
 
@@ -63,6 +67,13 @@ export const Assignments: FC = () => {
     setNewAssignment({ ModuleID: moduleId });
     getAssignments({ moduleId: moduleId }, setAssignments);
   };
+
+  const editAssignment = async () => {
+    await editAssignmentCall(newAssignment);
+    setEditNew(false);
+    setNewAssignment({ ModuleID: moduleId });
+    getAssignments({ moduleId: moduleId }, setAssignments);
+  }
 
   return (
     <div>
@@ -137,33 +148,132 @@ export const Assignments: FC = () => {
           </Button>
         </MaxWidthDialogActions>
       </MaxWidthDialog>
+      <MaxWidthDialog
+        title="Edit Assignment"
+        setOpen={setEditNew}
+        open={editNew}
+        width={"sm"}
+      >
+        <DialogContentText>
+          Please fill in the details
+        </DialogContentText>
+        <form className={classes.form} noValidate>
+          <FormControl className={classes.formControl}>
+            <Grid container direction="column" spacing={2}>
+              <Grid item>
+                <TextField
+                  type="Name"
+                  placeholder="Name"
+                  fullWidth
+                  name="Name"
+                  label="Assignment Name"
+                  defaultValue={newAssignment.Name}
+                  variant="outlined"
+                  onChange={(e) =>
+                    setNewAssignment({ ...newAssignment, Name: e.target.value })
+                  }
+                  required
+                  autoFocus
+                />
+              </Grid>
+              <Grid item>
+                <TextField
+                  type="GroupSize"
+                  placeholder="GroupSize"
+                  fullWidth
+                  name="GroupSize"
+                  variant="outlined"
+                  label="Group Size"
+                  defaultValue={newAssignment.GroupSize}
+                  onChange={(e) =>
+                    setNewAssignment({
+                      ...newAssignment,
+                      GroupSize: Number(e.target.value),
+                    })
+                  }
+                  required
+                />
+              </Grid>
+              <Grid item>
+                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                  <DateTimePicker
+                    label="Assignment Deadline"
+                    inputVariant="outlined"
+                    defaultValue={newAssignment.Deadline}
+                    value={
+                      newAssignment.Deadline
+                        ? moment.unix(newAssignment.Deadline).local().toDate()
+                        : moment().toDate()
+                    }
+                    onChange={(e) =>
+                      setNewAssignment({
+                        ...newAssignment,
+                        Deadline: e.unix(),
+                      })
+                    }
+                  />
+                </MuiPickersUtilsProvider>
+              </Grid>
+            </Grid>
+          </FormControl>
+        </form>
+        <MaxWidthDialogActions handleClose={() => setEditNew(false)}>
+          <Button onClick={editAssignment} color="primary">
+            Edit
+          </Button>
+        </MaxWidthDialogActions>
+      </MaxWidthDialog>
       <StyledTableContainer>
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
           <StyledTableCell>Name</StyledTableCell>
           <StyledTableCell>Group Size</StyledTableCell>
-          <StyledTableCell align="right">Deadline</StyledTableCell>
+          <StyledTableCell>Deadline</StyledTableCell>
+          <StyledTableCell align="right">Edit</StyledTableCell>
         </StyledTableHead>
         <TableBody>
           {assignments.rows?.map((assignment) => {
+            const { ID, Name, GroupSize, Deadline } = assignment
             return (
               <StyledTableRow onClick={() => {
+                console.log("ONCLICK");
                 dispatch({ type: AuthType.ASSIGNMENT, payload: { assignment: assignment } });
                 history.push(`${match.url}/${assignment.ID}`);
               }} hover={true} key={assignment.ID}>
                 <StyledTableCell component="th" scope="row">
-                  {assignment.ID}
+                  {ID}
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {assignment.Name}
+                  {Name}
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {assignment.GroupSize}
+                  {GroupSize}
+                </StyledTableCell>
+                <StyledTableCell component="th" scope="row">
+                  {Deadline
+                    ? moment.unix(Deadline).toLocaleString()
+                    : "No Deadline"}
                 </StyledTableCell>
                 <StyledTableCell align="right">
-                  {assignment.Deadline
-                    ? moment.unix(assignment.Deadline).toLocaleString()
-                    : "No Deadline"}
+                <IconButton
+                  edge="start"
+                  color="primary"
+                  aria-label="menu"
+                  onClick={(e: React.MouseEvent<HTMLElement>) => {
+                    e.stopPropagation();
+                    setEditNew(true);
+                    setNewAssignment(assignment => ({
+                      ...assignment, 
+                      ID,
+                      Name,
+                      GroupSize, 
+                      Deadline 
+                    }))
+                    //console.log("edit button clicked");
+                  }}
+                >
+                  <EditIcon />
+                </IconButton>
                 </StyledTableCell>
               </StyledTableRow>
             );
