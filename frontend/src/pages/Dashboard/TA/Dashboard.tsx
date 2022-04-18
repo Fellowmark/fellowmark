@@ -32,6 +32,10 @@ export const getPageList = (match): Page[] => {
       title: "Class",
       path: `/student/ta/module/${moduleId}/class`,
     },
+    {
+      title: "Go Back to All TA Modules",
+      path: `/student/ta`,
+    }
   ];
 };
 
