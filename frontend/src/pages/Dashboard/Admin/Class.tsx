@@ -41,7 +41,7 @@ export const Class: FC = () => {
   const [students, setStudents] = useState<Pagination<Enrollment>>({});
   const history = useHistory();
   const [page, setPage] = useState(1)
-  const PAGE_SIZE = 5 //to test
+  const PAGE_SIZE = 15 //to test
   const [noPagination, setNoPagination] = useState(false)
 
   const moduleId: number = useValidCheck(history, state, match, setIsValid);

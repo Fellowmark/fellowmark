@@ -55,7 +55,7 @@ export const Supervisors: FC = () => {
   const [superviseErrorMessages, setSuperviseErrorMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [page, setPage] = useState(1)
-  const PAGE_SIZE = 2 //to test
+  const PAGE_SIZE = 15 //to test
   const [noPagination, setNoPagination] = useState(false)
   const classes = useStyles()
   const history = useHistory();

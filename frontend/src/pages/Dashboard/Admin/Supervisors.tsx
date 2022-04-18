@@ -40,7 +40,7 @@ export const Supervisors: FC = () => {
   const [isValid, setIsValid] = useState(false);
   const [supervisions, setSupervisions] = useState<Pagination<Supervision>>({});
   const [page, setPage] = useState(1)
-  const PAGE_SIZE = 2 //to test
+  const PAGE_SIZE = 15 //to test
   const [noPagination, setNoPagination] = useState(false)
   const history = useHistory();
 

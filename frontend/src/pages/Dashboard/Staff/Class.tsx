@@ -48,7 +48,7 @@ export const Class: FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [page, setPage] = useState(1)
   const classes = useStyles()
-  const PAGE_SIZE = 3 //to test
+  const PAGE_SIZE = 15 //to test
   const [noPagination, setNoPagination] = useState(false)
 
   const handleEnrollEmailsChange = (event) => {
