@@ -12,7 +12,7 @@ import AddIcon from "@material-ui/icons/Add";
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
-  getEnrollments,
+  getAssistances,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar } from "../../../components/NavBar";
 import {
@@ -25,10 +25,10 @@ import {
   StyledTableRow,
 } from "../../../components/StyledTable";
 import { AuthContext } from "../../../context/context";
-import { Enrollment } from "../../../models/models";
+import { Assistance } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 import { getPageList, useValidCheck } from "./Dashboard";
-import { createEnrollment, deleteEnrollment } from "../../../actions/moduleActions";
+import { createAssistance, deleteAssistance } from "../../../actions/moduleActions";
 
 const useStyles = makeStyles((theme) => ({
   error: {
@@ -37,24 +37,24 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export const Class: FC = () => {
+export const TAs: FC = () => {
   const match = useRouteMatch();
   const { state } = useContext(AuthContext);
   const [isValid, setIsValid] = useState(false);
-  const [enrollments, setEnrollments] = useState<Pagination<Enrollment>>({});
+  const [assistances, setAssistances] = useState<Pagination<Assistance>>({});
   const [open, setOpen] = useState(false);
-  const [enrollEmails, setEnrollEmails] = useState("");
-  const [enrollErrorMessages, setEnrollErrorMessages] = useState([]);
+  const [taEmails, setTAEmails] = useState("");
+  const [assistanceErrorMessages, setAssistanceErrorMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [page, setPage] = useState(1)
-  const classes = useStyles()
   const PAGE_SIZE = 15 //to test
   const [noPagination, setNoPagination] = useState(false)
+  const classes = useStyles()
 
-  const handleEnrollEmailsChange = (event) => {
-    setEnrollEmails(event.target.value)
-    if (enrollErrorMessages.length > 0){
-      setEnrollErrorMessages([])
+  const handleTAEmailsChange = (event) => {
+    setTAEmails(event.target.value)
+    if (assistanceErrorMessages.length > 0){
+      setAssistanceErrorMessages([])
     }
   };
 
@@ -67,12 +67,16 @@ export const Class: FC = () => {
   useEffect(() => {
     if (isValid) {
       if (noPagination) {
-        getEnrollments({ moduleId: moduleId }, setEnrollments);
+        getAssistances({ moduleId: moduleId }, setAssistances);
       } else {
-        getEnrollments({ moduleId: moduleId, page: page, limit: PAGE_SIZE }, setEnrollments);
+        getAssistances({ moduleId: moduleId, page: page, limit: PAGE_SIZE }, setAssistances);
       }
     }
   }, [isValid, page, noPagination]);
+
+  const handlePageChange = (event, page) => {
+    setPage(page)
+  }
 
   const handleOpen = () => {
     setOpen(true);
@@ -82,30 +86,26 @@ export const Class: FC = () => {
     setOpen(false);
   };
 
-  const handlePageChange = (event, page) => {
-    setPage(page)
-  }
-
-  const enrollStudents = () => {
+  const addTAs = () => {
     setIsSubmitting(true)
-    let emailArr = enrollEmails.split(/,|\n|\s/)
+    let emailArr = taEmails.split(/,|\n|\s/)
     emailArr = emailArr.filter(email => email)
     const emailCount = emailArr.length
-    createEnrollment(moduleId, emailArr).then(res => {
+    createAssistance(moduleId, emailArr).then(res => {
       const successCount = res.data.success
-      const errMessages =  res.data.enrollErrors
+      const errMessages =  res.data.assistanceErrors
       if (successCount == emailCount) {
-        setEnrollEmails("")
-        setEnrollErrorMessages([])
-        const totalRowsAfter = enrollments.totalRows + successCount
+        setTAEmails("")
+        setAssistanceErrorMessages([])
+        const totalRowsAfter = assistances.totalRows + successCount
         const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
         if (noPagination) {
-          getEnrollments({ moduleId: moduleId }, setEnrollments);
+          getAssistances({ moduleId: moduleId }, setAssistances);
         } else {
-          getEnrollments({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setEnrollments);
+          getAssistances({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setAssistances);
         }
         setPage(lastPageAfter)
-        alert("All students are enrolled successfully!")
+        alert("All TAs are added successfully!")
         setIsSubmitting(false)
       } else {
         const failedEmails = []
@@ -116,48 +116,48 @@ export const Class: FC = () => {
             emailAndErrors.push(emailArr[i] + " : " + errMessages[i])
           }
         }
-        setEnrollErrorMessages(emailAndErrors)
-        setEnrollEmails(failedEmails.join('\n'))
+        setAssistanceErrorMessages(emailAndErrors)
+        setTAEmails(failedEmails.join('\n'))
         if (failedEmails.length < emailCount) {
-          const totalRowsAfter = enrollments.totalRows + successCount
-          const lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
+          const totalRowsAfter = assistances.totalRows + successCount
+          let lastPageAfter = Math.ceil(totalRowsAfter / PAGE_SIZE)
           if (noPagination) {
-            getEnrollments({ moduleId: moduleId }, setEnrollments);
+            getAssistances({ moduleId: moduleId }, setAssistances);
           } else {
-            getEnrollments({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setEnrollments);
+            getAssistances({ moduleId: moduleId, page: lastPageAfter, limit: PAGE_SIZE }, setAssistances);
           }
           setPage(lastPageAfter)
         }
-        alert("Not all students are enrolled successfully. Please check the error messages.")
+        alert("Not all TAs are added successfully. Please check the error messages.")
         setIsSubmitting(false)
       }
     }).catch(err => {
       let message = ""
       if (err && err.response && err.response.data && err.response.data.message) {
-        message = "Enrollment failed:" + err.response.data.message
+        message = "Add TAs failed:" + err.response.data.message
       } else {
-        message = "Enrollment failed"
+        message = "Add TAs failed"
       }
-      setEnrollErrorMessages([message])
+      setAssistanceErrorMessages([message])
       alert(message)
       setIsSubmitting(false)
     })
   }
 
-  const deleteStudent = (enrollment) => {
-    const confirmed = window.confirm(`Are you sure you want to delete student ${enrollment.Student.Name}?`)
+  const deleteStudent = (assistance) => {
+    const confirmed = window.confirm(`Are you sure you want to delete student ${assistance.Student.Name}?`)
     if (!confirmed) {
       return
     }
-    deleteEnrollment(moduleId, enrollment.Student.ID).then(res => {
+    deleteAssistance(moduleId, assistance.Student.ID).then(res => {
       let showPage = page
-      if (page == enrollments.totalPages && enrollments.totalRows % PAGE_SIZE == 1) {//last page && only 1 row in last page
+      if (page == assistances.totalPages && assistances.totalRows % PAGE_SIZE == 1) {//last page && only 1 row in last page
         showPage--
       }
       if (noPagination) {
-        getEnrollments({ moduleId: moduleId }, setEnrollments);
+        getAssistances({ moduleId: moduleId }, setAssistances);
       } else {
-        getEnrollments({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setEnrollments);
+        getAssistances({ moduleId: moduleId, page: showPage, limit: PAGE_SIZE }, setAssistances);
       }
       setPage(showPage)
       alert("Successfully deleted!")
@@ -172,9 +172,9 @@ export const Class: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage="Class" username={`${state?.user?.Name}`} colour='deepPurple'/>
+      <ButtonAppBar pageList={pageList} currentPage="TAs" username= {`${state?.user?.Name}`} colour='deepPurple'/>
       <MaxWidthDialog
-        title="Enroll Students"
+        title="Add TAs"
         setOpen={setOpen}
         open={open}
         width={"xl"}>
@@ -185,15 +185,15 @@ export const Class: FC = () => {
               minRows={5}
               maxRows={10}
               fullWidth
-              value={enrollEmails}
-              onChange={handleEnrollEmailsChange}
+              value={taEmails}
+              onChange={handleTAEmailsChange}
               variant="outlined"
-              error = {enrollErrorMessages.length > 0}
+              error = {assistanceErrorMessages.length > 0}
             />
             {
-              enrollErrorMessages.length > 0 ? (
+              assistanceErrorMessages.length > 0 ? (
                 <div className={classes.error}>
-                  {enrollErrorMessages.map((message,i) => (
+                  {assistanceErrorMessages.map((message,i) => (
                     <div key={i}>{message}</div>
                   ))}
                 </div>
@@ -201,7 +201,7 @@ export const Class: FC = () => {
             }
           </DialogContent>
           <DialogActions>
-            <Button onClick={enrollStudents} color="primary" disabled={isSubmitting}>
+            <Button onClick={addTAs} color="primary" disabled={isSubmitting}>
               Add
             </Button>
             <Button onClick={handleClose} color="primary" disabled={isSubmitting}>
@@ -225,20 +225,20 @@ export const Class: FC = () => {
           >
             <AddIcon />
           </IconButton>
-          {enrollments.rows?.map((enrollment) => {
+          {assistances.rows?.map((assistance) => {
             return (
-              <StyledTableRow key={enrollment.Student.ID}>
+              <StyledTableRow key={assistance.Student.ID}>
                 <StyledTableCell component="th" scope="row">
-                  {enrollment.Student.ID}
+                  {assistance.Student.ID}
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {enrollment.Student.Name}
+                  {assistance.Student.Name}
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {enrollment.Student.Email}
+                  {assistance.Student.Email}
                 </StyledTableCell>
                 <StyledTableCell align="right">
-                  <Button onClick={() => deleteStudent(enrollment)} color="primary">Delete</Button>
+                  <Button onClick={() => deleteStudent(assistance)} color="primary">Delete</Button>
                 </StyledTableCell>
               </StyledTableRow>
             );
@@ -246,9 +246,9 @@ export const Class: FC = () => {
         </TableBody>
       </StyledTableContainer>
       {
-        !noPagination && enrollments.totalPages > 1 ?
+        !noPagination && assistances.totalPages > 1 ?
         <div style={{marginTop: 20, display: 'flex', justifyContent: 'center'}}>
-          <PaginationMui count={enrollments.totalPages} page={page} onChange={handlePageChange} variant="outlined" color="primary" />
+          <PaginationMui count={assistances.totalPages} page={page} onChange={handlePageChange} variant="outlined" color="primary" />
           <Button color="primary" onClick={()=>{setNoPagination(true)}}>Show full list</Button>
         </div> : null 
       }

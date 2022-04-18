@@ -59,12 +59,12 @@ export const Class: FC = () => {
       } else {
         getEnrollments({ moduleId: moduleId, page: page, limit: PAGE_SIZE }, setStudents);
       }
-    }
+      }
   }, [isValid, page, noPagination]);
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage="Class" username= {`${state?.user?.Name}`} colour='orange' />
+      <ButtonAppBar pageList={pageList} currentPage="Class" username= {`${state?.user?.Name}`} colour='deepPurple'/>
       <StyledTableContainer>
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>

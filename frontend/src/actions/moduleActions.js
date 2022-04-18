@@ -32,6 +32,26 @@ export const createEnrollment = (moduleId, studentEmails) => {
 };
 
 /**
+ * Adds a ta to a module
+ *
+ * @param {int} moduleId ID of module
+ * @param {int} studentId ID of student
+ */
+ export const createAssistance = (moduleId, studentEmails) => {
+  return axios.post(`/module/ta`, { ModuleID: moduleId, StudentEmails: studentEmails })
+};
+
+/**
+ * delete a ta from a module
+ *
+ * @param {int} moduleId
+ * @param {int} staffId
+ */
+ export const deleteAssistance = (moduleId, studentId) => {
+  return axios.delete(`/module/ta`, { data: {ModuleID: moduleId, StudentID: studentId} })
+};
+
+/**
  * Adds a staff member to a module
  *
  * @param {int} moduleId
@@ -200,6 +220,25 @@ export const getEnrollments = (enrollmentData, setEnrollments) => {
     });
 };
 
+/**
+ * Returns Assistances data that matches given data
+ *
+ * @param {Object} assistanceData can consist of ID, ModuleID, and/or StudentID
+ */
+ export const getAssistances = (assistanceData, setAssistances) => {
+  axios
+    .get(`/module/tas`, {
+      method: "GET",
+      params: assistanceData,
+    })
+    .then((res) => {
+      setAssistances(res.data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
 // /**
 //  * Returns Enrollments data that matches given data
 //  *
@@ -224,6 +263,25 @@ export const getEnrollments = (enrollmentData, setEnrollments) => {
 export const getStudentModules = (setModules) => {
   axios
     .get(`/module/enroll`)
+    .then((res) => {
+      return res.data;
+    })
+    .then((res) => {
+      setModules(res);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
+/**
+ * Returns Assistances data that matches given data
+ *
+ * @param {Object} assistanceData can consist of ID, ModuleID, and/or StudentID
+ */
+ export const getTAModules = (setModules) => {
+  axios
+    .get(`/module/ta`)
     .then((res) => {
       return res.data;
     })

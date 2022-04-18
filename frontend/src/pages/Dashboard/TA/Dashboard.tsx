@@ -30,23 +30,11 @@ export const getPageList = (match): Page[] => {
   return [
     {
       title: "Class",
-      path: `/staff/module/${moduleId}/class`,
+      path: `/student/ta/module/${moduleId}/class`,
     },
     {
-      title: "Supervisors",
-      path: `/staff/module/${moduleId}/supervisors`,
-    },
-    {
-      title: "TAs",
-      path: `/staff/module/${moduleId}/tas`,
-    },
-    {
-      title: "Assignments",
-      path: `/staff/module/${moduleId}/assignments`,
-    },
-    {
-      title: "Go Back to All Modules",
-      path: `/staff`,
+      title: "Go Back to All TA Modules",
+      path: `/student/ta`,
     }
   ];
 };
@@ -56,23 +44,27 @@ export const useValidCheck = (history, authContext, match, setIsValid?) => {
     (match.params as { moduleId: number }).moduleId
   );
   useEffect(() => {
-    if (authContext?.role !== Role.STAFF) {
+    if (authContext?.role !== Role.STUDENT) {
       history.push("/");
     }
   }, []);
 
   useEffect(() => {
     if (authContext?.module?.ID !== moduleId) {
-      history.push("/staff");
+      history.push("/student/ta");
     } else {
       setIsValid(true);
     }
   }, []);
 
+  useEffect(() => {
+    //TODO: if he/she is a ta of this module
+  }, [])
+
   return moduleId;
 };
 
-export const StaffModuleDashboard: FC = () => {
+export const TAModuleDashboard: FC = () => {
   const match = useRouteMatch();
   const { state } = useContext(AuthContext);
   const history = useHistory();

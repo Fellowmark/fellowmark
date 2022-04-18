@@ -14,13 +14,20 @@ import (
 
 const EmailsNotFoundKey = "emailNotFoundIndexes"
 const EnrollmentExistIndexesKey = "enrollmentExistIndexes"
+const AssistanceExistIndexesKey = "assistanceExistIndexes"
 const EnrollErrorsKey = "enrollErrors"
+const AssistanceErrorsKey = "assistanceErrors"
 const SupervisionExistIndexesKey = "supervisionExistIndexes"
 const SuperviseErrorsKey = "superviseErrors"
 
 type EnrollmentResult struct {
 	SuccessCount int `json:"success"`
 	EnrollErrors []string `json:"enrollErrors"`
+}
+
+type AssistanceResult struct {
+	SuccessCount int `json:"success"`
+	AssistanceErrors []string `json:"assistanceErrors"`
 }
 
 type SupervisionResult struct {
@@ -76,6 +83,25 @@ func (controller ModuleController) EnrollmentCreateHandleFunc() http.HandlerFunc
 	}
 }
 
+func (controller ModuleController) AssistanceCreateHandleFunc() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		assistances := r.Context().Value(utils.DecodeBodyContextKey).(*[]models.Assistance)
+		assistanceErrors := r.Context().Value(AssistanceErrorsKey).(*[]string)
+		result := controller.DB.Model(assistances).Create(assistances)
+		if result.Error != nil {
+			if result.Error.Error() == "empty slice found" {
+				response := AssistanceResult{0, *assistanceErrors}
+				utils.HandleResponseWithObject(w, &response, http.StatusOK)
+			} else {
+				utils.HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
+			}
+		} else {
+			response := AssistanceResult{len(*assistances), *assistanceErrors}
+			utils.HandleResponseWithObject(w, &response, http.StatusOK)
+		}
+	}
+}
+
 func (controller ModuleController) EnrollmentDeleteHandleFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		enrollment := r.Context().Value(utils.DecodeBodyContextKey).(*models.Enrollment)
@@ -99,6 +125,32 @@ func (controller ModuleController) EnrollmentDeleteHandleFunc() http.HandlerFunc
 			return
 		}
 		utils.HandleResponseWithObject(w, enrollment, http.StatusOK)
+	}
+}
+
+func (controller ModuleController) AssistanceDeleteHandleFunc() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		assistance := r.Context().Value(utils.DecodeBodyContextKey).(*models.Assistance)
+		txError := controller.DB.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Model(assistance).Where(assistance).Take(assistance).Error; err != nil {
+				return err
+			}
+			if err := tx.Model(assistance).Delete(assistance).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+		if txError != nil {
+			var errMessage string
+			if errors.Is(txError, gorm.ErrRecordNotFound) {
+				errMessage = "Deletion failed: Student not found."
+			} else {
+				errMessage = "Deletion failed: " + txError.Error()
+			}
+			utils.HandleResponse(w, errMessage, http.StatusBadRequest)
+			return
+		}
+		utils.HandleResponseWithObject(w, assistance, http.StatusOK)
 	}
 }
 
@@ -156,6 +208,15 @@ func (controller ModuleController) GetStudentEnrollmentsHandleFunc() http.Handle
 	})
 }
 
+func (controller ModuleController) GetStudentAssitancesHandleFunc() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var modules []models.Module
+		user := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
+		controller.DB.Joins("inner join assistances e on modules.id = e.module_id").Where("e.student_id = ?", user.ID).Find(&modules)
+		utils.HandleResponseWithObject(w, modules, http.StatusOK)
+	})
+}
+
 func (controller ModuleController) GetStaffSupervisionsHandleFunc() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var modules []models.Module
@@ -176,10 +237,14 @@ func (controller ModuleController) CheckStaffSupervision() mux.MiddlewareFunc {
 					moduleID = data.(*BatchEnrollment).ModuleID
 				case *BatchSupervision:
 					moduleID = data.(*BatchSupervision).ModuleID
-				case *models.Supervision:
-					moduleID = data.(*models.Supervision).ModuleID
+				case *BatchAssistance:
+					moduleID = data.(*BatchAssistance).ModuleID
 				case *models.Enrollment:
 					moduleID = data.(*models.Enrollment).ModuleID
+				case *models.Supervision:
+					moduleID = data.(*models.Supervision).ModuleID
+				case *models.Assistance:
+					moduleID = data.(*models.Assistance).ModuleID
 			}
 			if pass := utils.IsSupervisor(*claims, moduleID, controller.DB); pass {
 				next.ServeHTTP(w, r)
@@ -195,6 +260,7 @@ func (controller ModuleController) EnrollmentDataPrepare() mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			const duplicateErrorMessage = "Enrollment exists"
 			const studentNotFoundErrorMessage = "Student not found"
+			const taErrorMessage = "TA of this module cannot be enrolled"
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*BatchEnrollment)
 			if (data.StudentID > 0) {
 				enrollments := make([]models.Enrollment, 0, 1)
@@ -204,6 +270,8 @@ func (controller ModuleController) EnrollmentDataPrepare() mux.MiddlewareFunc {
 					enrollErrors[0] = studentNotFoundErrorMessage
 				} else if controller.DB.Model(&existEnrollment).Where("student_id = ? and module_id = ?", data.StudentID, data.ModuleID).Take(&existEnrollment).Error == nil {
 					enrollErrors[0] = duplicateErrorMessage
+				} else if controller.DB.Model(&models.Assistance{}).Where("student_id = ? and module_id = ?", data.StudentID, data.ModuleID).Take(&models.Assistance{}).Error == nil {
+					enrollErrors[0] = taErrorMessage
 				} else {
 					enrollments = append(enrollments, models.Enrollment{ModuleID: data.ModuleID, StudentID: data.StudentID})
 				}
@@ -219,6 +287,8 @@ func (controller ModuleController) EnrollmentDataPrepare() mux.MiddlewareFunc {
 						enrollErrors[i] = studentNotFoundErrorMessage
 					} else if controller.DB.Model(&existEnrollment).Where("student_id = ? and module_id = ?", studentID, data.ModuleID).Take(&existEnrollment).Error == nil {
 						enrollErrors[i] = duplicateErrorMessage
+					} else if controller.DB.Model(&models.Assistance{}).Where("student_id = ? and module_id = ?", studentID, data.ModuleID).Take(&models.Assistance{}).Error == nil {
+						enrollErrors[i] = taErrorMessage
 					} else {
 						enrollments = append(enrollments, models.Enrollment{ModuleID: data.ModuleID, StudentID: studentID})
 					}
@@ -237,6 +307,8 @@ func (controller ModuleController) EnrollmentDataPrepare() mux.MiddlewareFunc {
 						enrollErrors[i] = studentNotFoundErrorMessage
 					} else if controller.DB.Model(&existEnrollment).Where("student_id = ? and module_id = ?", student.ID, data.ModuleID).Take(&existEnrollment).Error == nil {
 						enrollErrors[i] = duplicateErrorMessage
+					} else if controller.DB.Model(&models.Assistance{}).Where("student_id = ? and module_id = ?", student.ID, data.ModuleID).Take(&models.Assistance{}).Error == nil {
+						enrollErrors[i] = taErrorMessage
 					} else {
 						enrollments = append(enrollments, models.Enrollment{ModuleID: data.ModuleID, StudentID: student.ID})
 					}
@@ -307,6 +379,74 @@ func (controller ModuleController) SupervisionDataPrepare() mux.MiddlewareFunc {
 				next.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				utils.HandleResponse(w, "Empty Supervisions Data", http.StatusBadRequest)
+			}
+		})
+	}
+}
+
+func (controller ModuleController) AssistanceDataPrepare() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			const duplicateErrorMessage = "TA exists"
+			const studentNotFoundErrorMessage = "Student not found"
+			const enrolledStudentErrorMessage = "Student enrolled in this module cannot be a TA at the same time"
+			data := r.Context().Value(utils.DecodeBodyContextKey).(*BatchAssistance)
+			if (data.StudentID > 0) {
+				assistances := make([]models.Assistance, 0, 1)
+				assistanceErrors := make([]string, 1, 1)
+				existAssistance := models.Assistance{}
+				if controller.DB.Take(&models.Student{}, data.StudentID).Error != nil {
+					assistanceErrors[0] = studentNotFoundErrorMessage
+				} else if controller.DB.Model(&existAssistance).Where("student_id = ? and module_id = ?", data.StudentID, data.ModuleID).Take(&existAssistance).Error == nil {
+					assistanceErrors[0] = duplicateErrorMessage
+				} else if controller.DB.Model(&models.Enrollment{}).Where("student_id = ? and module_id = ?", data.StudentID, data.ModuleID).Take(&models.Enrollment{}).Error == nil {
+					assistanceErrors[0] = enrolledStudentErrorMessage
+				} else {
+					assistances = append(assistances, models.Assistance{ModuleID: data.ModuleID, StudentID: data.StudentID})
+				}
+				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &assistances)
+				ctx = context.WithValue(ctx, AssistanceErrorsKey, &assistanceErrors)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			} else if (len(data.StudentIDs) > 0) {
+				assistances := make([]models.Assistance, 0, len(data.StudentIDs))
+				assistanceErrors := make([]string, len(data.StudentIDs), len(data.StudentIDs))
+				for i, studentID := range data.StudentIDs {
+					existAssistance := models.Assistance{}
+					if controller.DB.Take(&models.Student{}, studentID).Error != nil {
+						assistanceErrors[i] = studentNotFoundErrorMessage
+					} else if controller.DB.Model(&existAssistance).Where("student_id = ? and module_id = ?", studentID, data.ModuleID).Take(&existAssistance).Error == nil {
+						assistanceErrors[i] = duplicateErrorMessage
+					} else if controller.DB.Model(&models.Enrollment{}).Where("student_id = ? and module_id = ?", studentID, data.ModuleID).Take(&models.Enrollment{}).Error == nil {
+						assistanceErrors[i] = enrolledStudentErrorMessage
+					} else {
+						assistances = append(assistances, models.Assistance{ModuleID: data.ModuleID, StudentID: studentID})
+					}
+				}
+				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &assistances)
+				ctx = context.WithValue(ctx, AssistanceErrorsKey, &assistanceErrors)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			} else if (len(data.StudentEmails) > 0) {
+				assistances := make([]models.Assistance, 0, len(data.StudentEmails))
+				assistanceErrors := make([]string, len(data.StudentEmails), len(data.StudentEmails))
+				for i, email := range data.StudentEmails {
+					student := models.Student{}
+					studentResult := controller.DB.Model(&student).Where("email = ?", email).Take(&student)
+					existAssistance := models.Assistance{}
+					if studentResult.Error != nil {
+						assistanceErrors[i] = studentNotFoundErrorMessage
+					} else if controller.DB.Model(&existAssistance).Where("student_id = ? and module_id = ?", student.ID, data.ModuleID).Take(&existAssistance).Error == nil {
+						assistanceErrors[i] = duplicateErrorMessage
+					} else if controller.DB.Model(&models.Enrollment{}).Where("student_id = ? and module_id = ?", student.ID, data.ModuleID).Take(&models.Enrollment{}).Error == nil {
+						assistanceErrors[i] = enrolledStudentErrorMessage
+					} else {
+						assistances = append(assistances, models.Assistance{ModuleID: data.ModuleID, StudentID: student.ID})
+					}
+				}
+				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &assistances)
+				ctx = context.WithValue(ctx, AssistanceErrorsKey, &assistanceErrors)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			} else {
+				utils.HandleResponse(w, "Empty Data", http.StatusBadRequest)
 			}
 		})
 	}

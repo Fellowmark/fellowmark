@@ -6,6 +6,7 @@ import {
   TableBody,
   TextField,
 } from "@material-ui/core";
+import PaginationMui from '@material-ui/lab/Pagination';
 import DateFnsUtils from "@date-io/moment"; // choose your lib
 import AddIcon from "@material-ui/icons/Add";
 import { DateTimePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
@@ -38,6 +39,9 @@ export const Supervisors: FC = () => {
   const { state } = useContext(AuthContext);
   const [isValid, setIsValid] = useState(false);
   const [supervisions, setSupervisions] = useState<Pagination<Supervision>>({});
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 15 //to test
+  const [noPagination, setNoPagination] = useState(false)
   const history = useHistory();
 
   const moduleId: number = useValidCheck(history, state, match, setIsValid);
@@ -46,9 +50,17 @@ export const Supervisors: FC = () => {
 
   useEffect(() => {
     if (isValid) {
-      getSupervisions({ moduleId: moduleId }, setSupervisions);
+      if (noPagination) {
+        getSupervisions({ moduleId: moduleId }, setSupervisions);
+      } else {
+        getSupervisions({ moduleId: moduleId, page: page, limit: PAGE_SIZE }, setSupervisions);
+      }
     }
-  }, [isValid]);
+  }, [isValid, page, noPagination]);
+
+  const handlePageChange = (event, page) => {
+    setPage(page)
+  }
 
   return (
     <div>
@@ -85,6 +97,13 @@ export const Supervisors: FC = () => {
           })}
         </TableBody>
       </StyledTableContainer>
+      {
+        !noPagination && supervisions.totalPages > 1 ?
+        <div style={{marginTop: 20, display: 'flex', justifyContent: 'center'}}>
+          <PaginationMui count={supervisions.totalPages} page={page} onChange={handlePageChange} variant="outlined" color="primary" />
+          <Button color="primary" onClick={()=>{setNoPagination(true)}}>Show full list</Button>
+        </div> : null 
+      }
     </div>
   );
 };

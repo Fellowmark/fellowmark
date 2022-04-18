@@ -71,6 +71,7 @@ func InitialMigration(connection *gorm.DB) {
 	connection.AutoMigrate(&models.Grade{})
 	connection.AutoMigrate(&models.Supervision{})
 	connection.AutoMigrate(&models.Enrollment{})
+	connection.AutoMigrate(&models.Assistance{})
 	connection.AutoMigrate(&models.Admin{})
 }
 

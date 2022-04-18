@@ -32,6 +32,10 @@ export const getPageList = (match): Page[] => {
       title: "Assignments",
       path: `/student/module/${moduleId}/assignments`,
     },
+    {
+      title: "Go Back to All Modules",
+      path: `/student`,
+    }
   ];
 };
 
@@ -47,7 +51,7 @@ export const useValidCheck = (history, authContext, match, setIsValid?) => {
 
   useEffect(() => {
     if (authContext?.module?.ID !== moduleId) {
-      history.push("/staff");
+      history.push("/student");
     } else {
       setIsValid(true);
     }
