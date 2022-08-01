@@ -4,11 +4,10 @@ import {
   CardContent,
   DialogContentText,
   Grid,
-  Input,
   makeStyles,
   Typography,
 } from "@material-ui/core";
-import { FC, useContext, useEffect, useRef, useState } from "react";
+import React, { FC, useContext, useEffect, useRef, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import { getSubmissionMetadata, uploadSubmission } from "../../../actions/moduleActions";
 import { ButtonAppBar, Page } from "../../../components/NavBar";
@@ -17,6 +16,7 @@ import { AuthContext } from "../../../context/context";
 import { Role } from "../../Login";
 import { Gradebook } from "./Gradebook";
 import { PeerReview } from "./PeerReview";
+import QuillEditor from "../../../components/QuillEditor";
 
 export const useFormStyles = makeStyles((theme) => ({
   form: {
@@ -140,12 +140,12 @@ export const QuestionBoard: FC = () => {
 
         <MaxWidthDialogActions handleClose={() => setGradeBook(false)} />
       </MaxWidthDialog>
+
       <Card>
         <CardContent>
           <Typography gutterBottom variant="h3">
             {`Question ${state?.question?.QuestionNumber}`}
           </Typography>
-
           <Typography gutterBottom variant="body1">
             {state?.question?.QuestionText}
           </Typography>
@@ -162,7 +162,7 @@ export const QuestionBoard: FC = () => {
           }}
         />
         <Button
-          style={{ marginTop: "10px" }}
+          style={{ marginTop: "10px", marginBottom: "10px" }}
           variant="contained"
           onClick={() => {
             hiddenFileInput.current.click();
@@ -171,6 +171,9 @@ export const QuestionBoard: FC = () => {
           {submitted ? "Re-submit" : "Upload"}
         </Button>
       </form>
+
+      <QuillEditor />
+
       <Grid
         container
         direction="row"
