@@ -14,8 +14,18 @@ Education application for student to student cross reviewing of assignments.
 `.env` file contains the configuration variables.
 
 ## Local dev API setup
-```sh
+```shell
 docker-compose --profile api-dev up
+```
+
+## Local dev front end setup
+```shell
+docker-compose --profile frontend-dev up
+```
+
+To start the fellowmark system, run
+```shell
+docker-compose --profile dev up
 ```
 
 After api is running, populate with mock data by running the seed.sh script:

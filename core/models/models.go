@@ -70,7 +70,7 @@ type Supervision struct {
 type Assistance struct {
 	Model
 	Module    Module  `gorm:"foreignKey:ModuleID;references:ID" json:"-"`
-	ModuleID uint  `gorm:"uniqueIndex:assistanceIdx;column:module_id;not null"`
+	ModuleID  uint    `gorm:"uniqueIndex:assistanceIdx;column:module_id;not null"`
 	Student   Student `gorm:"foreignKey:StudentID"`
 	StudentID uint    `gorm:"uniqueIndex:assistanceIdx;column:student_id;not null"`
 }
@@ -133,4 +133,13 @@ type Grade struct {
 	RubricID  uint    `gorm:"column:rubric_id;not null"`
 	Grade     int     `gorm:"column:grade;not null"`
 	Comment   string  `gorm:"column:comment"`
+}
+
+type OnlineSubmission struct {
+	Model
+	SubmittedBy Student  `gorm:"foreignKey:StudentID"`
+	StudentID   uint     `gorm:"uniqueIndex:submissionIdx;column:submitted_by;not null"`
+	Question    Question `gorm:"foreignKey:QuestionID" json:"-"`
+	QuestionID  uint     `gorm:"uniqueIndex:submissionIdx;column:question_id;not null"`
+	Text        string   `gorm:"column:text"`
 }

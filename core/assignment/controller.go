@@ -19,6 +19,7 @@ func (controller AssignmentController) CreateRouters(route *mux.Router) {
 	controller.GetQuestionsRoute(route.PathPrefix("/question").Subrouter())
 	controller.GetRubricsRoute(route.PathPrefix("/rubric").Subrouter())
 	controller.GetSubmissionRoute(route.PathPrefix("/submission").Subrouter())
+	controller.GetOnlineSubmissionRoute(route.PathPrefix("/online_submission").Subrouter())
 }
 
 func (controller AssignmentController) CreatePrivilegedRouters(route *mux.Router) {
@@ -86,6 +87,11 @@ func (controller AssignmentController) GetPairingsForMarkerRoute(route *mux.Rout
 func (controller AssignmentController) GetSubmissionRoute(route *mux.Router) {
 	route.Use(utils.DecodeParamsMiddleware(&models.Submission{}))
 	route.HandleFunc("", utils.DBGetFromDataParams(controller.DB, &models.Submission{}, &[]models.Submission{})).Methods(http.MethodGet)
+}
+
+func (controller AssignmentController) GetOnlineSubmissionRoute(route *mux.Router) {
+	route.Use(utils.DecodeParamsMiddleware(&models.OnlineSubmission{}))
+	route.HandleFunc("", utils.DBGetFromDataParams(controller.DB, &models.OnlineSubmission{}, &[]models.OnlineSubmission{}))
 }
 
 func (controller AssignmentController) CreatePairingsRoute(route *mux.Router) {
