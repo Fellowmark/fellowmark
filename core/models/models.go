@@ -138,8 +138,8 @@ type Grade struct {
 type OnlineSubmission struct {
 	Model
 	SubmittedBy Student  `gorm:"foreignKey:StudentID"`
-	StudentID   uint     `gorm:"uniqueIndex:submissionIdx;column:submitted_by;not null"`
+	StudentID   uint     `gorm:"uniqueIndex:online_submissionIdx;column:submitted_by;not null"`
 	Question    Question `gorm:"foreignKey:QuestionID" json:"-"`
-	QuestionID  uint     `gorm:"uniqueIndex:submissionIdx;column:question_id;not null"`
+	QuestionID  uint     `gorm:"uniqueIndex:online_submissionIdx;column:question_id;not null"`
 	Text        string   `gorm:"column:text"`
 }

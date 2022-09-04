@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/nus-utils/nus-peer-review/online_submissions"
 	"net/http"
 	"os"
 	"os/signal"
@@ -79,6 +80,10 @@ func InitServer(pool *gorm.DB) {
 		DB: pool,
 	}
 
+	onlineSubmissionController := online_submissions.OnlineSubmissionController{
+		DB: pool,
+	}
+
 	// gradingController := grading.GradingRoute{
 	// 	DB: pool,
 	// }
@@ -90,6 +95,7 @@ func InitServer(pool *gorm.DB) {
 	assignmentController.CreateRouters(router.PathPrefix("/assignment").Subrouter())
 	submissionController.CreateRouters(router.PathPrefix("/submission").Subrouter())
 	gradingController.CreateRouters(router.PathPrefix("/grade").Subrouter())
+	onlineSubmissionController.CreateRouters(router.PathPrefix("/online_submission").Subrouter())
 
 	router.HandleFunc("/health", healthCheck).Methods(http.MethodGet)
 	mux.CORSMethodMiddleware(router)
