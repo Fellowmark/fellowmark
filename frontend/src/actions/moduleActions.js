@@ -479,6 +479,17 @@ export const getRubrics = (rubricData, setRubrics) => {
     });
 };
 
+export const onlineSubmit = async (
+    studentId,
+    questionId,
+    content
+) => {
+  await axios.post(
+      `/assignment/online_submission?questionId=${questionId}&studentId=${studentId}`,
+      content
+  );
+};
+
 export const uploadSubmission = async (
   fileFormData,
   moduleId,

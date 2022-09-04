@@ -1,19 +1,21 @@
-import React, {useState} from "react";
+import React, {FC, useContext, useState} from "react";
 import ReactQuill from "react-quill";
 import { Button } from "@material-ui/core";
 import "react-quill/dist/quill.snow.css";
 import "./QuillEditor.css"
 import EditorToolbar, { modules, formats } from "./EditorToolBar";
+import {onlineSubmit} from "../actions/moduleActions";
+import {AuthContext} from "../context/context";
 
 
-const QuillEditor = () => {
-    const [submission, setSubmission] = useState({
-        content: ''
-    });
-
+const QuillEditor: FC<{
+    studentId: number
+    questionId: number;
+}> = (props) => {
+    const [submission, setSubmission] = useState({content: ''});
+    const { studentId, questionId } = props;
     const onChangeContent = (value) => {
         setSubmission({
-            ...submission,
             content: value
         });
     }
@@ -21,9 +23,13 @@ const QuillEditor = () => {
     const onSubmit = async (e) => {
         e.preventDefault();
         e.persist();
+        try {
+            await onlineSubmit(studentId, questionId, submission.content);
+        } catch(e) {
+            alert("Fail to submit");
+        }
 
         console.log(submission.content)
-
     }
 
     return (
