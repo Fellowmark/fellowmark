@@ -9,13 +9,11 @@ import (
 	"net/http"
 )
 
-const ContentTextContextKey = "text"
-
-func (controller OnlineSubmissionController) StartOnlineSubmissionPermissionCheck() mux.MiddlewareFunc {
+func (controller OnlineSubmissionController) CreateOnlineSubmissionPermissionCheck() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
-			onlineSubmission := r.Context().Value(utils.DecodeParamsContextKey).(*models.OnlineSubmission)
+			onlineSubmission := r.Context().Value(utils.DecodeBodyContextKey).(*models.OnlineSubmission)
 
 			var question models.Question
 			controller.DB.Model(&models.Question{}).Where("id = ?", onlineSubmission.QuestionID).Find(&question)
@@ -36,12 +34,12 @@ func (controller OnlineSubmissionController) UpdateOnlineSubmissionPermissionChe
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
-			submission := r.Context().Value(utils.DecodeParamsContextKey).(*models.OnlineSubmission)
+			onlineSubmission := r.Context().Value(utils.DecodeBodyContextKey).(*models.OnlineSubmission)
 
 			var question models.Question
-			controller.DB.Model(&models.Question{}).Where("id = ?", submission.QuestionID).Find(&question)
+			controller.DB.Model(&models.Question{}).Where("id = ?", onlineSubmission.QuestionID).Find(&question)
 
-			if pass := claims.ID == submission.StudentID || utils.IsPair(*claims, question.AssignmentID, submission.StudentID, controller.DB); pass {
+			if pass := claims.ID == onlineSubmission.StudentID || utils.IsPair(*claims, question.AssignmentID, onlineSubmission.StudentID, controller.DB); pass {
 				next.ServeHTTP(w, r)
 			} else {
 				utils.HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
@@ -50,10 +48,10 @@ func (controller OnlineSubmissionController) UpdateOnlineSubmissionPermissionChe
 	}
 }
 
-func (controller OnlineSubmissionController) GetOnlineSubmissionMiddleware() mux.MiddlewareFunc {
+func (controller OnlineSubmissionController) CreateOnlineSubmissionHandleFunc() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			data := r.Context().Value(utils.DecodeParamsContextKey).(*models.OnlineSubmission)
+			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.OnlineSubmission)
 			controller.DB.Model(&models.OnlineSubmission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).FirstOrCreate(data)
 			ctxWithPath := context.WithValue(r.Context(), utils.DecodeBodyContextKey, data)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))
@@ -61,12 +59,11 @@ func (controller OnlineSubmissionController) GetOnlineSubmissionMiddleware() mux
 	}
 }
 
-func (controller OnlineSubmissionController) UpdateOnlineContent() mux.MiddlewareFunc {
+func (controller OnlineSubmissionController) UpdateOnlineSubmissionHandleFunc() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.OnlineSubmission)
-			text := r.Context().Value(ContentTextContextKey).(string)
-			data.Text = text
+			controller.DB.Model(&models.OnlineSubmission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).Updates(data)
 			ctxWithPath := context.WithValue(r.Context(), utils.DecodeBodyContextKey, data)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))
 		})

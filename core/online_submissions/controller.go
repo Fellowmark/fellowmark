@@ -19,22 +19,20 @@ func (controller OnlineSubmissionController) CreateRouters(route *mux.Router) {
 func (controller OnlineSubmissionController) CreatePrivilegedRoute(route *mux.Router) {
 	route.Use(utils.AuthenticationMiddleware())
 
-	controller.CreateStartOnlineSubmissionRoute(route)
-	controller.CreateUpdateOnlineSubmissionRoute(route)
+	controller.CreateOnlineSubmissionRoute(route.PathPrefix("/create").Subrouter())
+	controller.UpdateOnlineSubmissionRoute(route.PathPrefix("/update").Subrouter())
 }
 
-func (controller OnlineSubmissionController) CreateStartOnlineSubmissionRoute(route *mux.Router) {
-	route.Use(utils.DecodeParamsMiddleware(&models.OnlineSubmission{}))
-	route.Use(controller.StartOnlineSubmissionPermissionCheck())
-	route.Use(controller.GetOnlineSubmissionMiddleware())
-	route.Use(controller.UpdateOnlineContent())
-	route.HandleFunc("", controller.SaveContentInDB(controller.DB)).Methods(http.MethodPost)
+func (controller OnlineSubmissionController) CreateOnlineSubmissionRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.OnlineSubmission{}))
+	route.Use(controller.CreateOnlineSubmissionPermissionCheck())
+	route.Use(controller.CreateOnlineSubmissionHandleFunc())
+	route.HandleFunc("", utils.DBCreateHandleFunc(controller.DB, true)).Methods(http.MethodPost)
 }
 
-func (controller OnlineSubmissionController) CreateUpdateOnlineSubmissionRoute(route *mux.Router) {
-	route.Use(utils.DecodeParamsMiddleware(&models.OnlineSubmission{}))
+func (controller OnlineSubmissionController) UpdateOnlineSubmissionRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.OnlineSubmission{}))
 	route.Use(controller.UpdateOnlineSubmissionPermissionCheck())
-	route.Use(controller.GetOnlineSubmissionMiddleware())
-	route.Use(controller.UpdateOnlineContent())
+	route.Use(controller.UpdateOnlineSubmissionHandleFunc())
 	route.HandleFunc("", controller.SaveContentInDB(controller.DB)).Methods(http.MethodPut)
 }

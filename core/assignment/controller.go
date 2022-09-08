@@ -91,7 +91,7 @@ func (controller AssignmentController) GetSubmissionRoute(route *mux.Router) {
 
 func (controller AssignmentController) GetOnlineSubmissionRoute(route *mux.Router) {
 	route.Use(utils.DecodeParamsMiddleware(&models.OnlineSubmission{}))
-	route.HandleFunc("", utils.DBGetFromDataParams(controller.DB, &models.OnlineSubmission{}, &[]models.OnlineSubmission{}))
+	route.HandleFunc("", utils.DBGetFromDataParams(controller.DB, &models.OnlineSubmission{}, &[]models.OnlineSubmission{})).Methods(http.MethodGet)
 }
 
 func (controller AssignmentController) CreatePairingsRoute(route *mux.Router) {
