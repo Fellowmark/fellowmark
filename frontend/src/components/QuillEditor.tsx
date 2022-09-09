@@ -1,11 +1,10 @@
-import React, {FC, useContext, useState} from "react";
+import React, {FC, useState, useEffect} from "react";
 import ReactQuill from "react-quill";
-import { Button } from "@material-ui/core";
 import "react-quill/dist/quill.snow.css";
+import { Button } from "@material-ui/core";
 import "./QuillEditor.css"
 import EditorToolbar, { modules, formats } from "./EditorToolBar";
-import {onlineSubmit} from "../actions/moduleActions";
-import {AuthContext} from "../context/context";
+import {getOnlineSubmission, onlineSubmit, onlineUpdate} from "../actions/moduleActions";
 
 
 const QuillEditor: FC<{
@@ -28,27 +27,50 @@ const QuillEditor: FC<{
         } catch(e) {
             alert("Fail to submit");
         }
-
-        console.log(submission.content)
+        console.log(submission.content);
     }
+
+    const onUpdate = async (e) => {
+        e.preventDefault();
+        e.persist();
+        try {
+            await onlineUpdate(studentId, questionId, submission.content);
+        } catch(e) {
+            alert("Fail to update");
+        }
+        console.log(submission.content);
+    }
+
+    useEffect(() => {
+        getOnlineSubmission(studentId, questionId, setSubmission);
+    }, []);
 
     return (
         <div>
             <EditorToolbar toolbarId={'t1'} style={{ height: '300px' }}/>
             <ReactQuill
                 theme="snow"
-                value={submission.content}
+                value={submission.content || ''}
                 onChange={onChangeContent}
                 placeholder={"Enter..."}
                 modules={modules('t1')}
                 formats={formats}
             />
+
             <Button
                 style={{ marginTop: "10px", marginBottom: "10px", float:"right"}}
                 variant="contained"
                 onClick={onSubmit}
             >
-                Submit
+                SUBMIT
+            </Button>
+
+            <Button
+                style={{ marginTop: "10px", marginBottom: "10px", float:"right"}}
+                variant="contained"
+                onClick={onUpdate}
+            >
+                UPDATE
             </Button>
         </div>
     );
