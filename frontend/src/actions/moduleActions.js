@@ -485,8 +485,12 @@ export const onlineSubmit = async (
     content
 ) => {
   await axios.post(
-      `/assignment/online_submission?questionId=${questionId}&studentId=${studentId}`,
-      content
+      `/online_submission/create`,
+      {
+        studentId: studentId,
+        questionId: questionId,
+        text: content
+      }
   );
 };
 
