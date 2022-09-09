@@ -48,11 +48,22 @@ func (controller OnlineSubmissionController) UpdateOnlineSubmissionPermissionChe
 	}
 }
 
+func (controller OnlineSubmissionController) GetOnlineSubmissionByStudentIdAndQuestionIdRouteHandleFunc() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.OnlineSubmission)
+			controller.DB.Model(&models.OnlineSubmission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).First(data)
+			ctxWithPath := context.WithValue(r.Context(), utils.DecodeBodyContextKey, data)
+			next.ServeHTTP(w, r.WithContext(ctxWithPath))
+		})
+	}
+}
+
 func (controller OnlineSubmissionController) CreateOnlineSubmissionHandleFunc() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.OnlineSubmission)
-			controller.DB.Model(&models.OnlineSubmission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).FirstOrCreate(data)
+			controller.DB.Model(&models.OnlineSubmission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).Create(data)
 			ctxWithPath := context.WithValue(r.Context(), utils.DecodeBodyContextKey, data)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))
 		})

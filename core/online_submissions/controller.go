@@ -19,8 +19,16 @@ func (controller OnlineSubmissionController) CreateRouters(route *mux.Router) {
 func (controller OnlineSubmissionController) CreatePrivilegedRoute(route *mux.Router) {
 	route.Use(utils.AuthenticationMiddleware())
 
+	controller.GetOnlineSubmissionByStudentIdAndQuestionIdRoute(route.PathPrefix("").Subrouter())
 	controller.CreateOnlineSubmissionRoute(route.PathPrefix("/create").Subrouter())
 	controller.UpdateOnlineSubmissionRoute(route.PathPrefix("/update").Subrouter())
+}
+
+func (controller OnlineSubmissionController) GetOnlineSubmissionByStudentIdAndQuestionIdRoute(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.OnlineSubmission{}))
+	route.Use(controller.CreateOnlineSubmissionPermissionCheck())
+	route.Use(controller.GetOnlineSubmissionByStudentIdAndQuestionIdRouteHandleFunc())
+	route.HandleFunc("", utils.DBCreateHandleFunc(controller.DB, true)).Methods(http.MethodGet)
 }
 
 func (controller OnlineSubmissionController) CreateOnlineSubmissionRoute(route *mux.Router) {
