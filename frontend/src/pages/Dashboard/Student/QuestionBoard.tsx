@@ -172,7 +172,7 @@ export const QuestionBoard: FC = () => {
         </Button>
       </form>
 
-      <QuillEditor studentId={state.user.ID} questionId={questionId}/>
+      <QuillEditor studentId={state.user.ID} questionId={Number(questionId)}/>
 
       <Grid
         container
