@@ -9,6 +9,27 @@ import (
 	"net/http"
 )
 
+func (controller OnlineSubmissionController) GetOnlineSubmissionPermissionCheck() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
+			onlineSubmission := r.Context().Value(utils.DecodeParamsContextKey).(*models.OnlineSubmission)
+
+			var question models.Question
+			controller.DB.Model(&models.Question{}).Where("id = ?", onlineSubmission.QuestionID).Find(&question)
+
+			var assignment models.Assignment
+			controller.DB.Model(&models.Assignment{}).Where("id = ?", question.AssignmentID).Find(&assignment)
+
+			if pass := utils.IsEnrolled(*claims, assignment.ModuleID, controller.DB); pass {
+				next.ServeHTTP(w, r)
+			} else {
+				utils.HandleResponse(w, "Unauthorized", http.StatusUnauthorized)
+			}
+		})
+	}
+}
+
 func (controller OnlineSubmissionController) CreateOnlineSubmissionPermissionCheck() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -51,9 +72,9 @@ func (controller OnlineSubmissionController) UpdateOnlineSubmissionPermissionChe
 func (controller OnlineSubmissionController) GetOnlineSubmissionByStudentIdAndQuestionIdRouteHandleFunc() mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			data := r.Context().Value(utils.DecodeBodyContextKey).(*models.OnlineSubmission)
+			data := r.Context().Value(utils.DecodeParamsContextKey).(*models.OnlineSubmission)
 			controller.DB.Model(&models.OnlineSubmission{}).Where("submitted_by = ? AND question_id = ?", data.StudentID, data.QuestionID).First(data)
-			ctxWithPath := context.WithValue(r.Context(), utils.DecodeBodyContextKey, data)
+			ctxWithPath := context.WithValue(r.Context(), utils.DecodeParamsContextKey, data)
 			next.ServeHTTP(w, r.WithContext(ctxWithPath))
 		})
 	}
@@ -93,5 +114,12 @@ func (controller OnlineSubmissionController) SaveContentInDB(db *gorm.DB) http.H
 		} else {
 			utils.HandleResponseWithObject(w, data, http.StatusOK)
 		}
+	}
+}
+
+func (controller OnlineSubmissionController) SearchOnlineSubmissionText() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := r.Context().Value(utils.DecodeParamsContextKey).(*models.OnlineSubmission)
+		utils.HandleResponseWithObject(w, data, http.StatusOK)
 	}
 }

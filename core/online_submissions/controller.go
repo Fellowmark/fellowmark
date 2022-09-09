@@ -25,10 +25,10 @@ func (controller OnlineSubmissionController) CreatePrivilegedRoute(route *mux.Ro
 }
 
 func (controller OnlineSubmissionController) GetOnlineSubmissionByStudentIdAndQuestionIdRoute(route *mux.Router) {
-	route.Use(utils.DecodeBodyMiddleware(&models.OnlineSubmission{}))
-	route.Use(controller.CreateOnlineSubmissionPermissionCheck())
+	route.Use(utils.DecodeParamsMiddleware(&models.OnlineSubmission{}))
+	route.Use(controller.GetOnlineSubmissionPermissionCheck())
 	route.Use(controller.GetOnlineSubmissionByStudentIdAndQuestionIdRouteHandleFunc())
-	route.HandleFunc("", utils.DBCreateHandleFunc(controller.DB, true)).Methods(http.MethodGet)
+	route.HandleFunc("", controller.SearchOnlineSubmissionText()).Methods(http.MethodGet)
 }
 
 func (controller OnlineSubmissionController) CreateOnlineSubmissionRoute(route *mux.Router) {
