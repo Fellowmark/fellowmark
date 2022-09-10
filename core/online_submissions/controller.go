@@ -35,6 +35,7 @@ func (controller OnlineSubmissionController) CreateOnlineSubmissionRoute(route *
 	route.Use(utils.DecodeBodyMiddleware(&models.OnlineSubmission{}))
 	route.Use(controller.CreateOnlineSubmissionPermissionCheck())
 	route.Use(controller.CreateOnlineSubmissionHandleFunc())
+	route.Use(utils.CorsMiddleware)
 	route.HandleFunc("", utils.DBCreateHandleFunc(controller.DB, true)).Methods(http.MethodPost)
 }
 

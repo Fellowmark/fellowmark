@@ -1,15 +1,15 @@
 package module
 
 import (
+	"context"
 	"net/http"
 	"strings"
-	"context"
 
+	"errors"
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
-	"errors"
 )
 
 const EmailsNotFoundKey = "emailNotFoundIndexes"
@@ -21,17 +21,17 @@ const SupervisionExistIndexesKey = "supervisionExistIndexes"
 const SuperviseErrorsKey = "superviseErrors"
 
 type EnrollmentResult struct {
-	SuccessCount int `json:"success"`
+	SuccessCount int      `json:"success"`
 	EnrollErrors []string `json:"enrollErrors"`
 }
 
 type AssistanceResult struct {
-	SuccessCount int `json:"success"`
+	SuccessCount     int      `json:"success"`
 	AssistanceErrors []string `json:"assistanceErrors"`
 }
 
 type SupervisionResult struct {
-	SuccessCount int `json:"success"`
+	SuccessCount    int      `json:"success"`
 	SuperviseErrors []string `json:"superviseErrors"`
 }
 
@@ -39,7 +39,7 @@ func (controller ModuleController) ModuleCreateHandleFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		module := r.Context().Value(utils.DecodeBodyContextKey).(*models.Module)
 		user := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
-		
+
 		txError := controller.DB.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Model(module).Create(module).Error; err != nil {
 				return err
@@ -233,18 +233,18 @@ func (controller ModuleController) CheckStaffSupervision() mux.MiddlewareFunc {
 			data := r.Context().Value(utils.DecodeBodyContextKey)
 			var moduleID uint
 			switch data.(type) {
-				case *BatchEnrollment:
-					moduleID = data.(*BatchEnrollment).ModuleID
-				case *BatchSupervision:
-					moduleID = data.(*BatchSupervision).ModuleID
-				case *BatchAssistance:
-					moduleID = data.(*BatchAssistance).ModuleID
-				case *models.Enrollment:
-					moduleID = data.(*models.Enrollment).ModuleID
-				case *models.Supervision:
-					moduleID = data.(*models.Supervision).ModuleID
-				case *models.Assistance:
-					moduleID = data.(*models.Assistance).ModuleID
+			case *BatchEnrollment:
+				moduleID = data.(*BatchEnrollment).ModuleID
+			case *BatchSupervision:
+				moduleID = data.(*BatchSupervision).ModuleID
+			case *BatchAssistance:
+				moduleID = data.(*BatchAssistance).ModuleID
+			case *models.Enrollment:
+				moduleID = data.(*models.Enrollment).ModuleID
+			case *models.Supervision:
+				moduleID = data.(*models.Supervision).ModuleID
+			case *models.Assistance:
+				moduleID = data.(*models.Assistance).ModuleID
 			}
 			if pass := utils.IsSupervisor(*claims, moduleID, controller.DB); pass {
 				next.ServeHTTP(w, r)
@@ -262,7 +262,7 @@ func (controller ModuleController) EnrollmentDataPrepare() mux.MiddlewareFunc {
 			const studentNotFoundErrorMessage = "Student not found"
 			const taErrorMessage = "TA of this module cannot be enrolled"
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*BatchEnrollment)
-			if (data.StudentID > 0) {
+			if data.StudentID > 0 {
 				enrollments := make([]models.Enrollment, 0, 1)
 				enrollErrors := make([]string, 1, 1)
 				existEnrollment := models.Enrollment{}
@@ -278,7 +278,7 @@ func (controller ModuleController) EnrollmentDataPrepare() mux.MiddlewareFunc {
 				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &enrollments)
 				ctx = context.WithValue(ctx, EnrollErrorsKey, &enrollErrors)
 				next.ServeHTTP(w, r.WithContext(ctx))
-			} else if (len(data.StudentIDs) > 0) {
+			} else if len(data.StudentIDs) > 0 {
 				enrollments := make([]models.Enrollment, 0, len(data.StudentIDs))
 				enrollErrors := make([]string, len(data.StudentIDs), len(data.StudentIDs))
 				for i, studentID := range data.StudentIDs {
@@ -296,7 +296,7 @@ func (controller ModuleController) EnrollmentDataPrepare() mux.MiddlewareFunc {
 				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &enrollments)
 				ctx = context.WithValue(ctx, EnrollErrorsKey, &enrollErrors)
 				next.ServeHTTP(w, r.WithContext(ctx))
-			} else if (len(data.StudentEmails) > 0) {
+			} else if len(data.StudentEmails) > 0 {
 				enrollments := make([]models.Enrollment, 0, len(data.StudentEmails))
 				enrollErrors := make([]string, len(data.StudentEmails), len(data.StudentEmails))
 				for i, email := range data.StudentEmails {
@@ -329,7 +329,7 @@ func (controller ModuleController) SupervisionDataPrepare() mux.MiddlewareFunc {
 			const duplicateErrorMessage = "Supervision exists"
 			const staffNotFoundErrorMessage = "Staff not found"
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*BatchSupervision)
-			if (data.StaffID > 0) {
+			if data.StaffID > 0 {
 				supervisions := make([]models.Supervision, 0, 1)
 				superviseErrors := make([]string, 1, 1)
 				existSupervision := models.Supervision{}
@@ -343,7 +343,7 @@ func (controller ModuleController) SupervisionDataPrepare() mux.MiddlewareFunc {
 				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &supervisions)
 				ctx = context.WithValue(ctx, SuperviseErrorsKey, &superviseErrors)
 				next.ServeHTTP(w, r.WithContext(ctx))
-			} else if (len(data.StaffIDs) > 0) {
+			} else if len(data.StaffIDs) > 0 {
 				supervisions := make([]models.Supervision, 0, len(data.StaffIDs))
 				superviseErrors := make([]string, len(data.StaffIDs), len(data.StaffIDs))
 				for i, staffID := range data.StaffIDs {
@@ -359,7 +359,7 @@ func (controller ModuleController) SupervisionDataPrepare() mux.MiddlewareFunc {
 				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &supervisions)
 				ctx = context.WithValue(ctx, SuperviseErrorsKey, &superviseErrors)
 				next.ServeHTTP(w, r.WithContext(ctx))
-			} else if (len(data.StaffEmails) > 0) {
+			} else if len(data.StaffEmails) > 0 {
 				supervisions := make([]models.Supervision, 0, len(data.StaffEmails))
 				superviseErrors := make([]string, len(data.StaffEmails), len(data.StaffEmails))
 				for i, email := range data.StaffEmails {
@@ -391,7 +391,7 @@ func (controller ModuleController) AssistanceDataPrepare() mux.MiddlewareFunc {
 			const studentNotFoundErrorMessage = "Student not found"
 			const enrolledStudentErrorMessage = "Student enrolled in this module cannot be a TA at the same time"
 			data := r.Context().Value(utils.DecodeBodyContextKey).(*BatchAssistance)
-			if (data.StudentID > 0) {
+			if data.StudentID > 0 {
 				assistances := make([]models.Assistance, 0, 1)
 				assistanceErrors := make([]string, 1, 1)
 				existAssistance := models.Assistance{}
@@ -407,7 +407,7 @@ func (controller ModuleController) AssistanceDataPrepare() mux.MiddlewareFunc {
 				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &assistances)
 				ctx = context.WithValue(ctx, AssistanceErrorsKey, &assistanceErrors)
 				next.ServeHTTP(w, r.WithContext(ctx))
-			} else if (len(data.StudentIDs) > 0) {
+			} else if len(data.StudentIDs) > 0 {
 				assistances := make([]models.Assistance, 0, len(data.StudentIDs))
 				assistanceErrors := make([]string, len(data.StudentIDs), len(data.StudentIDs))
 				for i, studentID := range data.StudentIDs {
@@ -425,7 +425,7 @@ func (controller ModuleController) AssistanceDataPrepare() mux.MiddlewareFunc {
 				ctx := context.WithValue(r.Context(), utils.DecodeBodyContextKey, &assistances)
 				ctx = context.WithValue(ctx, AssistanceErrorsKey, &assistanceErrors)
 				next.ServeHTTP(w, r.WithContext(ctx))
-			} else if (len(data.StudentEmails) > 0) {
+			} else if len(data.StudentEmails) > 0 {
 				assistances := make([]models.Assistance, 0, len(data.StudentEmails))
 				assistanceErrors := make([]string, len(data.StudentEmails), len(data.StudentEmails))
 				for i, email := range data.StudentEmails {
