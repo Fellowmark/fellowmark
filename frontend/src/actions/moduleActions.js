@@ -494,6 +494,37 @@ export const onlineSubmit = async (
   );
 };
 
+export const onlineUpdate = async (
+    studentId,
+    questionId,
+    content
+) => {
+    await axios.put(
+        `/online_submission/update`,
+        {
+            studentId: studentId,
+            questionId: questionId,
+            text: content
+        }
+    );
+};
+
+export const getOnlineSubmission = (studentId, questionId, setSubmission) => {
+    axios.get(`/online_submission`, {
+        params: {
+            studentId: studentId,
+            questionId: questionId
+            }
+        })
+        .then((res) => {
+            if (res.data.id !== 0) {
+                setSubmission({
+                    content: res.data.Text
+                });
+            }
+        });
+}
+
 export const uploadSubmission = async (
   fileFormData,
   moduleId,
