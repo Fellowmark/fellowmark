@@ -14,23 +14,23 @@ type ModuleController struct {
 }
 
 type BatchEnrollment struct {
-	ModuleID  uint `json:"moduleId"`
-	StudentID uint `json:"studentId"`
-	StudentIDs []uint `json:"studentIds"`
+	ModuleID      uint     `json:"moduleId"`
+	StudentID     uint     `json:"studentId"`
+	StudentIDs    []uint   `json:"studentIds"`
 	StudentEmails []string `json:"studentEmails"`
 }
 
 type BatchSupervision struct {
-	ModuleID  uint `json:"moduleId"`
-	StaffID uint `json:"staffId"`
-	StaffIDs []uint `json:"staffIds"`
+	ModuleID    uint     `json:"moduleId"`
+	StaffID     uint     `json:"staffId"`
+	StaffIDs    []uint   `json:"staffIds"`
 	StaffEmails []string `json:"staffEmails"`
 }
 
 type BatchAssistance struct {
-	ModuleID  uint `json:"moduleId"`
-	StudentID uint `json:"studentId"`
-	StudentIDs []uint `json:"studentIds"`
+	ModuleID      uint     `json:"moduleId"`
+	StudentID     uint     `json:"studentId"`
+	StudentIDs    []uint   `json:"studentIds"`
 	StudentEmails []string `json:"studentEmails"`
 }
 
@@ -57,10 +57,10 @@ func (controller ModuleController) CreatePrivilegedRouter(route *mux.Router) {
 }
 
 func (controller ModuleController) CreateModuleRouter(route *mux.Router) {
-	route.Use(utils.IsStaffMiddleware(controller.DB))
+	route.Use(utils.IsStaffOrAdminMiddleware(controller.DB))
 	route.Use(utils.DecodeBodyMiddleware(&models.Module{}))
 	route.Use(utils.SanitizeDataMiddleware())
-	route.HandleFunc("", controller.ModuleCreateHandleFunc()).Methods(http.MethodPost)
+	route.HandleFunc("", controller.ModuleCreateOrUpdateHandleFunc()).Methods(http.MethodPost)
 }
 
 func (controller ModuleController) CreateEnrollmentRoute(route *mux.Router) {

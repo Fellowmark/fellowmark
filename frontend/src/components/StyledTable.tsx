@@ -26,7 +26,11 @@ export const StyledTableRow = withStyles((theme) => ({
   },
 }))(TableRow);
 
-export const StyledTableContainer: FC = (props) => {
+interface Props {
+  children: React.ReactNode,
+}
+
+export const StyledTableContainer: FC<Props> = (props) => {
   return (
     <TableContainer component={Paper}>
       <Table className="Groupings table" aria-label="customized table">
@@ -36,7 +40,7 @@ export const StyledTableContainer: FC = (props) => {
   );
 }
 
-export const StyledTableHead: FC = (props) => {
+export const StyledTableHead: FC<Props> = (props) => {
   return (
     <TableHead>
       <TableRow>

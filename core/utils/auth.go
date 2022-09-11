@@ -280,6 +280,19 @@ func IsStaffMiddleware(db *gorm.DB) mux.MiddlewareFunc {
 	}
 }
 
+func IsStaffOrAdminMiddleware(db *gorm.DB) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			data := r.Context().Value(JWTClaimContextKey).(*models.User)
+			if IsStaff(*data, db) || IsAdmin(*data, db) {
+				next.ServeHTTP(w, r)
+			} else {
+				HandleResponse(w, "Insufficient Permissions", http.StatusUnauthorized)
+			}
+		})
+	}
+}
+
 func LoginHandleFunc(db *gorm.DB, scope func(db *gorm.DB) *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var input models.User

@@ -27,9 +27,13 @@ const initialState: Context = {
   },
 };
 
+interface Props {
+  children: React.ReactNode,
+}
+
 export const AuthContext = createContext(initialState);
 
-export const AuthProvider: FC = (props) => {
+export const AuthProvider: FC<Props> = (props) => {
   const [state, dispatch] = useReducer(updateContext, null);
   const value = { state, dispatch };
 
@@ -46,7 +50,7 @@ export interface TimeoutState {
 
 export const TimeoutContext = createContext<TimeoutState>({});
 
-export const TimeoutProvider: FC = (props) => {
+export const TimeoutProvider: FC<Props> = (props) => {
   const [timeout, createTimeout] = useState<NodeJS.Timeout>(null);
 
   const cancelTimeout = () => {

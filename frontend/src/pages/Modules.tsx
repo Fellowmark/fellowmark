@@ -2,6 +2,7 @@ import {
   Card,
   CardActionArea,
   CardContent,
+  CardActions,
   CardMedia,
   Grid,
   makeStyles,
@@ -32,6 +33,10 @@ export interface ModuleInfo {
   Code?: string;
   Semester?: string;
   Name?: string;
+  handleOpen?: () => void;
+  handleClose?: () => void;
+  setInitialValue?: (ModuleInfo) => void;
+  setEditId?: (number) => void;
 }
 
 export interface UserInfo{
@@ -58,6 +63,13 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
   const [modules, setModules] = useState<ModuleInfo[]>([]);
   const [open, setOpen] = useState(false);
   const [pageList, setPageList] = useState<Page[]>([]);
+  const [moduleInitialValues, setModuleInitialValues] = useState({
+    ID: "",
+    Code: "",
+    Name: "",
+    Semester: ""
+  })
+  const [editId, setEditId] = useState(-1)
   const { state } = useContext(AuthContext);
   const classes = useStyles();
 
@@ -109,9 +121,23 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
     setOpen(true);
   };
 
+  const clickAddModule = () => {
+    handleOpen();
+    setEditId(-1);
+    setInitialValue({
+      Code: "",
+      Name: "",
+      Semester: "",
+    })
+  }
+
   const handleClose = () => {
     setOpen(false);
   };
+
+  const setInitialValue = (module) => {
+    setModuleInitialValues(module)
+  }
 
   const currentYear = new Date().getFullYear()
   const semesterRanges = [
@@ -128,8 +154,8 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
         {
           state?.role === Role.STAFF ? (
           <Grid item className="button-block" xs={12} sm={6} md={4} lg={3} xl={3}>
-            <Card className={`${classes.paper} ${classes.add_button}`} style={{height: "210px"}}>
-              <CardActionArea onClick={handleOpen}>
+            <Card className={`${classes.paper} ${classes.add_button}`} style={{height: "250px"}}>
+              <CardActionArea onClick={clickAddModule}>
                 <CardContent>
                   <AddIcon />
                 </CardContent>
@@ -138,20 +164,16 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
           </Grid>) : null
         }
         {modules?.map((module) => {
-          return <Module key={module.ID} {...module} />;
+          return <Module key={module.ID} {...module} handleOpen={handleOpen} handleClose={handleClose} setInitialValue={setInitialValue} setEditId={setEditId}/>;
         })}
       </Grid>
       {
-        state?.role === Role.STAFF ? (
+        state?.role === Role.STAFF || state?.role === Role.ADMIN ? (
         <Dialog open={open} onClose={handleClose} disableEnforceFocus>
           <DialogTitle>Create a Module</DialogTitle>
           <DialogContent>
           <Formik
-            initialValues={{
-              Code: "",
-              Name: "",
-              Semester: ""
-            }}
+            initialValues={moduleInitialValues}
             validate={(values) => {
               const errors: Partial<ModuleInfo> = {};
               values.Code = values.Code.replace(/(^\s*)|(\s*$)/g, "").toUpperCase()
@@ -168,10 +190,10 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
               return errors;
             }}
             onSubmit={(values, {setSubmitting, resetForm}) => {
-              createModule(values).then(_ => {
+              createModule(values, editId).then(_ => {
                 setSubmitting(false)
                 getStaffModules(setModules);
-                alert("Successfully created!")
+                alert("Successfully created/updated!")
                 resetForm()
                 setOpen(false)
               }).catch(err => {
@@ -179,7 +201,7 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
                 if (err && err.response  && err.response.data && err.response.data.message) {
                   alert(err.response.data.message)
                 } else {
-                  alert("Creation failed.")
+                  alert("Creation/Update failed.")
                 }
               })
             }}
@@ -239,14 +261,16 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
                   >
                     Submit
                   </Button>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    disabled={isSubmitting}
-                    onClick={() => { resetForm() }}
-                  >
-                    Reset
-                  </Button>
+                  {editId == -1 && (
+                      <Button
+                          variant="contained"
+                          color="secondary"
+                          disabled={isSubmitting}
+                          onClick={() => {resetForm()}}
+                      >
+                        Reset
+                      </Button>
+                  )}
                 </Box>
               </Form>
             )}
@@ -275,9 +299,19 @@ export const Module: FC<ModuleInfo> = (props) => {
     history.push(`${match.url}/module/${props.ID}`);
   };
 
+  const clickEdit = () => {
+    props.handleOpen()
+    props.setEditId(props.ID)
+    props.setInitialValue({
+      Code: props.Code,
+      Name: props.Name,
+      Semester: props.Semester,
+    })
+  }
+
   return (
     <Grid item className="button-block" xs={12} sm={6} md={4} lg={3} xl={3}>
-      <Card className={classes.paper} style={{height: "210px"}}>
+      <Card className={classes.paper} style={{height: "250px"}}>
         <CardActionArea onClick={clickModule}>
           <CardMedia
             component="img"
@@ -297,6 +331,11 @@ export const Module: FC<ModuleInfo> = (props) => {
             </Typography>
           </CardContent>
         </CardActionArea>
+        <CardActions>
+          <Button size="small" color="primary" onClick={clickEdit}>
+            Edit
+          </Button>
+        </CardActions>
       </Card>
     </Grid>
   );

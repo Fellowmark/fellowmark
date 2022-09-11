@@ -7,7 +7,10 @@ import axios from "axios";
  * @param {string} semester e.g. "2122-1" for AY2021/2022 Semester 1
  * @param {string} name  e.g. "Software Engineering & Object-Oriented Programming"
  */
-export const createModule = (moduleInfo) => {
+export const createModule = (moduleInfo, moduleId) => {
+  if (moduleId != -1) {
+    moduleInfo.ID = moduleId
+  }
   return axios.post(`/module`, moduleInfo)
 };
 
