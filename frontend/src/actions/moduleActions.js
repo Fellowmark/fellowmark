@@ -509,7 +509,7 @@ export const onlineUpdate = async (
     );
 };
 
-export const getOnlineSubmission = (studentId, questionId, setSubmission) => {
+export const getOnlineSubmission = (studentId, questionId, setSubmission, setSubmitted) => {
     axios.get(`/online_submission`, {
         params: {
             studentId: studentId,
@@ -517,10 +517,11 @@ export const getOnlineSubmission = (studentId, questionId, setSubmission) => {
             }
         })
         .then((res) => {
-            if (res.data.id !== 0) {
+            if (res.data.ID !== 0) {
                 setSubmission({
                     content: res.data.Text
                 });
+                setSubmitted(true);
             }
         });
 }

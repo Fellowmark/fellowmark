@@ -12,6 +12,7 @@ const QuillEditor: FC<{
     questionId: number;
 }> = (props) => {
     const [submission, setSubmission] = useState({content: ''});
+    const [submitted, setSubmitted] = useState(false);
     const { studentId, questionId } = props;
     const onChangeContent = (value) => {
         setSubmission({
@@ -27,7 +28,7 @@ const QuillEditor: FC<{
         } catch(e) {
             alert("Fail to submit");
         }
-        console.log(submission.content);
+        setSubmitted(true);
     }
 
     const onUpdate = async (e) => {
@@ -38,11 +39,10 @@ const QuillEditor: FC<{
         } catch(e) {
             alert("Fail to update");
         }
-        console.log(submission.content);
     }
 
     useEffect(() => {
-        getOnlineSubmission(studentId, questionId, setSubmission);
+        getOnlineSubmission(studentId, questionId, setSubmission, setSubmitted);
     }, []);
 
     return (
@@ -57,21 +57,21 @@ const QuillEditor: FC<{
                 formats={formats}
             />
 
-            <Button
-                style={{ marginTop: "10px", marginBottom: "10px", float:"right"}}
-                variant="contained"
-                onClick={onSubmit}
-            >
-                SUBMIT
-            </Button>
+            {!submitted && <Button
+            style={{ marginTop: "10px", marginBottom: "10px", float:"right"}}
+            variant="contained"
+            onClick={onSubmit}
+        >
+            SUBMIT
+            </Button>}
 
-            <Button
+            {submitted && <Button
                 style={{ marginTop: "10px", marginBottom: "10px", float:"right"}}
                 variant="contained"
                 onClick={onUpdate}
             >
                 UPDATE
-            </Button>
+            </Button>}
         </div>
     );
 };
