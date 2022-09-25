@@ -24,7 +24,7 @@ import { ButtonAppBar, Page } from "../components/NavBar";
 import { AuthContext } from "../context/context";
 import { AuthType } from "../reducers/reducer";
 import { Role } from "./Login";
-import { createModule } from "../actions/moduleActions"
+import { createModule, deleteModule } from "../actions/moduleActions"
 import { Formik, Form, Field } from "formik"
 import { TextField } from 'formik-material-ui';
 
@@ -35,6 +35,7 @@ export interface ModuleInfo {
   Name?: string;
   handleOpen?: () => void;
   handleClose?: () => void;
+  refreshModules?: () => void;
   setInitialValue?: (ModuleInfo) => void;
   setEditId?: (number) => void;
 }
@@ -139,6 +140,10 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
     setModuleInitialValues(module)
   }
 
+  const refreshModules = () => {
+    getStaffModules(setModules);
+  }
+
   const currentYear = new Date().getFullYear()
   const semesterRanges = [
     {value: `AY${currentYear-1}/${currentYear} 1`, label: `AY${currentYear-1}/${currentYear} 1`},
@@ -164,7 +169,7 @@ export const ModuleList: FC<{ role: Role }> = (props) => {
           </Grid>) : null
         }
         {modules?.map((module) => {
-          return <Module key={module.ID} {...module} handleOpen={handleOpen} handleClose={handleClose} setInitialValue={setInitialValue} setEditId={setEditId}/>;
+          return <Module key={module.ID} {...module} handleOpen={handleOpen} handleClose={handleClose} setInitialValue={setInitialValue} setEditId={setEditId} refreshModules={refreshModules}/>;
         })}
       </Grid>
       {
@@ -309,6 +314,23 @@ export const Module: FC<ModuleInfo> = (props) => {
     })
   }
 
+  const clickDelete = () => {
+    const confirmed = window.confirm(`Are you sure you want to delete module ${props.Code} in ${props.Semester}?`)
+    if (!confirmed) {
+      return
+    }
+    deleteModule(props.ID).then(_ => {
+      alert("Successfully deleted!")
+      props.refreshModules()
+    }).catch(err => {
+      if (err && err.response  && err.response.data && err.response.data.message) {
+        alert(err.response.data.message)
+      } else {
+        alert("Deletion failed.")
+      }
+    })
+  }
+
   return (
     <Grid item className="button-block" xs={12} sm={6} md={4} lg={3} xl={3}>
       <Card className={classes.paper} style={{height: "250px"}}>
@@ -334,6 +356,9 @@ export const Module: FC<ModuleInfo> = (props) => {
         <CardActions>
           <Button size="small" color="primary" onClick={clickEdit}>
             Edit
+          </Button>
+          <Button size="small" color="secondary" onClick={clickDelete} style={{"marginLeft": 'auto'}}>
+            Delete
           </Button>
         </CardActions>
       </Card>

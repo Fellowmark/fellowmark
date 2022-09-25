@@ -45,6 +45,7 @@ func (controller ModuleController) CreatePrivilegedRouter(route *mux.Router) {
 	route.Use(utils.AuthenticationMiddleware())
 
 	controller.CreateModuleRouter(route.NewRoute().Subrouter())
+	controller.DeleteModuleRouter(route.NewRoute().Subrouter())
 	controller.CreateEnrollmentRoute(route.PathPrefix("/enroll").Subrouter())
 	controller.DeleteEnrollmentRoute(route.PathPrefix("/enroll").Subrouter())
 	controller.CreateSupervisionRoute(route.PathPrefix("/supervise").Subrouter())
@@ -61,6 +62,13 @@ func (controller ModuleController) CreateModuleRouter(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.Module{}))
 	route.Use(utils.SanitizeDataMiddleware())
 	route.HandleFunc("", controller.ModuleCreateOrUpdateHandleFunc()).Methods(http.MethodPost)
+}
+
+func (controller ModuleController) DeleteModuleRouter(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Module{}))
+	route.Use(utils.SanitizeDataMiddleware())
+	route.Use(controller.DeleteModulePermissionCheck())
+	route.HandleFunc("", controller.ModuleDeleteHandleFunc()).Methods(http.MethodDelete)
 }
 
 func (controller ModuleController) CreateEnrollmentRoute(route *mux.Router) {

@@ -15,6 +15,15 @@ export const createModule = (moduleInfo, moduleId) => {
 };
 
 /**
+ * Delete a module using given data
+ *
+ * @param {string} ID
+ */
+export const deleteModule = (moduleId) => {
+  return axios.delete(`/module`, {data: {ID: moduleId}})
+};
+
+/**
  * Adds a student to a module
  *
  * @param {int} moduleId ID of module
