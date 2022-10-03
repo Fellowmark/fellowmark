@@ -2,13 +2,14 @@ package module
 
 import (
 	"context"
+	"net/http"
+	"strings"
+
 	"errors"
 	"github.com/gorilla/mux"
 	"github.com/nus-utils/nus-peer-review/models"
 	"github.com/nus-utils/nus-peer-review/utils"
 	"gorm.io/gorm"
-	"net/http"
-	"strings"
 )
 
 const EmailsNotFoundKey = "emailNotFoundIndexes"
@@ -38,7 +39,6 @@ func (controller ModuleController) ModuleCreateOrUpdateHandleFunc() http.Handler
 	return func(w http.ResponseWriter, r *http.Request) {
 		module := r.Context().Value(utils.DecodeBodyContextKey).(*models.Module)
 		user := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
-
 		result := controller.DB.First(&models.Module{}, module.ID)
 		if result.Error == nil { //update
 			if utils.IsAdmin(*user, controller.DB) || utils.IsSupervisor(*user, module.ID, controller.DB) {

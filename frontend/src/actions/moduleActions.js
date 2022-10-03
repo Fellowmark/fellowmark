@@ -360,6 +360,16 @@ export const createAssignment = async (assignment) => {
   });
 };
 
+export const editAssignmentCall = async (assignment) => {
+  return await axios.post(`/assignment`, {
+    id: assignment.ID,
+    name: assignment.Name,
+    moduleId: assignment.ModuleID,
+    groupSize: assignment.GroupSize,
+    deadline: assignment.Deadline,
+  });
+};
+
 /**
  * Creates question using given data
  *
@@ -377,6 +387,21 @@ export const createQuestion = async (
     questionText: questionText,
     assignmentId: assignmentId,
   });
+};
+
+export const editQuestionCall = async (
+  questionId,
+  questionNumber,
+  questionText,
+  assignmentId
+) => {
+  await axios.post(`/assignment/question`, {
+    id: questionId,
+    questionNumber: questionNumber,
+    questionText: questionText,
+    assignmentId: assignmentId,
+  });
+  //console.log(questionId);
 };
 
 /**
@@ -465,6 +490,53 @@ export const getRubrics = (rubricData, setRubrics) => {
       console.log(err);
     });
 };
+
+export const onlineSubmit = async (
+    studentId,
+    questionId,
+    content
+) => {
+  await axios.post(
+      `/online_submission/create`,
+      {
+        studentId: studentId,
+        questionId: questionId,
+        text: content
+      }
+  );
+};
+
+export const onlineUpdate = async (
+    studentId,
+    questionId,
+    content
+) => {
+    await axios.put(
+        `/online_submission/update`,
+        {
+            studentId: studentId,
+            questionId: questionId,
+            text: content
+        }
+    );
+};
+
+export const getOnlineSubmission = (studentId, questionId, setSubmission, setSubmitted) => {
+    axios.get(`/online_submission`, {
+        params: {
+            studentId: studentId,
+            questionId: questionId
+            }
+        })
+        .then((res) => {
+            if (res.data.ID !== 0) {
+                setSubmission({
+                    content: res.data.Text
+                });
+                setSubmitted(true);
+            }
+        });
+}
 
 export const uploadSubmission = async (
   fileFormData,

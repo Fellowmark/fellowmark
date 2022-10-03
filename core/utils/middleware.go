@@ -28,15 +28,29 @@ const DecodeParamsContextKey = "params"
 
 func SetupCors() mux.MiddlewareFunc {
 	return handlers.CORS(handlers.AllowedOrigins([]string{"http://localhost:3000"}),
-		handlers.AllowedMethods([]string{http.MethodPost, http.MethodGet, http.MethodOptions}))
+		handlers.AllowedMethods([]string{http.MethodPost, http.MethodGet, http.MethodPut, http.MethodOptions}))
+}
+
+func CorsMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, cache-control")
+		w.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
 }
 
 func SetHeaders(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//anyone can make a CORS request (not recommended in production)
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		//only allow GET, POST, and OPTIONS ; and Delete
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+		//only allow GET, POST, and OPTIONS , PUT, DELETE
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS")
 		//Since I was building a REST API that returned JSON, I set the content type to JSON here.
 		w.Header().Set("Content-Type", "application/json")
 		//Allow requests to have the following headers

@@ -1,0 +1,8 @@
+.ql-editor {
+    min-height: 300px;
+    /*background-color: black;*/
+}
+
+.ql-editor >* {
+    color: black;
+}
