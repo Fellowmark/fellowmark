@@ -49,7 +49,7 @@ func SetHeaders(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//anyone can make a CORS request (not recommended in production)
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		//only allow GET, POST, and OPTIONS
+		//only allow GET, POST, and OPTIONS , PUT, DELETE
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS")
 		//Since I was building a REST API that returned JSON, I set the content type to JSON here.
 		w.Header().Set("Content-Type", "application/json")
@@ -191,8 +191,12 @@ func DBCreateHandleFunc(db *gorm.DB, update bool) http.HandlerFunc {
 		db.Model(generatePointerWithSameType(data)).Clauses(
 			clause.OnConflict{UpdateAll: true}).Create(data)
 		output := generatePointerWithSameType(data)
-		db.Model(data).Where(data).First(output)
-		HandleResponseWithObject(w, output, http.StatusOK)
+		result := db.Model(data).Where(data).First(output)
+		if result.Error != nil {
+			HandleResponse(w, result.Error.Error(), http.StatusBadRequest)
+		} else {
+			HandleResponseWithObject(w, output, http.StatusOK)
+		}
 	}
 }
 

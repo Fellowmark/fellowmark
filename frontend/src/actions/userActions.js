@@ -33,6 +33,21 @@ export const approveStaff = (stf) => {
     });
 };
 
+export const updateStaff = (stf) => {
+    return axios
+        .post(`/staff`, stf)
+        .then((res) => {
+            console.log(res.data)
+            alert("Successfully updated!")
+            return {success: true, data: res.data}
+        })
+        .catch((err) => {
+            console.error(err);
+            alert("Update failed!")
+            return {success: false, err}
+        });
+};
+
 export const loginUser = (role, userData, history) => {
   axios
     .get(`${role.toLowerCase()}/auth/login`, {

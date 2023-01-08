@@ -35,11 +35,28 @@ type SupervisionResult struct {
 	SuperviseErrors []string `json:"superviseErrors"`
 }
 
-func (controller ModuleController) ModuleCreateHandleFunc() http.HandlerFunc {
+func (controller ModuleController) ModuleCreateOrUpdateHandleFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		module := r.Context().Value(utils.DecodeBodyContextKey).(*models.Module)
 		user := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
-
+		result := controller.DB.First(&models.Module{}, module.ID)
+		if result.Error == nil { //update
+			if utils.IsAdmin(*user, controller.DB) || utils.IsSupervisor(*user, module.ID, controller.DB) {
+				result := controller.DB.Save(module)
+				if result.Error != nil {
+					errMessage := result.Error.Error()
+					if strings.Contains(errMessage, "duplicate key value") {
+						errMessage = "Update failed: Duplicate module code and semester"
+					}
+					utils.HandleResponse(w, errMessage, http.StatusBadRequest)
+				} else {
+					utils.HandleResponseWithObject(w, module, http.StatusOK)
+				}
+			} else {
+				utils.HandleResponse(w, "Insufficient Permissions", http.StatusUnauthorized)
+			}
+			return
+		}
 		txError := controller.DB.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Model(module).Create(module).Error; err != nil {
 				return err
@@ -57,6 +74,19 @@ func (controller ModuleController) ModuleCreateHandleFunc() http.HandlerFunc {
 			} else {
 				errMessage = "Creation failed: " + txError.Error()
 			}
+			utils.HandleResponse(w, errMessage, http.StatusBadRequest)
+			return
+		}
+		utils.HandleResponseWithObject(w, module, http.StatusOK)
+	}
+}
+
+func (controller ModuleController) ModuleDeleteHandleFunc() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		module := r.Context().Value(utils.DecodeBodyContextKey).(*models.Module)
+		result := controller.DB.Delete(&module)
+		if result.Error != nil {
+			errMessage := "Deletion failed: " + result.Error.Error()
 			utils.HandleResponse(w, errMessage, http.StatusBadRequest)
 			return
 		}
@@ -447,6 +477,20 @@ func (controller ModuleController) AssistanceDataPrepare() mux.MiddlewareFunc {
 				next.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				utils.HandleResponse(w, "Empty Data", http.StatusBadRequest)
+			}
+		})
+	}
+}
+
+func (controller ModuleController) DeleteModulePermissionCheck() mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims := r.Context().Value(utils.JWTClaimContextKey).(*models.User)
+			module := r.Context().Value(utils.DecodeBodyContextKey).(*models.Module)
+			if pass := utils.IsSupervisor(*claims, module.ID, controller.DB); pass {
+				next.ServeHTTP(w, r)
+			} else {
+				utils.HandleResponse(w, "Not a supervisor", http.StatusUnauthorized)
 			}
 		})
 	}

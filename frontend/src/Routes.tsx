@@ -11,17 +11,21 @@ import { StaffManagement } from "./pages/Dashboard/Admin/StaffMangement";
 import { FC } from "react";
 import { Class as StaffClass } from "./pages/Dashboard/Staff/Class";
 import { Supervisors as StaffSupervisors } from "./pages/Dashboard/Staff/Supervisors";
+import { Supervisors as AdminSupervisors } from "./pages/Dashboard/Admin/Supervisors";
 import { TAs as StaffTAs } from "./pages/Dashboard/Staff/TAs";
+import { TAs as AdminTAs } from "./pages/Dashboard/Admin/TAs";
 import { Class as AdminClass } from "./pages/Dashboard/Admin/Class";
 import { Class as TAClass } from "./pages/Dashboard/TA/Class";
 import { Assignments as StaffAssignments } from "./pages/Dashboard/Staff/Assignments";
 import { Assignments as StudentAssignments} from "./pages/Dashboard/Student/Assignments";
+import { Assignments as AdminAssignments} from "./pages/Dashboard/Admin/Assignments";
 import { Questions as StaffQuestions } from "./pages/Dashboard/Staff/Questions";
 import { Questions as StudentQuestions } from "./pages/Dashboard/Student/Questions";
+import { Questions as AdminQuestions } from "./pages/Dashboard/Admin/Questions";
 import { SignUp } from "./pages/Signup";
 import { QuestionBoard as StudentQuestionBoard } from "./pages/Dashboard/Student/QuestionBoard";
 import { QuestionBoard as StaffQuestionBoard } from "./pages/Dashboard/Staff/QuestionBoard";
-import { Supervisors } from "./pages/Dashboard/Admin/Supervisors";
+import { QuestionBoard as AdminQuestionBoard } from "./pages/Dashboard/Admin/QuestionBoard";
 
 const Routes: FC = () => {
   return (
@@ -54,7 +58,11 @@ const Routes: FC = () => {
       <Route exact path="/admin/managestaff" component={StaffManagement} />
       <Route exact path="/admin/module/:moduleId" component={AdminModuleDashboard} />
       <Route exact path="/admin/module/:moduleId/class" component={AdminClass} />
-      <Route exact path="/admin/module/:moduleId/supervisors" component={Supervisors} />
+      <Route exact path="/admin/module/:moduleId/supervisors" component={AdminSupervisors} />
+      <Route exact path="/admin/module/:moduleId/tas" component={AdminTAs} />
+      <Route exact path="/admin/module/:moduleId/assignments" component={AdminAssignments} />
+      <Route exact path="/admin/module/:moduleId/assignments/:assignmentId" component={AdminQuestions} />
+      <Route exact path="/admin/module/:moduleId/assignments/:assignmentId/question/:questionId" component={AdminQuestionBoard} />
     </Switch>
   );
 };

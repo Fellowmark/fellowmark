@@ -14,23 +14,23 @@ type ModuleController struct {
 }
 
 type BatchEnrollment struct {
-	ModuleID  uint `json:"moduleId"`
-	StudentID uint `json:"studentId"`
-	StudentIDs []uint `json:"studentIds"`
+	ModuleID      uint     `json:"moduleId"`
+	StudentID     uint     `json:"studentId"`
+	StudentIDs    []uint   `json:"studentIds"`
 	StudentEmails []string `json:"studentEmails"`
 }
 
 type BatchSupervision struct {
-	ModuleID  uint `json:"moduleId"`
-	StaffID uint `json:"staffId"`
-	StaffIDs []uint `json:"staffIds"`
+	ModuleID    uint     `json:"moduleId"`
+	StaffID     uint     `json:"staffId"`
+	StaffIDs    []uint   `json:"staffIds"`
 	StaffEmails []string `json:"staffEmails"`
 }
 
 type BatchAssistance struct {
-	ModuleID  uint `json:"moduleId"`
-	StudentID uint `json:"studentId"`
-	StudentIDs []uint `json:"studentIds"`
+	ModuleID      uint     `json:"moduleId"`
+	StudentID     uint     `json:"studentId"`
+	StudentIDs    []uint   `json:"studentIds"`
 	StudentEmails []string `json:"studentEmails"`
 }
 
@@ -45,6 +45,7 @@ func (controller ModuleController) CreatePrivilegedRouter(route *mux.Router) {
 	route.Use(utils.AuthenticationMiddleware())
 
 	controller.CreateModuleRouter(route.NewRoute().Subrouter())
+	controller.DeleteModuleRouter(route.NewRoute().Subrouter())
 	controller.CreateEnrollmentRoute(route.PathPrefix("/enroll").Subrouter())
 	controller.DeleteEnrollmentRoute(route.PathPrefix("/enroll").Subrouter())
 	controller.CreateSupervisionRoute(route.PathPrefix("/supervise").Subrouter())
@@ -57,10 +58,17 @@ func (controller ModuleController) CreatePrivilegedRouter(route *mux.Router) {
 }
 
 func (controller ModuleController) CreateModuleRouter(route *mux.Router) {
-	route.Use(utils.IsStaffMiddleware(controller.DB))
+	route.Use(utils.IsStaffOrAdminMiddleware(controller.DB))
 	route.Use(utils.DecodeBodyMiddleware(&models.Module{}))
 	route.Use(utils.SanitizeDataMiddleware())
-	route.HandleFunc("", controller.ModuleCreateHandleFunc()).Methods(http.MethodPost)
+	route.HandleFunc("", controller.ModuleCreateOrUpdateHandleFunc()).Methods(http.MethodPost)
+}
+
+func (controller ModuleController) DeleteModuleRouter(route *mux.Router) {
+	route.Use(utils.DecodeBodyMiddleware(&models.Module{}))
+	route.Use(utils.SanitizeDataMiddleware())
+	route.Use(controller.DeleteModulePermissionCheck())
+	route.HandleFunc("", controller.ModuleDeleteHandleFunc()).Methods(http.MethodDelete)
 }
 
 func (controller ModuleController) CreateEnrollmentRoute(route *mux.Router) {

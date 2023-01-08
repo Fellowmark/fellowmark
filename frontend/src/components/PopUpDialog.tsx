@@ -37,7 +37,8 @@ interface MaxWidthDialogProps {
   handleSubmit?: () => void,
   title: string,
   open: boolean,
-  width: Size
+  width: Size,
+  children: React.ReactNode,
 }
 
 
@@ -67,7 +68,13 @@ export const MaxWidthDialog: FC<MaxWidthDialogProps> = (props) => {
   );
 }
 
-export const MaxWidthDialogActions: FC<{ handleClose: () => void }> = (props) => {
+interface MaxWidthDialogActionsProps {
+  handleClose: () => void,
+  children?: React.ReactNode,
+}
+
+
+export const MaxWidthDialogActions: FC<MaxWidthDialogActionsProps> = (props) => {
   return (
     <DialogActions>
       {props.children}

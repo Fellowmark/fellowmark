@@ -38,6 +38,7 @@ func (controller StaffController) CreatePrivilegedRouter(route *mux.Router) {
 	controller.CreateStaffApproveRoute(route.PathPrefix("/approve").Subrouter())
 	controller.GetPairingsRoute(route.PathPrefix("/module/{moduleId}/pairing").Subrouter())
 	controller.GetStaffsRoute(route.NewRoute().Subrouter())
+	controller.UpdateStaffRoute(route.NewRoute().Subrouter())
 }
 
 func (controller StaffController) CreateStaffApproveRoute(route *mux.Router) {
@@ -45,7 +46,7 @@ func (controller StaffController) CreateStaffApproveRoute(route *mux.Router) {
 	route.Use(utils.DecodeBodyMiddleware(&models.User{}))
 	route.Use(utils.SanitizeDataMiddleware())
 	route.Use(utils.AccountExistCheckMiddleware(controller.DB, &models.PendingStaff{}, utils.DecodeBodyContextKey, true, "No such signup request"))
-	route.Use(utils.AccountExistCheckMiddleware(controller.DB, &models.Staff{}, utils.DecodeBodyContextKey, false,  "Staff account already exists"))
+	route.Use(utils.AccountExistCheckMiddleware(controller.DB, &models.Staff{}, utils.DecodeBodyContextKey, false, "Staff account already exists"))
 	route.HandleFunc("", controller.StaffApproveHandleFunc()).Methods(http.MethodPost)
 }
 
@@ -60,4 +61,11 @@ func (controller StaffController) GetStaffsRoute(route *mux.Router) {
 	route.Use(utils.SanitizeDataMiddleware())
 	route.HandleFunc("/pending", utils.DBGetFromDataParams(controller.DB, &models.PendingStaff{}, &[]models.PendingStaff{})).Methods(http.MethodGet)
 	route.HandleFunc("/approve", utils.DBGetFromDataParams(controller.DB, &models.Staff{}, &[]models.Staff{})).Methods(http.MethodGet)
+}
+
+func (controller StaffController) UpdateStaffRoute(route *mux.Router) {
+	route.Use(utils.IsAdminMiddleware(controller.DB))
+	route.Use(utils.DecodeBodyMiddleware(&models.Staff{}))
+	route.Use(utils.SanitizeDataMiddleware())
+	route.HandleFunc("", utils.DBCreateHandleFunc(controller.DB, true)).Methods(http.MethodPost)
 }

@@ -1,12 +1,13 @@
 import {
   Button,
   TableBody,
+  makeStyles
 } from "@material-ui/core";
 import PaginationMui from '@material-ui/lab/Pagination';
 import { FC, useContext, useEffect, useState } from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
-  getSupervisions,
+  getAssistances,
 } from "../../../actions/moduleActions";
 import { ButtonAppBar } from "../../../components/NavBar";
 import {
@@ -16,18 +17,26 @@ import {
   StyledTableRow,
 } from "../../../components/StyledTable";
 import { AuthContext } from "../../../context/context";
-import { Supervision } from "../../../models/models";
+import { Assistance } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
-import { getPageList, useFormStyles, useValidCheck } from "./Dashboard";
+import { getPageList, useValidCheck } from "./Dashboard";
 
-export const Supervisors: FC = () => {
+const useStyles = makeStyles((theme) => ({
+  error: {
+    color: "#f44336;",
+    fontSize: "0.75rem"
+  },
+}));
+
+export const TAs: FC = () => {
   const match = useRouteMatch();
   const { state } = useContext(AuthContext);
   const [isValid, setIsValid] = useState(false);
-  const [supervisions, setSupervisions] = useState<Pagination<Supervision>>({});
+  const [assistances, setAssistances] = useState<Pagination<Assistance>>({});
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 15 //to test
   const [noPagination, setNoPagination] = useState(false)
+  const classes = useStyles()
   const history = useHistory();
 
   const moduleId: number = useValidCheck(history, state, match, setIsValid);
@@ -37,9 +46,9 @@ export const Supervisors: FC = () => {
   useEffect(() => {
     if (isValid) {
       if (noPagination) {
-        getSupervisions({ moduleId: moduleId }, setSupervisions);
+        getAssistances({ moduleId: moduleId }, setAssistances);
       } else {
-        getSupervisions({ moduleId: moduleId, page: page, limit: PAGE_SIZE }, setSupervisions);
+        getAssistances({ moduleId: moduleId, page: page, limit: PAGE_SIZE }, setAssistances);
       }
     }
   }, [isValid, page, noPagination]);
@@ -50,7 +59,7 @@ export const Supervisors: FC = () => {
 
   return (
     <div>
-      <ButtonAppBar pageList={pageList} currentPage="Supervisors" username= {`${state?.user?.Name}`} colour='orange'/>
+      <ButtonAppBar pageList={pageList} currentPage="TAs" username= {`${state?.user?.Name}`} colour='orange'/>
       <StyledTableContainer>
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
@@ -58,17 +67,17 @@ export const Supervisors: FC = () => {
           <StyledTableCell align="right">Email</StyledTableCell>
         </StyledTableHead>
         <TableBody>
-          {supervisions.rows?.map((supervision) => {
+          {assistances.rows?.map((assistance) => {
             return (
-              <StyledTableRow key={supervision.Staff.ID}>
+              <StyledTableRow key={assistance.Student.ID}>
                 <StyledTableCell component="th" scope="row">
-                  {supervision.Staff.ID}
+                  {assistance.Student.ID}
                 </StyledTableCell>
                 <StyledTableCell component="th" scope="row">
-                  {supervision.Staff.Name}
+                  {assistance.Student.Name}
                 </StyledTableCell>
                 <StyledTableCell align="right">
-                  {supervision.Staff.Email}
+                  {assistance.Student.Email}
                 </StyledTableCell>
               </StyledTableRow>
             );
@@ -76,9 +85,9 @@ export const Supervisors: FC = () => {
         </TableBody>
       </StyledTableContainer>
       {
-        !noPagination && supervisions.totalPages > 1 ?
+        !noPagination && assistances.totalPages > 1 ?
         <div style={{marginTop: 20, display: 'flex', justifyContent: 'center'}}>
-          <PaginationMui count={supervisions.totalPages} page={page} onChange={handlePageChange} variant="outlined" color="primary" />
+          <PaginationMui count={assistances.totalPages} page={page} onChange={handlePageChange} variant="outlined" color="primary" />
           <Button color="primary" onClick={()=>{setNoPagination(true)}}>Show full list</Button>
         </div> : null 
       }

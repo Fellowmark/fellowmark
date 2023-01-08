@@ -3,16 +3,24 @@ import { useHistory } from "react-router-dom";
 import { AuthContext } from "../../../context/context";
 import { ButtonAppBar, Page } from "../../../components/NavBar";
 import { Role } from "../../Login";
-import { makeStyles, TableBody } from "@material-ui/core";
+import {
+    makeStyles,
+    TableBody,
+    Dialog,
+    DialogContent,
+    DialogTitle
+} from "@material-ui/core";
 import Button from '@material-ui/core/Button';
 import Typography from "@material-ui/core/Typography";
+import Grid from "@material-ui/core/Grid";
+import TextField from "@material-ui/core/TextField";
 import {
   StyledTableCell,
   StyledTableContainer,
   StyledTableHead,
   StyledTableRow,
 } from "../../../components/StyledTable";
-import { approveStaff, getPendingStaffs, getStaffs } from "../../../actions/userActions";
+import { approveStaff, getPendingStaffs, getStaffs, updateStaff } from "../../../actions/userActions";
 import { User } from "../../../models/models";
 import { Pagination } from "../../../models/pagination";
 
@@ -21,6 +29,8 @@ export const StaffManagement: FC = () => {
   const [pageList, setPageList] = useState<Page[]>([]);
   const [pendingStaffs, setPendingStaffs] = useState<Pagination<User>>({});
   const [staffs, setStaffs] = useState<Pagination<User>>({});
+  const [open, setOpen] = useState(false);
+  const [updatingUser, setUpdatingUser] = useState<User>({});
   const { state } = useContext(AuthContext);
   const history = useHistory();
   const useStyles = makeStyles(() => ({
@@ -57,6 +67,26 @@ export const StaffManagement: FC = () => {
       }
     })
   }
+
+  const handleUpdate = (e, stf) => {
+    e.preventDefault()
+    updateStaff(stf).then((res) => {
+      if (res.success) {
+        getStaffs({}, setStaffs);
+        handleClose()
+      }
+    })
+  }
+
+  const handleOpen = (stf) => {
+    setUpdatingUser(stf);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setUpdatingUser({});
+  };
 
   return (
     <div className={classes.root}>
@@ -100,7 +130,8 @@ export const StaffManagement: FC = () => {
         <StyledTableHead>
           <StyledTableCell>ID</StyledTableCell>
           <StyledTableCell>Name</StyledTableCell>
-          <StyledTableCell align="right">Email</StyledTableCell>
+          <StyledTableCell>Email</StyledTableCell>
+          <StyledTableCell align="right">Edit</StyledTableCell>
         </StyledTableHead>
         <TableBody>
           {staffs.rows?.map((stf) => {
@@ -112,14 +143,66 @@ export const StaffManagement: FC = () => {
                 <StyledTableCell component="th" scope="row">
                   {stf.Name}
                 </StyledTableCell>
-                <StyledTableCell component="th" scope="row"  align="right">
+                <StyledTableCell component="th" scope="row">
                   {stf.Email}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  <Button onClick={() => handleOpen(stf)} color="primary">Edit</Button>
                 </StyledTableCell>
               </StyledTableRow>
             );
           })}
         </TableBody>
       </StyledTableContainer>
+
+      <Dialog open={open} onClose={handleClose} disableEnforceFocus>
+        <DialogTitle>Update Staff Info</DialogTitle>
+        <DialogContent>
+            <form onSubmit={(e) => handleUpdate(e, updatingUser)}>
+                <Grid container direction="column" spacing={2}>
+                    <Grid item>
+                        <TextField
+                            type="Name"
+                            defaultValue={updatingUser.Name}
+                            placeholder="Name"
+                            fullWidth
+                            name="handle"
+                            variant="outlined"
+                            onChange={(e) =>
+                                setUpdatingUser({ ...updatingUser, Name: e.target.value })
+                            }
+                            required
+                            autoFocus
+                        />
+                    </Grid>
+                    <Grid item>
+                        <TextField
+                            type="email"
+                            defaultValue={updatingUser.Email}
+                            placeholder="Email"
+                            fullWidth
+                            name="email"
+                            variant="outlined"
+                            onChange={(e) =>
+                                setUpdatingUser({ ...updatingUser, Email: e.target.value })
+                            }
+                            required
+                        />
+                    </Grid>
+                    <Grid item>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            type="submit"
+                            className="button-block"
+                        >
+                            Update
+                        </Button>
+                    </Grid>
+                </Grid>
+            </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
